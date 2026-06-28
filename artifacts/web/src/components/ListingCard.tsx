@@ -1,0 +1,87 @@
+import { Link } from "wouter";
+import { type Listing } from "../data/listings";
+import { StarRating } from "./StarRating";
+import { MapPin, Bookmark, BookmarkCheck, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { useSavedListings } from "../hooks/useSavedListings";
+
+interface ListingCardProps {
+  listing: Listing;
+}
+
+export function ListingCard({ listing }: ListingCardProps) {
+  const { isSaved, toggleSaved } = useSavedListings();
+  const saved = isSaved(listing.id);
+
+  const handleSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    toggleSaved(listing.id);
+  };
+
+  return (
+    <Link href={`/listing/${listing.id}`} className="group block h-full outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg">
+      <Card className="h-full overflow-hidden transition-all hover:shadow-md dark:hover:border-primary/50 flex flex-col bg-card">
+        {/* Top colored band */}
+        <div 
+          className="h-20 w-full relative flex items-center justify-center transition-colors"
+          style={{ backgroundColor: listing.color }}
+        >
+          <div className="text-white font-bold text-3xl opacity-80 tracking-widest">{listing.initials}</div>
+          
+          <button 
+            onClick={handleSave}
+            className="absolute top-3 right-3 p-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors text-white"
+            aria-label={saved ? "Remove from saved" : "Save listing"}
+          >
+            {saved ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+          </button>
+        </div>
+        
+        <CardContent className="p-5 flex-1 flex flex-col">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors flex items-center gap-1.5">
+                {listing.name}
+                {listing.verified && (
+                  <CheckCircle2 className="w-4 h-4 text-primary shrink-0" aria-label="Verified" />
+                )}
+              </h3>
+              <p className="text-sm text-muted-foreground capitalize mt-1">
+                {listing.category}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 mb-3">
+            <StarRating rating={listing.rating} />
+            <span className="text-xs font-medium">{listing.rating}</span>
+            <span className="text-xs text-muted-foreground">({listing.reviewCount})</span>
+            <span className="text-muted-foreground text-xs mx-1">•</span>
+            <span className="text-xs font-medium text-muted-foreground">{listing.priceRange}</span>
+          </div>
+
+          <div className="flex items-start gap-1.5 text-sm text-muted-foreground mt-auto pt-4 border-t border-border/50">
+            <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
+            <span className="line-clamp-1">
+              {listing.neighborhood ? `${listing.neighborhood} · ${listing.city}` : `${listing.address}, ${listing.city}`}
+            </span>
+          </div>
+          
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {listing.tags.slice(0, 3).map(tag => (
+              <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
+                {tag}
+              </Badge>
+            ))}
+            {listing.tags.length > 3 && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                +{listing.tags.length - 3}
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}

@@ -18,7 +18,7 @@ import { ListingCard } from '@/components/ListingCard';
 import { CategoryPillRow } from '@/components/CategoryPill';
 import { SAMPLE_LISTINGS } from '@/constants/data';
 
-const LOCATION = 'San Francisco, CA';
+const LOCATION = 'San Francisco Bay Area';
 
 export default function HomeScreen() {
   const colors = useColors();
@@ -54,8 +54,8 @@ export default function HomeScreen() {
         {/* Hero heading */}
         <View style={styles.heroSection}>
           <Text style={[styles.heroTitle, { color: colors.foreground }]}>
-            Find the best{'\n'}
-            <Text style={{ color: colors.primary }}>places near you</Text>
+            The best food{'\n'}
+            <Text style={{ color: colors.primary }}>in the Bay Area</Text>
           </Text>
         </View>
 
@@ -67,7 +67,7 @@ export default function HomeScreen() {
         >
           <Feather name="search" size={18} color={colors.mutedForeground} />
           <Text style={[styles.searchPlaceholder, { color: colors.mutedForeground }]}>
-            Search restaurants, services...
+            Ramen, sourdough, cocktails...
           </Text>
           <View style={[styles.filterBtn, { backgroundColor: colors.primary }]}>
             <Feather name="sliders" size={14} color="#fff" />
@@ -100,7 +100,7 @@ export default function HomeScreen() {
 
         {/* All listings */}
         <View style={[styles.sectionHeader, { marginTop: 20 }]}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Nearby</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>All Places</Text>
           <Text style={[styles.count, { color: colors.mutedForeground }]}>
             {filteredListings.length} places
           </Text>
