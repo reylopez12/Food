@@ -11,6 +11,7 @@ import Home from '@/pages/Home';
 import Explore from '@/pages/Explore';
 import ListingDetail from '@/pages/ListingDetail';
 import Saved from '@/pages/Saved';
+import Spin from '@/pages/Spin';
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ function Router() {
           <Route path="/explore" component={Explore} />
           <Route path="/listing/:id" component={ListingDetail} />
           <Route path="/saved" component={Saved} />
+          <Route path="/spin" component={Spin} />
           <Route component={NotFound} />
         </Switch>
       </main>

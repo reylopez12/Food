@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { UtensilsCrossed, Search, Moon, Sun, Menu } from "lucide-react";
+import { UtensilsCrossed, Search, Moon, Sun, Menu, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "../hooks/useTheme";
 import {
@@ -8,14 +8,22 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+interface NavLink {
+  href: string;
+  label: string;
+  icon?: React.ReactNode;
+  highlight?: boolean;
+}
+
 export function Navbar() {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
 
-  const navLinks = [
+  const navLinks: NavLink[] = [
     { href: "/", label: "Home" },
     { href: "/explore", label: "Explore" },
     { href: "/saved", label: "Saved" },
+    { href: "/spin", label: "Indecisive", icon: <Shuffle className="w-3.5 h-3.5" />, highlight: true },
   ];
 
   return (
@@ -31,15 +39,30 @@ export function Navbar() {
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location === link.href ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
-              {link.label}
-            </Link>
+            link.highlight ? (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full transition-all border ${
+                  location === link.href
+                    ? "bg-accent text-accent-foreground border-accent"
+                    : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                }`}
+              >
+                {link.icon}
+                {link.label}
+              </Link>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  location === link.href ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                {link.label}
+              </Link>
+            )
           ))}
         </nav>
 
@@ -69,10 +92,11 @@ export function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`text-lg font-medium transition-colors ${
+                    className={`flex items-center gap-2 text-lg font-medium transition-colors ${
                       location === link.href ? "text-primary" : "text-muted-foreground"
                     }`}
                   >
+                    {link.icon}
                     {link.label}
                   </Link>
                 ))}
