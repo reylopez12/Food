@@ -15,6 +15,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { SAMPLE_LISTINGS } from '@/constants/data';
 import { RatingStars } from '@/components/RatingStars';
+import { VideoCard } from '@/components/VideoCard';
 import { useDirectory } from '@/context/DirectoryContext';
 import * as Haptics from 'expo-haptics';
 
@@ -167,6 +168,16 @@ export default function ListingDetailScreen() {
             </Pressable>
           ))}
         </View>
+
+        {/* Video Showcase */}
+        {listing.hasVideo && listing.video && (
+          <View style={[styles.section, { paddingTop: 20 }]}>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Dish Showcase</Text>
+            <View style={{ marginTop: 10 }}>
+              <VideoCard listing={listing} />
+            </View>
+          </View>
+        )}
 
         {/* About */}
         <View style={styles.section}>

@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { type Listing } from "../data/listings";
 import { StarRating } from "./StarRating";
-import { MapPin, Bookmark, BookmarkCheck, CheckCircle2 } from "lucide-react";
+import { MapPin, Bookmark, BookmarkCheck, CheckCircle2, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSavedListings } from "../hooks/useSavedListings";
@@ -28,6 +28,13 @@ export function ListingCard({ listing }: ListingCardProps) {
           style={{ backgroundColor: listing.color }}
         >
           <div className="text-white font-bold text-3xl opacity-80 tracking-widest">{listing.initials}</div>
+
+          {listing.hasVideo && (
+            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm">
+              <Play className="w-3 h-3 text-white fill-white" />
+              <span className="text-[10px] font-bold text-white tracking-widest uppercase">Video</span>
+            </div>
+          )}
           
           <button 
             onClick={handleSave}

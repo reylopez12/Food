@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Search, MapPin, UtensilsCrossed, Coffee, Cake, Wine, Star, ShoppingBasket, Truck } from "lucide-react";
+import { Search, MapPin, UtensilsCrossed, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -8,15 +8,11 @@ import { LISTINGS } from "../data/listings";
 import { FeaturedCard } from "../components/FeaturedCard";
 import { CategoryCard } from "../components/CategoryCard";
 import { ListingCard } from "../components/ListingCard";
+import { VideoShowcase } from "../components/VideoShowcase";
 
 const CATEGORIES = [
   { id: 'restaurants', label: 'Restaurants', icon: <UtensilsCrossed className="w-6 h-6" /> },
-  { id: 'fine-dining', label: 'Fine Dining', icon: <Star className="w-6 h-6" /> },
-  { id: 'cafes', label: 'Cafes', icon: <Coffee className="w-6 h-6" /> },
-  { id: 'bakeries', label: 'Bakeries', icon: <Cake className="w-6 h-6" /> },
-  { id: 'bars', label: 'Bars', icon: <Wine className="w-6 h-6" /> },
   { id: 'food-trucks', label: 'Food Trucks', icon: <Truck className="w-6 h-6" /> },
-  { id: 'markets', label: 'Markets', icon: <ShoppingBasket className="w-6 h-6" /> },
 ];
 
 export default function Home() {
@@ -52,7 +48,7 @@ export default function Home() {
           </h1>
 
           <p className="text-primary-foreground/80 text-lg md:text-xl max-w-2xl mb-10">
-            From Michelin-starred institutions to beloved neighborhood gems — discover where the Bay Area eats, drinks, and lingers.
+            From legendary taquerias to beloved bao trucks — discover where the Bay Area eats, drinks, and lingers.
           </p>
 
           <form onSubmit={handleSearch} className="w-full max-w-3xl bg-background rounded-full p-2 flex items-center shadow-xl shadow-black/10">
@@ -60,7 +56,7 @@ export default function Home() {
               <Search className="w-5 h-5 text-muted-foreground shrink-0" />
               <Input
                 type="text"
-                placeholder="Ramen, sourdough, craft cocktails..."
+                placeholder="Tacos, sourdough, bao, pasta..."
                 className="border-0 focus-visible:ring-0 px-0 shadow-none h-12 text-base bg-transparent"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -82,7 +78,7 @@ export default function Home() {
           {/* Quick pills */}
           <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
             <span className="text-primary-foreground/70 text-sm mr-2">Popular:</span>
-            {['Oysters', 'Sourdough', 'Michelin Stars', 'Coffee', 'Tacos'].map((pill) => (
+            {['Oysters', 'Sourdough', 'Michelin Stars', 'Tacos', 'Bao'].map((pill) => (
               <Button key={pill} variant="outline" size="sm" className="rounded-full bg-white/5 border-white/10 text-white hover:bg-white/20 hover:text-white" onClick={() => setLocation(`/explore?q=${pill}`)}>
                 {pill}
               </Button>
@@ -103,7 +99,7 @@ export default function Home() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+        <div className="grid grid-cols-2 gap-4 max-w-sm">
           {CATEGORIES.map((cat) => (
             <CategoryCard
               key={cat.id}
@@ -135,11 +131,14 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Video Showcases */}
+      <VideoShowcase />
+
       {/* Recent Listings */}
       <section className="py-16 md:py-24 container mx-auto px-4 mb-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight mb-2">Recently Added</h2>
+            <h2 className="text-3xl font-bold tracking-tight mb-2">More to Discover</h2>
             <p className="text-muted-foreground">More hidden gems and neighborhood favorites.</p>
           </div>
           <Button variant="outline" onClick={() => setLocation('/explore')}>

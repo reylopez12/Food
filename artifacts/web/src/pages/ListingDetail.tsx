@@ -2,6 +2,7 @@ import { useRoute, Link } from "wouter";
 import { ArrowLeft, Phone, Globe, Navigation, Share2, MapPin, Clock, CheckCircle2, Bookmark, BookmarkCheck } from "lucide-react";
 import { LISTINGS } from "../data/listings";
 import { StarRating } from "../components/StarRating";
+import { VideoSpot } from "../components/VideoSpot";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -120,6 +121,14 @@ export default function ListingDetail() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Video Showcase */}
+        {listing.hasVideo && listing.video && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">Dish Showcase</h2>
+            <VideoSpot listing={listing} playing={true} />
+          </div>
+        )}
 
         {/* Content Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">

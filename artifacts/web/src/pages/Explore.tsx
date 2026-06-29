@@ -14,12 +14,7 @@ import { ListingCard } from "../components/ListingCard";
 
 const CATEGORIES = [
   { id: 'restaurants', label: 'Restaurants' },
-  { id: 'fine-dining', label: 'Fine Dining' },
-  { id: 'cafes', label: 'Cafes' },
-  { id: 'bakeries', label: 'Bakeries & Desserts' },
-  { id: 'bars', label: 'Bars & Cocktails' },
   { id: 'food-trucks', label: 'Food Trucks' },
-  { id: 'markets', label: 'Markets' },
 ];
 
 const PRICE_RANGES = ['$', '$$', '$$$', '$$$$'];
