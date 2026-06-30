@@ -87,6 +87,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Video Showcases */}
+      <VideoShowcase />
+
       {/* Categories Grid */}
       <section className="py-16 md:py-24 container mx-auto px-4">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
@@ -130,9 +133,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Video Showcases */}
-      <VideoShowcase />
 
       {/* Recent Listings */}
       <section className="py-16 md:py-24 container mx-auto px-4 mb-10">

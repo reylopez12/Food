@@ -16,6 +16,7 @@ import { useDirectory } from '@/context/DirectoryContext';
 import { FeaturedCard } from '@/components/FeaturedCard';
 import { ListingCard } from '@/components/ListingCard';
 import { CategoryPillRow } from '@/components/CategoryPill';
+import { VideoShowcase } from '@/components/VideoShowcase';
 import { SAMPLE_LISTINGS } from '@/constants/data';
 
 const LOCATION = 'San Francisco Bay Area';
@@ -73,6 +74,9 @@ export default function HomeScreen() {
             <Feather name="sliders" size={14} color="#fff" />
           </View>
         </TouchableOpacity>
+
+        {/* Video Showcase */}
+        <VideoShowcase />
 
         {/* Featured listings */}
         <View style={styles.sectionHeader}>
