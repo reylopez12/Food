@@ -160,9 +160,10 @@ export default function SpinScreen() {
       easing:         Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start(({ finished }) => {
+      // Always clear spinning — even if interrupted — so the button never gets stuck
+      setSpinning(false);
       if (!finished) return;
       const picked = snapshot[winnerIdx];
-      setSpinning(false);
       setWinner(picked);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
