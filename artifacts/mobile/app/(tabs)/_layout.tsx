@@ -21,7 +21,7 @@ function NativeTabLayout() {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="spin">
         <Icon sf={{ default: 'shuffle', selected: 'shuffle' }} />
-        <Label>Spin</Label>
+        <Label>Indecisive</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="saved">
         <Icon sf={{ default: 'bookmark', selected: 'bookmark.fill' }} />
@@ -100,7 +100,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="spin"
         options={{
-          title: 'Spin',
+          title: 'Indecisive',
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="shuffle" tintColor={color} size={24} />

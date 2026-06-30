@@ -310,7 +310,7 @@ export default function Spin() {
           Can't decide?
         </div>
         <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-3">
-          Indecisive
+          Indecisive Spin
         </h1>
         <p className="text-muted-foreground text-base">
           Spin the wheel. Let fate pick your next Bay Area meal.

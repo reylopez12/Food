@@ -199,7 +199,7 @@ export default function SpinScreen() {
           <Feather name="shuffle" size={13} color={colors.primary} />
           <Text style={[styles.badgeText, { color: colors.primary }]}>Can't decide?</Text>
         </View>
-        <Text style={[styles.title, { color: colors.foreground }]}>Indecisive</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>Indecisive Spin</Text>
         <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
           Spin the wheel. Let fate pick your next Bay Area meal.
         </Text>

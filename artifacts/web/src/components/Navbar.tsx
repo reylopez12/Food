@@ -23,7 +23,7 @@ export function Navbar() {
     { href: "/", label: "Home" },
     { href: "/explore", label: "Explore" },
     { href: "/saved", label: "Saved" },
-    { href: "/spin", label: "Indecisive", icon: <Shuffle className="w-3.5 h-3.5" />, highlight: true },
+    { href: "/spin", label: "Indecisive Spin", icon: <Shuffle className="w-3.5 h-3.5" />, highlight: true },
   ];
 
   return (
