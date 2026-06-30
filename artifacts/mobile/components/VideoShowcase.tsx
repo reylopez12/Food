@@ -57,7 +57,11 @@ export function VideoShowcase() {
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        scrollEnabled={false}
+        scrollEnabled={true}
+        onMomentumScrollEnd={e => {
+          const idx = Math.round(e.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_GAP));
+          setActiveIdx(idx);
+        }}
         contentContainerStyle={styles.carouselContent}
         renderItem={({ item }) => (
           <View style={styles.cardWrapper}>
