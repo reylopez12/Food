@@ -19,6 +19,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: 'magnifyingglass', selected: 'magnifyingglass.circle.fill' }} />
         <Label>Explore</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="spin">
+        <Icon sf={{ default: 'shuffle', selected: 'shuffle' }} />
+        <Label>Spin</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="saved">
         <Icon sf={{ default: 'bookmark', selected: 'bookmark.fill' }} />
         <Label>Saved</Label>
@@ -90,6 +94,18 @@ function ClassicTabLayout() {
               <SymbolView name="magnifyingglass" tintColor={color} size={24} />
             ) : (
               <Feather name="search" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="spin"
+        options={{
+          title: 'Spin',
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="shuffle" tintColor={color} size={24} />
+            ) : (
+              <Feather name="shuffle" size={22} color={color} />
             ),
         }}
       />
