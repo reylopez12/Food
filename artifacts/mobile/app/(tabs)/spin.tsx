@@ -20,17 +20,25 @@ import { SAMPLE_LISTINGS, type Listing } from '@/constants/data';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type FilterId = 'all' | 'restaurants' | 'food-trucks';
+type PriceId  = 'all' | '$' | '$$' | '$$$';
 
 const FILTER_OPTIONS: { id: FilterId; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'restaurants', label: 'Restaurants' },
-  { id: 'food-trucks', label: 'Food Trucks' },
+  { id: 'all',          label: 'All' },
+  { id: 'restaurants',  label: 'Restaurants' },
+  { id: 'food-trucks',  label: 'Food Trucks' },
+];
+
+const PRICE_OPTIONS: { id: PriceId; label: string }[] = [
+  { id: 'all', label: 'Any price' },
+  { id: '$',   label: '$' },
+  { id: '$$',  label: '$$' },
+  { id: '$$$', label: '$$$' },
 ];
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const SPIN_ROTATIONS = 8;   // extra full rotations added for drama
-const SPIN_DURATION  = 4200; // ms
+const SPIN_ROTATIONS = 8;
+const SPIN_DURATION  = 4200;
 const WHEEL_SIZE     = 300;
 const CX             = WHEEL_SIZE / 2;
 const CY             = WHEEL_SIZE / 2;
@@ -45,14 +53,10 @@ function polarXY(cx: number, cy: number, r: number, angleDeg: number) {
 
 /**
  * SVG arc path for one pie slice.
- * Coordinate convention: segment i spans [-90 + i*slice, -90 + (i+1)*slice].
- * The top of the wheel (world angle -90°) is where the pointer lives.
+ * Segment i spans [-90 + i*slice, -90 + (i+1)*slice]. Top = -90°.
  *
  * Landing math:
- *   To land winnerIdx under the top pointer, we need the wheel's total
- *   rotation `angle` (in degrees) to satisfy:
- *     (-90 + (winnerIdx + 0.5) * slice) + angle ≡ -90  (mod 360)
- *     ⟹  angle ≡ -(winnerIdx + 0.5) * slice  (mod 360)
+ *   angle ≡ -(winnerIdx + 0.5) * slice  (mod 360)
  */
 function slicePath(startDeg: number, endDeg: number): string {
   const s = polarXY(CX, CY, R, startDeg);
@@ -74,6 +78,7 @@ export default function SpinScreen() {
   const router  = useRouter();
 
   const [filter,   setFilter]   = useState<FilterId>('all');
+  const [price,    setPrice]    = useState<PriceId>('all');
   const [spinning, setSpinning] = useState(false);
   const [winner,   setWinner]   = useState<Listing | null>(null);
 
@@ -85,37 +90,51 @@ export default function SpinScreen() {
   const currentRotation = useRef(0);
   const spinAnim        = useRef(new Animated.Value(0)).current;
 
-  // Interpolate the raw degree value into a CSS rotation string
   const rotateStr = spinAnim.interpolate({
-    inputRange: [-360_000, 360_000],
+    inputRange:  [-360_000, 360_000],
     outputRange: ['-360000deg', '360000deg'],
   });
 
   const listings = SAMPLE_LISTINGS.filter(
-    (l) => filter === 'all' || l.category === filter
+    (l) =>
+      (filter === 'all' || l.category === filter) &&
+      (price  === 'all' || l.priceRange === price)
   );
 
-  const topPad  = Platform.OS === 'web' ? 67 : insets.top;
-  const botPad  = Platform.OS === 'web' ? 120 : insets.bottom + 100;
+  const topPad   = Platform.OS === 'web' ? 67 : insets.top;
+  const botPad   = Platform.OS === 'web' ? 120 : insets.bottom + 100;
   const sliceDeg = listings.length > 0 ? 360 / listings.length : 360;
   const fontSize = Math.min(12, Math.max(8, 160 / Math.max(listings.length, 1)));
 
-  // Stop any in-flight animation on unmount
   useEffect(() => () => { spinAnim.stopAnimation(); }, [spinAnim]);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  const resetWheel = () => {
+    spinAnim.stopAnimation();
+    spinAnim.setValue(0);
+    currentRotation.current = 0;
+  };
 
   const resetResult = () => {
     resultOpacity.setValue(0);
     resultTranslateY.setValue(24);
   };
 
+  // ── Handlers ───────────────────────────────────────────────────────────────
+
   const handleFilterChange = (f: FilterId) => {
     if (spinning) return;
-    spinAnim.stopAnimation();
-    spinAnim.setValue(0);
-    currentRotation.current = 0;
+    resetWheel();
     setFilter(f);
+    setWinner(null);
+    resetResult();
+  };
+
+  const handlePriceChange = (p: PriceId) => {
+    if (spinning) return;
+    resetWheel();
+    setPrice(p);
     setWinner(null);
     resetResult();
   };
@@ -138,36 +157,30 @@ export default function SpinScreen() {
     const n        = listings.length;
     const winnerIdx = Math.floor(Math.random() * n);
 
-    // Target normalised angle (see slicePath doc-comment for the derivation)
     const targetNorm =
       (( -(winnerIdx + 0.5) * sliceDeg ) % 360 + 360) % 360;
     const currentNorm =
       (( currentRotation.current % 360 ) + 360) % 360;
 
-    // Always spin forward; guarantee ≥ 1 segment of travel
     let delta = targetNorm - currentNorm;
     if (delta < 0.01) delta += 360;
 
     const newTotal = currentRotation.current + delta + (SPIN_ROTATIONS - 1) * 360;
     currentRotation.current = newTotal;
 
-    // Snapshot listings so a filter change mid-spin can't corrupt the winner
     const snapshot = listings.slice();
 
     Animated.timing(spinAnim, {
-      toValue:        newTotal,
-      duration:       SPIN_DURATION,
-      easing:         Easing.out(Easing.cubic),
+      toValue:         newTotal,
+      duration:        SPIN_DURATION,
+      easing:          Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start(({ finished }) => {
-      // Always clear spinning — even if interrupted — so the button never gets stuck
       setSpinning(false);
       if (!finished) return;
       const picked = snapshot[winnerIdx];
       setWinner(picked);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-      // Slide + fade the result card in
       Animated.parallel([
         Animated.spring(resultOpacity,    { toValue: 1, useNativeDriver: true, tension: 80, friction: 10 }),
         Animated.spring(resultTranslateY, { toValue: 0, useNativeDriver: true, tension: 80, friction: 10 }),
@@ -197,11 +210,13 @@ export default function SpinScreen() {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* ── Filter pills ── */}
+        {/* ── Category filter ── */}
         <View style={[styles.pillRow, { backgroundColor: colors.muted }]}>
           {FILTER_OPTIONS.map((opt) => {
             const count = SAMPLE_LISTINGS.filter(
-              (l) => opt.id === 'all' || l.category === opt.id
+              (l) =>
+                (opt.id === 'all' || l.category === opt.id) &&
+                (price  === 'all' || l.priceRange === price)
             ).length;
             const active = filter === opt.id;
             return (
@@ -217,12 +232,38 @@ export default function SpinScreen() {
                   },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.pillText,
-                    { color: active ? colors.foreground : colors.mutedForeground },
-                  ]}
-                >
+                <Text style={[styles.pillText, { color: active ? colors.foreground : colors.mutedForeground }]}>
+                  {opt.label}
+                  <Text style={{ opacity: 0.55 }}> ({count})</Text>
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {/* ── Price filter ── */}
+        <View style={[styles.pillRow, { backgroundColor: colors.muted, marginTop: 8 }]}>
+          {PRICE_OPTIONS.map((opt) => {
+            const count = SAMPLE_LISTINGS.filter(
+              (l) =>
+                (filter === 'all' || l.category === filter) &&
+                (opt.id === 'all' || l.priceRange === opt.id)
+            ).length;
+            const active = price === opt.id;
+            return (
+              <Pressable
+                key={opt.id}
+                onPress={() => handlePriceChange(opt.id)}
+                disabled={spinning}
+                style={[
+                  styles.pill,
+                  {
+                    backgroundColor: active ? colors.card : 'transparent',
+                    opacity: spinning ? 0.45 : 1,
+                  },
+                ]}
+              >
+                <Text style={[styles.pillText, { color: active ? colors.foreground : colors.mutedForeground }]}>
                   {opt.label}
                   <Text style={{ opacity: 0.55 }}> ({count})</Text>
                 </Text>
@@ -233,18 +274,11 @@ export default function SpinScreen() {
 
         {/* ── Wheel + pointer ── */}
         <View style={styles.wheelWrap}>
-          {/* Fixed amber pointer — stays still while wheel rotates */}
           <View style={styles.pointerWrap} pointerEvents="none">
             <View style={styles.pointerTriangle} />
           </View>
 
-          {/* Rotating wheel */}
-          <Animated.View
-            style={[
-              styles.wheelAnim,
-              { transform: [{ rotate: rotateStr }] },
-            ]}
-          >
+          <Animated.View style={[styles.wheelAnim, { transform: [{ rotate: rotateStr }] }]}>
             <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
               {listings.length === 0 ? (
                 <Circle cx={CX} cy={CY} r={R} fill={colors.muted} />
@@ -257,17 +291,14 @@ export default function SpinScreen() {
                   const label    = listing.name.length > maxChars
                     ? listing.name.slice(0, maxChars - 1) + '…'
                     : listing.name;
-
                   return (
                     <G key={listing.id}>
-                      {/* Slice fill */}
                       <Path
                         d={slicePath(startDeg, endDeg)}
                         fill={listing.color}
                         stroke="rgba(255,255,255,0.22)"
                         strokeWidth={1.5}
                       />
-                      {/* Radial label — rotate group so text reads along the radius */}
                       <G transform={`rotate(${midDeg} ${CX} ${CY})`}>
                         <SvgText
                           x={CX + R * 0.72}
@@ -285,7 +316,6 @@ export default function SpinScreen() {
                   );
                 })
               )}
-              {/* Hub */}
               <Circle cx={CX} cy={CY} r={20} fill="white" />
               <Circle cx={CX} cy={CY} r={7}  fill={colors.primary} />
             </Svg>
@@ -295,7 +325,7 @@ export default function SpinScreen() {
         {/* ── Empty state ── */}
         {listings.length === 0 && (
           <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-            No listings match this filter.
+            No listings match these filters.
           </Text>
         )}
 
@@ -348,20 +378,15 @@ export default function SpinScreen() {
               },
             ]}
           >
-            {/* Coloured accent bar */}
             <View style={[styles.accentBar, { backgroundColor: winner.color }]} />
 
             <View style={styles.cardInner}>
-              {/* Initials + name */}
               <View style={styles.cardTop}>
                 <View style={[styles.initials, { backgroundColor: winner.color }]}>
                   <Text style={styles.initialsText}>{winner.initials}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text
-                    style={[styles.cardName, { color: colors.foreground }]}
-                    numberOfLines={1}
-                  >
+                  <Text style={[styles.cardName, { color: colors.foreground }]} numberOfLines={1}>
                     {winner.name}
                   </Text>
                   <View style={styles.cardMeta}>
@@ -373,7 +398,6 @@ export default function SpinScreen() {
                 </View>
               </View>
 
-              {/* Chips */}
               <View style={styles.chips}>
                 <View style={[styles.chip, { backgroundColor: colors.muted }]}>
                   <Text style={[styles.chipText, { color: colors.mutedForeground }]}>
@@ -398,15 +422,10 @@ export default function SpinScreen() {
                 )}
               </View>
 
-              {/* Description */}
-              <Text
-                style={[styles.cardDesc, { color: colors.mutedForeground }]}
-                numberOfLines={2}
-              >
+              <Text style={[styles.cardDesc, { color: colors.mutedForeground }]} numberOfLines={2}>
                 {winner.description}
               </Text>
 
-              {/* CTA */}
               <Pressable
                 onPress={() => router.push(`/listing/${winner!.id}`)}
                 style={({ pressed }) => [
@@ -427,7 +446,7 @@ export default function SpinScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const WHEEL_PAD = 24; // extra space around wheel for pointer + shadow
+const WHEEL_PAD = 24;
 
 const styles = StyleSheet.create({
   root:   { flex: 1 },
@@ -470,7 +489,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     padding: 4,
     gap: 2,
-    marginBottom: 20,
+    marginBottom: 4,
   },
   pill: {
     paddingHorizontal: 14,
@@ -487,6 +506,7 @@ const styles = StyleSheet.create({
     height: WHEEL_SIZE + WHEEL_PAD * 2,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 16,
     marginBottom: 20,
   },
   pointerWrap: {
@@ -520,6 +540,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter_400Regular',
     marginBottom: 12,
+    marginTop: 8,
   },
   // Buttons
   btnRow: {

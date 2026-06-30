@@ -7,11 +7,27 @@ import { Badge } from "@/components/ui/badge";
 import { LISTINGS, type Listing } from "../data/listings";
 
 type Filter = "all" | "restaurants" | "food-trucks";
+type Price  = "all" | "budget" | "mid" | "upscale";
+
+// Internal price-range identifiers avoid shell/regex issues with bare $ signs
+const PRICE_MAP: Record<Price, string | null> = {
+  all:     null,
+  budget:  "$",
+  mid:     "$$",
+  upscale: "$$$",
+};
 
 const FILTER_OPTIONS: { id: Filter; label: string }[] = [
   { id: "all",          label: "All" },
   { id: "restaurants",  label: "Restaurants" },
   { id: "food-trucks",  label: "Food Trucks" },
+];
+
+const PRICE_OPTIONS: { id: Price; label: string }[] = [
+  { id: "all",     label: "Any price" },
+  { id: "budget",  label: "$" },
+  { id: "mid",     label: "$$" },
+  { id: "upscale", label: "$$$" },
 ];
 
 const SPIN_ROTATIONS = 8;   // full extra rotations added for drama
@@ -139,6 +155,7 @@ export default function Spin() {
   const [, setLocation] = useLocation();
 
   const [filter,   setFilter]   = useState<Filter>("all");
+  const [price,    setPrice]    = useState<Price>("all");
   const [spinning, setSpinning] = useState(false);
   const [winner,   setWinner]   = useState<Listing | null>(null);
 
@@ -149,8 +166,11 @@ export default function Spin() {
   const canvasRef      = useRef<HTMLCanvasElement>(null);
   const rafRef         = useRef<number | null>(null);
 
+  const priceVal = PRICE_MAP[price];
   const listings = LISTINGS.filter(
-    (l) => filter === "all" || l.category === filter
+    (l) =>
+      (filter === "all" || l.category === filter) &&
+      (priceVal === null || l.priceRange === priceVal)
   );
 
   // ── Draw ──────────────────────────────────────────────────────────────────
@@ -250,12 +270,23 @@ export default function Spin() {
 
   // ── Filter change ─────────────────────────────────────────────────────────
 
-  const handleFilterChange = (f: Filter) => {
-    if (spinning) return; // lock during spin
+  const resetWheel = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     currentAngleRef.current = 0;
     setDisplayAngle(0);
+  };
+
+  const handleFilterChange = (f: Filter) => {
+    if (spinning) return;
+    resetWheel();
     setFilter(f);
+    setWinner(null);
+  };
+
+  const handlePriceChange = (p: Price) => {
+    if (spinning) return;
+    resetWheel();
+    setPrice(p);
     setWinner(null);
   };
 
@@ -286,28 +317,59 @@ export default function Spin() {
         </p>
       </div>
 
-      {/* Filter pills — disabled during spin */}
-      <div className="flex items-center gap-2 mb-8 p-1 bg-muted rounded-full">
-        {FILTER_OPTIONS.map((opt) => {
-          const count = LISTINGS.filter(
-            (l) => opt.id === "all" || l.category === opt.id
-          ).length;
-          return (
-            <button
-              key={opt.id}
-              onClick={() => handleFilterChange(opt.id)}
-              disabled={spinning}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                filter === opt.id
-                  ? "bg-background shadow text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {opt.label}
-              <span className="ml-1.5 text-xs opacity-60">({count})</span>
-            </button>
-          );
-        })}
+      {/* Filters — disabled during spin */}
+      <div className="flex flex-col items-center gap-2 mb-8">
+        {/* Category */}
+        <div className="flex items-center gap-2 p-1 bg-muted rounded-full">
+          {FILTER_OPTIONS.map((opt) => {
+            const count = LISTINGS.filter(
+              (l) =>
+                (opt.id === "all" || l.category === opt.id) &&
+                (priceVal === null || l.priceRange === priceVal)
+            ).length;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => handleFilterChange(opt.id)}
+                disabled={spinning}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                  filter === opt.id
+                    ? "bg-background shadow text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {opt.label}
+                <span className="ml-1.5 text-xs opacity-60">({count})</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Price */}
+        <div className="flex items-center gap-2 p-1 bg-muted rounded-full">
+          {PRICE_OPTIONS.map((opt) => {
+            const count = LISTINGS.filter(
+              (l) =>
+                (filter === "all" || l.category === filter) &&
+                (PRICE_MAP[opt.id] === null || l.priceRange === PRICE_MAP[opt.id])
+            ).length;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => handlePriceChange(opt.id)}
+                disabled={spinning}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                  price === opt.id
+                    ? "bg-background shadow text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {opt.label}
+                <span className="ml-1.5 text-xs opacity-60">({count})</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Wheel + controls */}
