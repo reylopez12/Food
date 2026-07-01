@@ -26,6 +26,8 @@ export interface Listing {
   initials: string;
   hasVideo: boolean;
   video?: VideoHighlight;
+  lat: number;
+  lng: number;
 }
 
 export const LISTINGS: Listing[] = [
@@ -57,6 +59,8 @@ export const LISTINGS: Listing[] = [
       descriptors: ['Slow-roasted pork', 'Pineapple kissed', 'Since 1973'],
       accentColor: '#F59E0B',
     },
+    lat: 37.7484,
+    lng: -122.4183,
   },
   {
     id: '2',
@@ -85,6 +89,8 @@ export const LISTINGS: Listing[] = [
       descriptors: ['Heritage wheat', 'Hand-rolled daily', 'Fire-finished'],
       accentColor: '#e2c27d',
     },
+    lat: 37.7601,
+    lng: -122.4100,
   },
   {
     id: '3',
@@ -113,6 +119,8 @@ export const LISTINGS: Listing[] = [
       descriptors: ['Dry-aged beef', 'Gruyère', 'House-baked brioche'],
       accentColor: '#86efac',
     },
+    lat: 37.7757,
+    lng: -122.4374,
   },
   {
     id: '4',
@@ -141,6 +149,8 @@ export const LISTINGS: Listing[] = [
       descriptors: ['House crème fraîche', 'Potato crisp', 'Cult classic'],
       accentColor: '#fbbf24',
     },
+    lat: 37.7764,
+    lng: -122.4243,
   },
   {
     id: '5',
@@ -163,6 +173,8 @@ export const LISTINGS: Listing[] = [
     color: '#dc2626',
     initials: 'PD',
     hasVideo: false,
+    lat: 37.7618,
+    lng: -122.4232,
   },
   {
     id: '6',
@@ -185,6 +197,8 @@ export const LISTINGS: Listing[] = [
     color: '#b45309',
     initials: 'NO',
     hasVideo: false,
+    lat: 37.7756,
+    lng: -122.4366,
   },
   {
     id: '7',
@@ -207,6 +221,8 @@ export const LISTINGS: Listing[] = [
     color: '#0369a1',
     initials: 'NS',
     hasVideo: false,
+    lat: 37.7214,
+    lng: -122.4759,
   },
   {
     id: '8',
@@ -229,6 +245,8 @@ export const LISTINGS: Listing[] = [
     color: '#0891b2',
     initials: 'LY',
     hasVideo: false,
+    lat: 37.7868,
+    lng: -122.4162,
   },
 
   // ── FOOD TRUCKS ──────────────────────────────────────────────
@@ -259,6 +277,8 @@ export const LISTINGS: Listing[] = [
       descriptors: ['Braised 12 hours', 'Steamed fresh', 'House five-spice'],
       accentColor: '#fca5a5',
     },
+    lat: 37.7946,
+    lng: -122.3937,
   },
   {
     id: '10',
@@ -287,6 +307,8 @@ export const LISTINGS: Listing[] = [
       descriptors: ['Crispy sisig', 'Garlic fried rice', 'Chili aioli'],
       accentColor: '#93c5fd',
     },
+    lat: 37.7749,
+    lng: -122.4074,
   },
   {
     id: '11',
@@ -309,6 +331,8 @@ export const LISTINGS: Listing[] = [
     color: '#991b1b',
     initials: 'EC',
     hasVideo: false,
+    lat: 37.7599,
+    lng: -122.4148,
   },
   {
     id: '12',
@@ -331,5 +355,7 @@ export const LISTINGS: Listing[] = [
     color: '#d97706',
     initials: 'CN',
     hasVideo: false,
+    lat: 37.7897,
+    lng: -122.4007,
   },
 ];

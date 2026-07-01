@@ -17,6 +17,7 @@ import { SAMPLE_LISTINGS } from '@/constants/data';
 import { RatingStars } from '@/components/RatingStars';
 import { VideoCard } from '@/components/VideoCard';
 import { useDirectory } from '@/context/DirectoryContext';
+import { ListingMapWebView } from '@/components/ListingMapWebView';
 import * as Haptics from 'expo-haptics';
 
 export default function ListingDetailScreen() {
@@ -59,11 +60,10 @@ export default function ListingDetailScreen() {
   };
 
   const handleDirections = () => {
-    const query = encodeURIComponent(`${listing.address}, ${listing.city}`);
     const url =
       Platform.OS === 'ios'
-        ? `maps://?q=${query}`
-        : `https://maps.google.com/?q=${query}`;
+        ? `maps://?q=${listing.lat},${listing.lng}`
+        : `https://maps.google.com/maps?q=${listing.lat},${listing.lng}`;
     Linking.openURL(url);
   };
 
@@ -198,6 +198,12 @@ export default function ListingDetailScreen() {
             </View>
           </View>
         )}
+
+        {/* Map */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Location</Text>
+          <ListingMapWebView lat={listing.lat} lng={listing.lng} name={listing.name} />
+        </View>
 
         {/* Info */}
         <View style={styles.section}>

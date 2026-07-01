@@ -3,11 +3,13 @@ import { ArrowLeft, Phone, Globe, Navigation, Share2, MapPin, Clock, CheckCircle
 import { LISTINGS } from "../data/listings";
 import { StarRating } from "../components/StarRating";
 import { VideoSpot } from "../components/VideoSpot";
+import { ListingMap } from "../components/ListingMap";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSavedListings } from "../hooks/useSavedListings";
 import { useToast } from "@/hooks/use-toast";
+import "leaflet/dist/leaflet.css";
 
 export default function ListingDetail() {
   const [match, params] = useRoute("/listing/:id");
@@ -163,9 +165,18 @@ export default function ListingDetail() {
                   </h3>
                   <p className="text-sm text-muted-foreground">{listing.address}</p>
                   <p className="text-sm text-muted-foreground">{listing.city}</p>
-                  <div className="w-full h-32 bg-muted rounded-md mt-4 flex items-center justify-center border text-muted-foreground text-sm font-medium">
-                    Map Preview
+                  <div className="mt-4">
+                    <ListingMap lat={listing.lat} lng={listing.lng} name={listing.name} address={listing.address} />
                   </div>
+                  <a
+                    href={`https://maps.google.com/maps?q=${listing.lat},${listing.lng}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mt-2"
+                  >
+                    <Navigation className="w-3 h-3" />
+                    Open in Maps
+                  </a>
                 </div>
 
                 <div className="h-px bg-border" />
