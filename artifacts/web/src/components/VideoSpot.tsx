@@ -13,7 +13,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Listing } from "@workspace/api-client-react";
+import type { Venue as Listing } from "@workspace/api-client-react";
 
 type Phase = "black" | "intro" | "dish" | "descriptors" | "tagline" | "hold" | "fadeout";
 

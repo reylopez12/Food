@@ -1,12 +1,21 @@
 import { Link, useLocation } from "wouter";
-import { UtensilsCrossed, Search, Moon, Sun, Menu, Shuffle } from "lucide-react";
+import { UtensilsCrossed, Search, Moon, Sun, Menu, Shuffle, LogIn, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "../hooks/useTheme";
+import { useAuth } from "@workspace/replit-auth-web";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface NavLink {
   href: string;
@@ -18,6 +27,7 @@ interface NavLink {
 export function Navbar() {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { user, isLoading, isAuthenticated, login, logout } = useAuth();
 
   const navLinks: NavLink[] = [
     { href: "/", label: "Home" },
@@ -25,6 +35,14 @@ export function Navbar() {
     { href: "/saved", label: "Saved" },
     { href: "/spin", label: "Indecisive Spin", icon: <Shuffle className="w-3.5 h-3.5" />, highlight: true },
   ];
+
+  const displayName = user?.firstName
+    ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ""}`
+    : user?.email ?? "Account";
+
+  const initials = user?.firstName
+    ? `${user.firstName[0]}${user.lastName ? user.lastName[0] : ""}`.toUpperCase()
+    : "?";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background">
@@ -78,6 +96,40 @@ export function Navbar() {
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
 
+          {/* Auth button — desktop */}
+          {!isLoading && (
+            isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="hidden md:flex rounded-full">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={user?.profileImageUrl ?? undefined} alt={displayName} />
+                      <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <div className="px-2 py-1.5 text-sm font-medium">{displayName}</div>
+                  {user?.email && (
+                    <div className="px-2 pb-1.5 text-xs text-muted-foreground">{user.email}</div>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} className="gap-2 cursor-pointer">
+                    <LogOut className="w-4 h-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="outline" size="sm" onClick={login} className="hidden md:flex gap-1.5">
+                <LogIn className="w-3.5 h-3.5" />
+                Log in
+              </Button>
+            )
+          )}
+
           {/* Mobile Nav */}
           <Sheet>
             <SheetTrigger asChild>
@@ -100,6 +152,35 @@ export function Navbar() {
                     {link.label}
                   </Link>
                 ))}
+                <div className="pt-4 border-t">
+                  {!isLoading && (
+                    isAuthenticated ? (
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-9 h-9">
+                            <AvatarImage src={user?.profileImageUrl ?? undefined} alt={displayName} />
+                            <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-medium">{displayName}</p>
+                            {user?.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={logout} className="gap-2 w-full">
+                          <LogOut className="w-3.5 h-3.5" />
+                          Log out
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button variant="default" size="sm" onClick={login} className="gap-2 w-full">
+                        <LogIn className="w-3.5 h-3.5" />
+                        Log in
+                      </Button>
+                    )
+                  )}
+                </div>
               </div>
             </SheetContent>
           </Sheet>

@@ -16,7 +16,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
 import { useDirectory } from '@/context/DirectoryContext';
-import type { Listing } from '@workspace/api-client-react';
+import type { Venue as Listing } from '@workspace/api-client-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

@@ -1,15 +1,18 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
-import { getListings } from '@workspace/api-client-react';
-import type { Listing } from '@workspace/api-client-react';
+import { listings } from '@workspace/api-client-react';
+import type { Venue } from '@workspace/api-client-react';
 
-export type { Listing };
+export type { Venue };
+
+// Alias for backwards-compat within mobile components
+export type Listing = Venue;
 
 const SAVED_KEY = '@directory_saved_ids';
 
 interface DirectoryContextValue {
-  listings: Listing[];
+  listings: Venue[];
   isLoading: boolean;
   savedIds: Set<string>;
   selectedCategory: string;
@@ -18,17 +21,17 @@ interface DirectoryContextValue {
   setSearchQuery: (q: string) => void;
   toggleSave: (id: string) => void;
   isSaved: (id: string) => boolean;
-  filteredListings: Listing[];
-  savedListings: Listing[];
-  featuredListings: Listing[];
+  filteredListings: Venue[];
+  savedListings: Venue[];
+  featuredListings: Venue[];
 }
 
 const DirectoryContext = createContext<DirectoryContextValue | null>(null);
 
 export function DirectoryProvider({ children }: { children: React.ReactNode }) {
-  const { data: listings = [], isLoading } = useQuery({
+  const { data: allListings = [], isLoading } = useQuery({
     queryKey: ['/api/listings'],
-    queryFn: ({ signal }) => getListings({ signal }),
+    queryFn: ({ signal }) => listings({ signal }),
   });
 
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
@@ -62,7 +65,7 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
   const isSaved = useCallback((id: string) => savedIds.has(id), [savedIds]);
 
   const filteredListings = useMemo(() => {
-    let result = listings;
+    let result = allListings;
     if (selectedCategory !== 'all') {
       result = result.filter((l) => l.category === selectedCategory);
     }
@@ -78,20 +81,20 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
       );
     }
     return result;
-  }, [listings, selectedCategory, searchQuery]);
+  }, [allListings, selectedCategory, searchQuery]);
 
   const savedListings = useMemo(
-    () => listings.filter((l) => savedIds.has(l.id)),
-    [listings, savedIds],
+    () => allListings.filter((l) => savedIds.has(l.id)),
+    [allListings, savedIds],
   );
 
   const featuredListings = useMemo(
-    () => listings.filter((l) => l.featured),
-    [listings],
+    () => allListings.filter((l) => l.featured),
+    [allListings],
   );
 
   const value: DirectoryContextValue = {
-    listings,
+    listings: allListings,
     isLoading,
     savedIds,
     selectedCategory,

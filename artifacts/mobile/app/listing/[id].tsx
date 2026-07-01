@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Linking,
@@ -12,12 +12,20 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
 import { useColors } from '@/hooks/useColors';
 import { RatingStars } from '@/components/RatingStars';
 import { VideoCard } from '@/components/VideoCard';
 import { useDirectory } from '@/context/DirectoryContext';
 import { ListingMapWebView } from '@/components/ListingMapWebView';
+import { useAuth } from '@/lib/auth';
 import * as Haptics from 'expo-haptics';
+
+function getApiBase() {
+  return process.env.EXPO_PUBLIC_DOMAIN
+    ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
+    : '';
+}
 
 export default function ListingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,9 +33,34 @@ export default function ListingDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { listings, isSaved, toggleSave } = useDirectory();
+  const { isAuthenticated, login } = useAuth();
 
   const listing = listings.find((l) => l.id === id);
   const saved = listing ? isSaved(listing.id) : false;
+
+  const [following, setFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  // Fetch follow status when authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !listing) return;
+    let cancelled = false;
+    const apiBase = getApiBase();
+    SecureStore.getItemAsync('auth_session_token').then((token) => {
+      if (!token || cancelled) return;
+      fetch(`${apiBase}/api/follows`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (!cancelled) {
+            setFollowing((data.following as string[]).includes(listing.id));
+          }
+        })
+        .catch(() => {});
+    });
+    return () => { cancelled = true; };
+  }, [isAuthenticated, listing?.id]);
 
   if (!listing) {
     return (
@@ -44,6 +77,33 @@ export default function ListingDetailScreen() {
   const handleSave = () => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     toggleSave(listing.id);
+  };
+
+  const handleFollow = async () => {
+    if (!isAuthenticated) {
+      login();
+      return;
+    }
+    if (followLoading) return;
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setFollowLoading(true);
+    try {
+      const token = await SecureStore.getItemAsync('auth_session_token');
+      if (!token) { login(); return; }
+      const apiBase = getApiBase();
+      const res = await fetch(`${apiBase}/api/follows/${listing.id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) { login(); return; }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setFollowing(data.following as boolean);
+    } catch {
+      Alert.alert('Error', 'Could not update follow status. Please try again.');
+    } finally {
+      setFollowLoading(false);
+    }
   };
 
   const handleCall = () => {
@@ -92,6 +152,18 @@ export default function ListingDetailScreen() {
                 onPress={handleShare}
               >
                 <Feather name="share-2" size={18} color="#fff" />
+              </Pressable>
+              {/* Follow button */}
+              <Pressable
+                style={[styles.circleBtn, { backgroundColor: following ? 'rgba(239,68,68,0.7)' : 'rgba(0,0,0,0.3)' }]}
+                onPress={handleFollow}
+                disabled={followLoading}
+              >
+                <Ionicons
+                  name={following ? 'heart' : 'heart-outline'}
+                  size={18}
+                  color="#fff"
+                />
               </Pressable>
               <Pressable
                 style={[styles.circleBtn, { backgroundColor: 'rgba(0,0,0,0.3)' }]}

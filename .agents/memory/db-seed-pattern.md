@@ -1,29 +1,35 @@
 ---
-name: DB schema + seed pattern
-description: venuesTable definition, how to push schema, and how to run the seed script
+name: DB seed pattern
+description: How to run the seed script and the venues table shape; includes a gotcha about tsx not being in the workspace root PATH.
 ---
 
-# DB schema & seed pattern
-
-## venuesTable
-Defined in `lib/db/src/schema/index.ts`. Uses camelCase property names that match the JS Listing interface (e.g. `reviewCount`, `priceRange`, `hasVideo`). `tags` and `video` are stored as `jsonb`.
-
-## Pushing schema
-```
-cd lib/db && pnpm run push
-```
-
 ## Running the seed
-tsx is not on PATH globally. Use the binary from the web workspace:
+
+`tsx` is not in `lib/db`'s own node_modules. Use the binary from an artifact that has it installed:
+
+```bash
+/home/runner/workspace/artifacts/web/node_modules/.bin/tsx /home/runner/workspace/lib/db/src/seed.ts
 ```
-./artifacts/web/node_modules/.bin/tsx lib/db/src/seed.ts
+
+This seeds 12 Bay Area venues into the `venues` PostgreSQL table.
+
+## When the venues table goes empty
+
+The venues table will be emptied if `drizzle-kit push` is run with the `--force` flag or if the Replit DB is recreated. After any `push`, verify count with:
+
+```bash
+psql "$DATABASE_URL" -c "SELECT count(*) FROM venues;"
 ```
-Or via `pnpm --filter @workspace/db run seed` (script added to lib/db/package.json).
 
-**Why:** The seed uses `onConflictDoNothing()` so it's safe to re-run.
+If count = 0, re-run the seed command above.
 
-## Listing type
-The shared `Listing` type lives in `lib/api-client-react/src/generated/api.schemas.ts` and is exported from `@workspace/api-client-react`. Components should import from there, not from the static data files.
+**Why:** The `pnpm --filter @workspace/db run seed` command fails silently because tsx is not in the monorepo root's PATH — it only lives inside artifact-level node_modules.
 
-## Static data files
-`artifacts/web/src/data/listings.ts` and `artifacts/mobile/constants/data.ts` are kept as reference but no longer used at runtime. `CATEGORIES` in the mobile constants file is still used by UI filter components.
+## Venues table shape (venuesTable in lib/db/src/schema/index.ts)
+
+Key columns: id (text PK/slug), name, category, rating (real), reviewCount, address, city, neighborhood, phone, website, hours, description, tags (jsonb), featured, verified, priceRange, color, initials, hasVideo, video (jsonb nullable), lat, lng.
+
+## Auth + follows tables
+
+Added in `lib/db/src/schema/auth.ts`: `sessionsTable`, `usersTable`.
+Added in `lib/db/src/schema/index.ts`: `followsTable` (userId, venueId, unique index; toggle via transaction with FOR UPDATE lock).

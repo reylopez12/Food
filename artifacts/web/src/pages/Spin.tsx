@@ -5,7 +5,7 @@ import { Shuffle, RotateCcw, ExternalLink, Star, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useListings } from "@workspace/api-client-react";
-import type { Listing } from "@workspace/api-client-react";
+import type { Venue as Listing } from "@workspace/api-client-react";
 
 type Filter = "all" | "restaurants" | "food-trucks";
 type Price  = "all" | "budget" | "mid" | "upscale";

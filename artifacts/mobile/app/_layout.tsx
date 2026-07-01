@@ -13,8 +13,10 @@ import {
 } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import * as SecureStore from 'expo-secure-store';
 import { DirectoryProvider } from '@/context/DirectoryContext';
-import { setBaseUrl } from '@workspace/api-client-react';
+import { AuthProvider } from '@/lib/auth';
+import { setBaseUrl, setAuthTokenGetter } from '@workspace/api-client-react';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -26,6 +28,9 @@ const apiDomain = process.env.EXPO_PUBLIC_DOMAIN;
 if (apiDomain) {
   setBaseUrl(`https://${apiDomain}`);
 }
+
+// Attach stored auth token to every API client request as Bearer token.
+setAuthTokenGetter(() => SecureStore.getItemAsync('auth_session_token'));
 
 function RootLayoutNav() {
   return (
@@ -65,9 +70,11 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
-              <DirectoryProvider>
-                <RootLayoutNav />
-              </DirectoryProvider>
+              <AuthProvider>
+                <DirectoryProvider>
+                  <RootLayoutNav />
+                </DirectoryProvider>
+              </AuthProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>
         </QueryClientProvider>

@@ -1,4 +1,7 @@
-import { pgTable, text, real, integer, boolean, jsonb } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { pgTable, text, real, integer, boolean, jsonb, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+
+export * from "./auth";
 
 export interface VideoHighlight {
   dish: string;
@@ -34,3 +37,19 @@ export const venuesTable = pgTable("venues", {
 
 export type Venue = typeof venuesTable.$inferSelect;
 export type InsertVenue = typeof venuesTable.$inferInsert;
+
+// Follows — users following venues to receive announcements
+export const followsTable = pgTable(
+  "follows",
+  {
+    id: text("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: text("user_id").notNull(),
+    venueId: text("venue_id").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("follows_user_venue_idx").on(table.userId, table.venueId)],
+);
+
+export type Follow = typeof followsTable.$inferSelect;

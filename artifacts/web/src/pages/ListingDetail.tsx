@@ -1,6 +1,7 @@
 import { useRoute, Link } from "wouter";
-import { ArrowLeft, Phone, Globe, Navigation, Share2, MapPin, Clock, CheckCircle2, Bookmark, BookmarkCheck } from "lucide-react";
+import { ArrowLeft, Phone, Globe, Navigation, Share2, MapPin, Clock, CheckCircle2, Bookmark, BookmarkCheck, Heart, HeartOff } from "lucide-react";
 import { useListing } from "@workspace/api-client-react";
+import { useAuth } from "@workspace/replit-auth-web";
 import { StarRating } from "../components/StarRating";
 import { VideoSpot } from "../components/VideoSpot";
 import { ListingMap } from "../components/ListingMap";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSavedListings } from "../hooks/useSavedListings";
+import { useFollows } from "../hooks/useFollows";
 import { useToast } from "@/hooks/use-toast";
 import "leaflet/dist/leaflet.css";
 
@@ -15,11 +17,12 @@ export default function ListingDetail() {
   const [match, params] = useRoute("/listing/:id");
   const { isSaved, toggleSaved } = useSavedListings();
   const { toast } = useToast();
-  
+  const { isAuthenticated, login } = useAuth();
+  const { isFollowing, toggleFollow } = useFollows(isAuthenticated);
+
   const id = params?.id ?? "";
-  const { data: listing, isLoading, isError } = useListing(id, {
-    query: { enabled: !!id },
-  });
+  // useListing already sets enabled: id !== null && id !== undefined internally
+  const { data: listing, isLoading, isError } = useListing(id);
 
   if (!match) return null;
 
@@ -44,6 +47,7 @@ export default function ListingDetail() {
   }
 
   const saved = isSaved(listing.id);
+  const followed = isFollowing(listing.id);
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -53,10 +57,28 @@ export default function ListingDetail() {
     });
   };
 
+  const handleFollow = async () => {
+    if (!isAuthenticated) {
+      login();
+      return;
+    }
+    try {
+      const nowFollowing = await toggleFollow(listing.id);
+      toast({
+        title: nowFollowing ? `Following ${listing.name}` : `Unfollowed ${listing.name}`,
+        description: nowFollowing
+          ? "You'll see announcements from this venue."
+          : "You won't receive announcements from this venue.",
+      });
+    } catch {
+      toast({ title: "Something went wrong", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen pb-24">
       {/* Hero Block */}
-      <div 
+      <div
         className="w-full h-[280px] md:h-[360px] relative flex flex-col items-center justify-center transition-colors"
         style={{ backgroundColor: listing.color }}
       >
@@ -69,6 +91,9 @@ export default function ListingDetail() {
           <div className="flex gap-2">
             <Button variant="secondary" size="icon" onClick={handleShare} className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm">
               <Share2 className="w-5 h-5" />
+            </Button>
+            <Button variant="secondary" size="icon" onClick={handleFollow} className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm" aria-label={followed ? "Unfollow" : "Follow"}>
+              {followed ? <HeartOff className="w-5 h-5" /> : <Heart className="w-5 h-5" />}
             </Button>
             <Button variant="secondary" size="icon" onClick={() => toggleSaved(listing.id)} className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm">
               {saved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
@@ -93,7 +118,7 @@ export default function ListingDetail() {
                     {listing.priceRange}
                   </Badge>
                 </div>
-                
+
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight flex items-center gap-2 mb-4">
                   {listing.name}
                   {listing.verified && (
@@ -107,12 +132,28 @@ export default function ListingDetail() {
                     <StarRating rating={listing.rating} />
                     <span className="text-muted-foreground font-medium">({listing.reviewCount} reviews)</span>
                   </div>
-                  
+
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <MapPin className="w-4 h-4" />
                     <span>{listing.neighborhood ? `${listing.neighborhood}, ${listing.city}` : listing.city}</span>
                   </div>
                 </div>
+
+                {/* Follow CTA */}
+                <Button
+                  variant={followed ? "secondary" : "default"}
+                  size="sm"
+                  onClick={handleFollow}
+                  className="gap-2 mb-2"
+                >
+                  <Heart className={`w-4 h-4 ${followed ? "fill-current" : ""}`} />
+                  {followed ? "Following" : "Follow venue"}
+                </Button>
+                {!isAuthenticated && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Log in to follow and get announcements
+                  </p>
+                )}
               </div>
 
               {/* Action Buttons Row - Desktop right, Mobile below */}

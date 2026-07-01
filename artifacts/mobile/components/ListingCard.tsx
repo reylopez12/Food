@@ -3,7 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
-import type { Listing } from '@workspace/api-client-react';
+import type { Venue as Listing } from '@workspace/api-client-react';
 import { RatingStars } from '@/components/RatingStars';
 import { useDirectory } from '@/context/DirectoryContext';
 import * as Haptics from 'expo-haptics';
