@@ -4,7 +4,8 @@ import { useLocation } from "wouter";
 import { Shuffle, RotateCcw, ExternalLink, Star, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LISTINGS, type Listing } from "../data/listings";
+import { useListings } from "@workspace/api-client-react";
+import type { Listing } from "@workspace/api-client-react";
 
 type Filter = "all" | "restaurants" | "food-trucks";
 type Price  = "all" | "budget" | "mid" | "upscale";
@@ -166,8 +167,10 @@ export default function Spin() {
   const canvasRef      = useRef<HTMLCanvasElement>(null);
   const rafRef         = useRef<number | null>(null);
 
+  const { data: allListings = [] } = useListings();
+
   const priceVal = PRICE_MAP[price];
-  const listings = LISTINGS.filter(
+  const listings = allListings.filter(
     (l) =>
       (filter === "all" || l.category === filter) &&
       (priceVal === null || l.priceRange === priceVal)
@@ -322,7 +325,7 @@ export default function Spin() {
         {/* Category */}
         <div className="flex items-center gap-2 p-1 bg-muted rounded-full">
           {FILTER_OPTIONS.map((opt) => {
-            const count = LISTINGS.filter(
+            const count = allListings.filter(
               (l) =>
                 (opt.id === "all" || l.category === opt.id) &&
                 (priceVal === null || l.priceRange === priceVal)
@@ -348,7 +351,7 @@ export default function Spin() {
         {/* Price */}
         <div className="flex items-center gap-2 p-1 bg-muted rounded-full">
           {PRICE_OPTIONS.map((opt) => {
-            const count = LISTINGS.filter(
+            const count = allListings.filter(
               (l) =>
                 (filter === "all" || l.category === filter) &&
                 (PRICE_MAP[opt.id] === null || l.priceRange === PRICE_MAP[opt.id])

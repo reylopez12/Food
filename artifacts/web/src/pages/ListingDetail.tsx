@@ -1,6 +1,6 @@
 import { useRoute, Link } from "wouter";
 import { ArrowLeft, Phone, Globe, Navigation, Share2, MapPin, Clock, CheckCircle2, Bookmark, BookmarkCheck } from "lucide-react";
-import { LISTINGS } from "../data/listings";
+import { useListing } from "@workspace/api-client-react";
 import { StarRating } from "../components/StarRating";
 import { VideoSpot } from "../components/VideoSpot";
 import { ListingMap } from "../components/ListingMap";
@@ -16,12 +16,22 @@ export default function ListingDetail() {
   const { isSaved, toggleSaved } = useSavedListings();
   const { toast } = useToast();
   
-  const id = params?.id;
-  const listing = LISTINGS.find(l => l.id === id);
+  const id = params?.id ?? "";
+  const { data: listing, isLoading, isError } = useListing(id, {
+    query: { enabled: !!id },
+  });
 
   if (!match) return null;
 
-  if (!listing) {
+  if (isLoading) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (isError || !listing) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4">
         <h1 className="text-3xl font-bold mb-4">Listing not found</h1>
@@ -107,17 +117,23 @@ export default function ListingDetail() {
 
               {/* Action Buttons Row - Desktop right, Mobile below */}
               <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto shrink-0 overflow-x-auto pb-2 md:pb-0">
-                <Button size="lg" className="flex-1 md:w-full gap-2">
-                  <Phone className="w-4 h-4" />
-                  <span>Call Now</span>
+                <Button size="lg" className="flex-1 md:w-full gap-2" asChild>
+                  <a href={`tel:${listing.phone.replace(/[^0-9]/g, '')}`}>
+                    <Phone className="w-4 h-4" />
+                    <span>Call Now</span>
+                  </a>
                 </Button>
-                <Button size="lg" variant="outline" className="flex-1 md:w-full gap-2">
-                  <Globe className="w-4 h-4" />
-                  <span>Website</span>
+                <Button size="lg" variant="outline" className="flex-1 md:w-full gap-2" asChild>
+                  <a href={listing.website} target="_blank" rel="noreferrer">
+                    <Globe className="w-4 h-4" />
+                    <span>Website</span>
+                  </a>
                 </Button>
-                <Button size="lg" variant="secondary" className="flex-1 md:w-full gap-2">
-                  <Navigation className="w-4 h-4" />
-                  <span>Directions</span>
+                <Button size="lg" variant="secondary" className="flex-1 md:w-full gap-2" asChild>
+                  <a href={`https://maps.google.com/maps?q=${listing.lat},${listing.lng}`} target="_blank" rel="noreferrer">
+                    <Navigation className="w-4 h-4" />
+                    <span>Directions</span>
+                  </a>
                 </Button>
               </div>
             </div>

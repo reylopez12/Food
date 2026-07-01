@@ -1,11 +1,16 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SAMPLE_LISTINGS, Listing } from '@/constants/data';
+import { useQuery } from '@tanstack/react-query';
+import { getListings } from '@workspace/api-client-react';
+import type { Listing } from '@workspace/api-client-react';
+
+export type { Listing };
 
 const SAVED_KEY = '@directory_saved_ids';
 
 interface DirectoryContextValue {
   listings: Listing[];
+  isLoading: boolean;
   savedIds: Set<string>;
   selectedCategory: string;
   searchQuery: string;
@@ -21,7 +26,11 @@ interface DirectoryContextValue {
 const DirectoryContext = createContext<DirectoryContextValue | null>(null);
 
 export function DirectoryProvider({ children }: { children: React.ReactNode }) {
-  const [listings] = useState<Listing[]>(SAMPLE_LISTINGS);
+  const { data: listings = [], isLoading } = useQuery({
+    queryKey: ['/api/listings'],
+    queryFn: ({ signal }) => getListings({ signal }),
+  });
+
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,6 +92,7 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
 
   const value: DirectoryContextValue = {
     listings,
+    isLoading,
     savedIds,
     selectedCategory,
     searchQuery,

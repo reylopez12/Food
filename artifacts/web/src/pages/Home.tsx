@@ -4,7 +4,7 @@ import { Search, MapPin, UtensilsCrossed, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { LISTINGS } from "../data/listings";
+import { useListings } from "@workspace/api-client-react";
 import { FeaturedCard } from "../components/FeaturedCard";
 import { CategoryCard } from "../components/CategoryCard";
 import { ListingCard } from "../components/ListingCard";
@@ -18,6 +18,7 @@ const CATEGORIES = [
 export default function Home() {
   const [_, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: listings = [] } = useListings();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,8 +29,8 @@ export default function Home() {
     }
   };
 
-  const featuredListings = LISTINGS.filter(l => l.featured);
-  const recentListings = [...LISTINGS].sort((a, b) => Number(b.id) - Number(a.id)).slice(0, 3);
+  const featuredListings = listings.filter(l => l.featured);
+  const recentListings = [...listings].sort((a, b) => Number(b.id) - Number(a.id)).slice(0, 3);
 
   return (
     <div className="flex flex-col min-h-screen">

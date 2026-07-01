@@ -15,7 +15,8 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
-import { SAMPLE_LISTINGS, type Listing } from '@/constants/data';
+import { useDirectory } from '@/context/DirectoryContext';
+import type { Listing } from '@workspace/api-client-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -95,7 +96,8 @@ export default function SpinScreen() {
     outputRange: ['-360000deg', '360000deg'],
   });
 
-  const listings = SAMPLE_LISTINGS.filter(
+  const { listings: allListings } = useDirectory();
+  const listings = allListings.filter(
     (l) =>
       (filter === 'all' || l.category === filter) &&
       (price  === 'all' || l.priceRange === price)
@@ -213,7 +215,7 @@ export default function SpinScreen() {
         {/* ── Category filter ── */}
         <View style={[styles.pillRow, { backgroundColor: colors.muted }]}>
           {FILTER_OPTIONS.map((opt) => {
-            const count = SAMPLE_LISTINGS.filter(
+            const count = allListings.filter(
               (l) =>
                 (opt.id === 'all' || l.category === opt.id) &&
                 (price  === 'all' || l.priceRange === price)
@@ -244,7 +246,7 @@ export default function SpinScreen() {
         {/* ── Price filter ── */}
         <View style={[styles.pillRow, { backgroundColor: colors.muted, marginTop: 8 }]}>
           {PRICE_OPTIONS.map((opt) => {
-            const count = SAMPLE_LISTINGS.filter(
+            const count = allListings.filter(
               (l) =>
                 (filter === 'all' || l.category === filter) &&
                 (opt.id === 'all' || l.priceRange === opt.id)

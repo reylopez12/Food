@@ -14,10 +14,18 @@ import {
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { DirectoryProvider } from '@/context/DirectoryContext';
+import { setBaseUrl } from '@workspace/api-client-react';
 
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
+
+// Point the API client at the Replit dev domain so the mobile app can reach
+// the API server.  EXPO_PUBLIC_DOMAIN is injected by the dev script.
+const apiDomain = process.env.EXPO_PUBLIC_DOMAIN;
+if (apiDomain) {
+  setBaseUrl(`https://${apiDomain}`);
+}
 
 function RootLayoutNav() {
   return (

@@ -1,0 +1,1 @@
+- [DB schema + seed pattern](db-seed-pattern.md) — how to run the seed script and the venues table shape

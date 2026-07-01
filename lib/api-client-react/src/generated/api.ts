@@ -13,7 +13,7 @@ import type {
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type { HealthStatus, Listing } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
 import type { ErrorType } from "../custom-fetch";
@@ -97,5 +97,101 @@ export function useHealthCheck<
     queryKey: QueryKey;
   };
 
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+// ── Listings ────────────────────────────────────────────────────────────────
+
+export const getListingsUrl = () => `/api/listings`;
+
+export const getListings = async (options?: RequestInit): Promise<Listing[]> => {
+  return customFetch<Listing[]>(getListingsUrl(), { ...options, method: "GET" });
+};
+
+export const getListingsQueryKey = () => [`/api/listings`] as const;
+
+export const getListingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getListings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getListings>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getListingsQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getListings>>> = ({
+    signal,
+  }) => getListings({ signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getListings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export function useListings<
+  TData = Awaited<ReturnType<typeof getListings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getListings>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListingsQueryOptions(options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+// ── Single listing ───────────────────────────────────────────────────────────
+
+export const getListingUrl = (id: string) => `/api/listings/${id}`;
+
+export const getListing = async (
+  id: string,
+  options?: RequestInit,
+): Promise<Listing> => {
+  return customFetch<Listing>(getListingUrl(id), { ...options, method: "GET" });
+};
+
+export const getListingQueryKey = (id: string) =>
+  [`/api/listings/${id}`] as const;
+
+export const getListingQueryOptions = <
+  TData = Awaited<ReturnType<typeof getListing>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getListing>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getListingQueryKey(id);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getListing>>> = ({
+    signal,
+  }) => getListing(id, { signal, ...requestOptions });
+  return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getListing>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export function useListing<
+  TData = Awaited<ReturnType<typeof getListing>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getListing>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListingQueryOptions(id, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
   return { ...query, queryKey: queryOptions.queryKey };
 }

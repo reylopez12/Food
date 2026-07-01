@@ -1,14 +1,15 @@
 import { Link } from "wouter";
 import { Bookmark, Search } from "lucide-react";
-import { LISTINGS } from "../data/listings";
+import { useListings } from "@workspace/api-client-react";
 import { useSavedListings } from "../hooks/useSavedListings";
 import { ListingCard } from "../components/ListingCard";
 import { Button } from "@/components/ui/button";
 
 export default function Saved() {
   const { savedIds } = useSavedListings();
+  const { data: allListings = [] } = useListings();
   
-  const savedListings = LISTINGS.filter(listing => savedIds.includes(listing.id));
+  const savedListings = allListings.filter(listing => savedIds.includes(listing.id));
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-7xl">
@@ -29,18 +30,18 @@ export default function Saved() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-32 text-center border rounded-2xl bg-card/30 border-dashed max-w-3xl mx-auto">
-          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 text-primary">
-            <Bookmark className="w-10 h-10" />
+        <div className="flex flex-col items-center justify-center py-24 text-center border rounded-xl bg-card/50 border-dashed">
+          <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-6">
+            <Bookmark className="w-10 h-10 text-muted-foreground" />
           </div>
-          <h2 className="text-2xl font-bold mb-3">No saved places yet</h2>
-          <p className="text-muted-foreground max-w-md mb-8 text-lg">
-            Save your favorite Bay Area spots — from Michelin-starred restaurants to beloved neighborhood cafes — and find them here anytime.
+          <h2 className="text-2xl font-semibold mb-3">No saved places yet</h2>
+          <p className="text-muted-foreground max-w-md mb-8">
+            Start bookmarking your favorite spots and they'll appear here for quick access.
           </p>
-          <Button asChild size="lg" className="px-8 font-medium">
+          <Button asChild>
             <Link href="/explore">
-              <Search className="w-5 h-5 mr-2" />
-              Explore Bay Area Food
+              <Search className="w-4 h-4 mr-2" />
+              Explore listings
             </Link>
           </Button>
         </div>

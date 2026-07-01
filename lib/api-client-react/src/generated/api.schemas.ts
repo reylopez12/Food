@@ -8,3 +8,35 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface VideoHighlight {
+  dish: string;
+  tagline: string;
+  descriptors: [string, string, string];
+  accentColor: string;
+}
+
+export interface Listing {
+  id: string;
+  name: string;
+  category: 'restaurants' | 'food-trucks';
+  rating: number;
+  reviewCount: number;
+  address: string;
+  city: string;
+  neighborhood: string;
+  phone: string;
+  website: string;
+  hours: string;
+  description: string;
+  tags: string[];
+  featured: boolean;
+  verified: boolean;
+  priceRange: string;
+  color: string;
+  initials: string;
+  hasVideo: boolean;
+  video: VideoHighlight | null;
+  lat: number;
+  lng: number;
+}

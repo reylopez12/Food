@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { LISTINGS } from "../data/listings";
+import { useListings } from "@workspace/api-client-react";
 import { ListingCard } from "../components/ListingCard";
 
 const CATEGORIES = [
@@ -22,6 +22,7 @@ const PRICE_RANGES = ['$', '$$', '$$$', '$$$$'];
 export default function Explore() {
   const [locationStr] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
+  const { data: allListings = [] } = useListings();
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
@@ -43,7 +44,7 @@ export default function Explore() {
   }, [locationStr]);
 
   const filteredListings = useMemo(() => {
-    return LISTINGS.filter(listing => {
+    return allListings.filter(listing => {
       const matchesSearch =
         searchQuery === "" ||
         listing.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -65,7 +66,7 @@ export default function Explore() {
 
       return matchesSearch && matchesCategory && matchesPrice && matchesRating && matchesVerified;
     });
-  }, [searchQuery, selectedCategories, selectedPrices, minRating, verifiedOnly]);
+  }, [allListings, searchQuery, selectedCategories, selectedPrices, minRating, verifiedOnly]);
 
   const toggleCategory = (categoryId: string) => {
     setSelectedCategories(prev =>

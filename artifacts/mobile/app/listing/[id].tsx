@@ -13,7 +13,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
-import { SAMPLE_LISTINGS } from '@/constants/data';
 import { RatingStars } from '@/components/RatingStars';
 import { VideoCard } from '@/components/VideoCard';
 import { useDirectory } from '@/context/DirectoryContext';
@@ -25,9 +24,9 @@ export default function ListingDetailScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { isSaved, toggleSave } = useDirectory();
+  const { listings, isSaved, toggleSave } = useDirectory();
 
-  const listing = SAMPLE_LISTINGS.find((l) => l.id === id);
+  const listing = listings.find((l) => l.id === id);
   const saved = listing ? isSaved(listing.id) : false;
 
   if (!listing) {

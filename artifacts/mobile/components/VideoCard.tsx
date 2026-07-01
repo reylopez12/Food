@@ -14,7 +14,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import type { Listing } from '@/constants/data';
+import type { Listing } from '@workspace/api-client-react';
 
 type Phase = 'black' | 'intro' | 'dish' | 'descriptors' | 'tagline' | 'hold' | 'fadeout';
 const PHASE_ORDER: Phase[] = ['black', 'intro', 'dish', 'descriptors', 'tagline', 'hold', 'fadeout'];

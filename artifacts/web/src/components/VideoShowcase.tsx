@@ -7,34 +7,36 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { useLocation } from "wouter";
-import { LISTINGS } from "../data/listings";
+import { useListings } from "@workspace/api-client-react";
 import { VideoSpot } from "./VideoSpot";
 
-const VIDEO_LISTINGS = LISTINGS.filter(l => l.hasVideo && l.video);
 const AUTO_ADVANCE_MS = 14000; // slightly longer than one VideoSpot cycle
 
 export function VideoShowcase() {
   const [, setLocation] = useLocation();
   const [activeIdx, setActiveIdx] = useState(0);
   const [playing, setPlaying] = useState(true);
+  const { data: allListings = [] } = useListings();
 
-  if (VIDEO_LISTINGS.length === 0) return null;
+  const videoListings = allListings.filter(l => l.hasVideo && l.video);
 
-  const activeListing = VIDEO_LISTINGS[activeIdx];
-
-  const goTo = useCallback((idx: number) => {
-    setActiveIdx(((idx % VIDEO_LISTINGS.length) + VIDEO_LISTINGS.length) % VIDEO_LISTINGS.length);
+  const goTo = useCallback((idx: number, total: number) => {
+    setActiveIdx(((idx % total) + total) % total);
   }, []);
 
-  const prev = () => goTo(activeIdx - 1);
-  const next = () => goTo(activeIdx + 1);
+  const prev = () => goTo(activeIdx - 1, videoListings.length);
+  const next = () => goTo(activeIdx + 1, videoListings.length);
 
   // Auto-advance
   useEffect(() => {
-    if (!playing) return;
-    const t = setInterval(() => goTo(activeIdx + 1), AUTO_ADVANCE_MS);
+    if (!playing || videoListings.length === 0) return;
+    const t = setInterval(() => goTo(activeIdx + 1, videoListings.length), AUTO_ADVANCE_MS);
     return () => clearInterval(t);
-  }, [playing, activeIdx, goTo]);
+  }, [playing, activeIdx, goTo, videoListings.length]);
+
+  if (videoListings.length === 0) return null;
+
+  const activeListing = videoListings[activeIdx] ?? videoListings[0];
 
   return (
     <section className="bg-[#080c14] py-16 md:py-24 border-y border-white/5">
@@ -64,12 +66,12 @@ export function VideoShowcase() {
 
             {/* Dot indicators */}
             <div className="flex items-center gap-2">
-              {VIDEO_LISTINGS.map((_, i) => (
+              {videoListings.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => goTo(i)}
+                  onClick={() => goTo(i, videoListings.length)}
                   className="transition-all"
-                  aria-label={`Go to ${VIDEO_LISTINGS[i].name}`}
+                  aria-label={`Go to ${videoListings[i].name}`}
                 >
                   <span
                     className="block rounded-full transition-all"
@@ -147,12 +149,12 @@ export function VideoShowcase() {
             {/* Up-next queue */}
             <div className="space-y-2">
               <p className="text-xs font-semibold text-white/30 uppercase tracking-widest mb-3">Up Next</p>
-              {VIDEO_LISTINGS.filter((_, i) => i !== activeIdx).slice(0, 3).map((listing) => {
-                const globalIdx = VIDEO_LISTINGS.indexOf(listing);
+              {videoListings.filter((_, i) => i !== activeIdx).slice(0, 3).map((listing) => {
+                const globalIdx = videoListings.indexOf(listing);
                 return (
                   <button
                     key={listing.id}
-                    onClick={() => goTo(globalIdx)}
+                    onClick={() => goTo(globalIdx, videoListings.length)}
                     className="w-full flex items-center gap-3 p-3 rounded-xl border border-white/5 hover:border-white/15 hover:bg-white/5 transition-all text-left group"
                   >
                     <div

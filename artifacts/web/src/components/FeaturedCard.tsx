@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { type Listing } from "../data/listings";
+import type { Listing } from "@workspace/api-client-react";
 import { StarRating } from "./StarRating";
 import { MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

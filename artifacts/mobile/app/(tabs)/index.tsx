@@ -17,8 +17,6 @@ import { FeaturedCard } from '@/components/FeaturedCard';
 import { ListingCard } from '@/components/ListingCard';
 import { CategoryPillRow } from '@/components/CategoryPill';
 import { VideoShowcase } from '@/components/VideoShowcase';
-import { SAMPLE_LISTINGS } from '@/constants/data';
-
 const LOCATION = 'San Francisco Bay Area';
 
 export default function HomeScreen() {

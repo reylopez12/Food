@@ -5,35 +5,38 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Animated,
   FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SAMPLE_LISTINGS } from '@/constants/data';
+import { useDirectory } from '@/context/DirectoryContext';
 import { VideoCard } from '@/components/VideoCard';
 
-const VIDEO_LISTINGS = SAMPLE_LISTINGS.filter(l => l.hasVideo && l.video);
 const AUTO_ADVANCE_MS = 14000;
 
 export function VideoShowcase() {
+  const { listings } = useDirectory();
+  const videoListings = listings.filter(l => l.hasVideo && l.video);
+
   const [activeIdx, setActiveIdx] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
-  if (VIDEO_LISTINGS.length === 0) return null;
-
   const goTo = useCallback((idx: number) => {
-    const next = ((idx % VIDEO_LISTINGS.length) + VIDEO_LISTINGS.length) % VIDEO_LISTINGS.length;
+    if (videoListings.length === 0) return;
+    const next = ((idx % videoListings.length) + videoListings.length) % videoListings.length;
     setActiveIdx(next);
     flatListRef.current?.scrollToIndex({ index: next, animated: true });
-  }, []);
+  }, [videoListings.length]);
 
   useEffect(() => {
+    if (videoListings.length === 0) return;
     const t = setInterval(() => goTo(activeIdx + 1), AUTO_ADVANCE_MS);
     return () => clearInterval(t);
-  }, [activeIdx, goTo]);
+  }, [activeIdx, goTo, videoListings.length]);
+
+  if (videoListings.length === 0) return null;
 
   return (
     <View style={styles.container}>
@@ -52,7 +55,7 @@ export function VideoShowcase() {
       {/* Carousel */}
       <FlatList
         ref={flatListRef}
-        data={VIDEO_LISTINGS}
+        data={videoListings}
         keyExtractor={item => item.id}
         horizontal
         pagingEnabled
@@ -77,7 +80,7 @@ export function VideoShowcase() {
 
       {/* Dot indicators */}
       <View style={styles.dots}>
-        {VIDEO_LISTINGS.map((_, i) => (
+        {videoListings.map((_, i) => (
           <TouchableOpacity key={i} onPress={() => goTo(i)} hitSlop={8}>
             <View
               style={[
