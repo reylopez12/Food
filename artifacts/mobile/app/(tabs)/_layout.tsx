@@ -19,6 +19,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: 'magnifyingglass', selected: 'magnifyingglass.circle.fill' }} />
         <Label>Explore</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="map">
+        <Icon sf={{ default: 'map', selected: 'map.fill' }} />
+        <Label>Map</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="spin">
         <Icon sf={{ default: 'shuffle', selected: 'shuffle' }} />
         <Label>Indecisive</Label>
@@ -94,6 +98,18 @@ function ClassicTabLayout() {
               <SymbolView name="magnifyingglass" tintColor={color} size={24} />
             ) : (
               <Feather name="search" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Map',
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="map" tintColor={color} size={24} />
+            ) : (
+              <Feather name="map" size={22} color={color} />
             ),
         }}
       />

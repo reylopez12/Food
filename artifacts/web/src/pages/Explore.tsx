@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Search, Filter, X } from "lucide-react";
+import { Search, Filter, X, List, Map } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useListings } from "@workspace/api-client-react";
 import { ListingCard } from "../components/ListingCard";
+import { ExploreAllMap } from "../components/ExploreAllMap";
 
 const CATEGORIES = [
   { id: 'restaurants', label: 'Restaurants' },
@@ -31,6 +32,7 @@ export default function Explore() {
   const [selectedPrices, setSelectedPrices] = useState<string[]>([]);
   const [minRating, setMinRating] = useState<number[]>([0]);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -206,6 +208,32 @@ export default function Explore() {
             )}
           </div>
 
+          {/* List / Map toggle */}
+          <div className="flex items-center border rounded-lg overflow-hidden shrink-0 bg-card">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">List</span>
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                viewMode === 'map'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Map className="w-4 h-4" />
+              <span className="hidden sm:inline">Map</span>
+            </button>
+          </div>
+
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" className="md:hidden shrink-0 flex items-center gap-2">
@@ -227,42 +255,46 @@ export default function Explore() {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Desktop Sidebar */}
-        <aside className="hidden md:block w-64 shrink-0">
-          <div className="sticky top-24 bg-card border rounded-xl p-6 shadow-sm">
-            <FilterContent />
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1">
-          <div className="mb-6 flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{filteredListings.length}</span> {filteredListings.length === 1 ? 'place' : 'places'}
+      {viewMode === 'map' ? (
+        <ExploreAllMap listings={filteredListings} />
+      ) : (
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Desktop Sidebar */}
+          <aside className="hidden md:block w-64 shrink-0">
+            <div className="sticky top-24 bg-card border rounded-xl p-6 shadow-sm">
+              <FilterContent />
             </div>
-          </div>
+          </aside>
 
-          {filteredListings.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredListings.map(listing => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-center border rounded-xl bg-card/50 border-dashed">
-              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-                <Search className="w-8 h-8 text-muted-foreground" />
+          {/* Main Content */}
+          <main className="flex-1">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing <span className="font-medium text-foreground">{filteredListings.length}</span> {filteredListings.length === 1 ? 'place' : 'places'}
               </div>
-              <h3 className="text-xl font-semibold mb-2">No places found</h3>
-              <p className="text-muted-foreground max-w-md mb-6">
-                We couldn't find anything matching your filters. Try adjusting your search or clearing the filters.
-              </p>
-              <Button onClick={clearFilters}>Clear all filters</Button>
             </div>
-          )}
-        </main>
-      </div>
+
+            {filteredListings.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredListings.map(listing => (
+                  <ListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center border rounded-xl bg-card/50 border-dashed">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                  <Search className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No places found</h3>
+                <p className="text-muted-foreground max-w-md mb-6">
+                  We couldn't find anything matching your filters. Try adjusting your search or clearing the filters.
+                </p>
+                <Button onClick={clearFilters}>Clear all filters</Button>
+              </div>
+            )}
+          </main>
+        </div>
+      )}
     </div>
   );
 }
