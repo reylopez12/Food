@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
-import { Link } from 'wouter';
-import { Star } from 'lucide-react';
 import type { Venue as Listing } from '@workspace/api-client-react';
 import 'leaflet/dist/leaflet.css';
 
