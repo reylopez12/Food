@@ -12,6 +12,7 @@ import Explore from '@/pages/Explore';
 import ListingDetail from '@/pages/ListingDetail';
 import Saved from '@/pages/Saved';
 import Spin from '@/pages/Spin';
+import Admin from '@/pages/Admin';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +33,7 @@ function Router() {
           <Route path="/listing/:id" component={ListingDetail} />
           <Route path="/saved" component={Saved} />
           <Route path="/spin" component={Spin} />
+          <Route path="/admin" component={Admin} />
           <Route component={NotFound} />
         </Switch>
       </main>
