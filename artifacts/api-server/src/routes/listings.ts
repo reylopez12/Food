@@ -7,6 +7,8 @@ const router: IRouter = Router();
 router.get("/listings", async (_req, res) => {
   try {
     const listings = await db.select().from(venuesTable);
+    // 5-minute browser/CDN cache; stale-while-revalidate for snappy repeat visits
+    res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=60");
     res.json(listings);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch listings" });

@@ -1,9 +1,8 @@
-import { useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
-import { Link } from 'wouter';
-import { Star } from 'lucide-react';
-import type { Listing } from '../data/listings';
+import type { Venue as Listing } from '@workspace/api-client-react';
+import 'leaflet/dist/leaflet.css';
 
 // Fix Leaflet default icon broken by Vite's asset handling
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -24,16 +23,108 @@ const amberIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
+const CATEGORIES = [
+  { id: 'restaurants', label: 'Restaurants' },
+  { id: 'food-trucks', label: 'Food Trucks' },
+];
+
+interface NeighborhoodCluster {
+  name: string;
+  count: number;
+  lat: number;
+  lng: number;
+}
+
 interface ExploreAllMapProps {
+  /** Filtered listings — these determine which pins are visible */
   listings: Listing[];
+  /** All listings — used to compute neighbourhood clusters and filter chips */
+  allListings: Listing[];
+  selectedCategories: string[];
+  onCategoryToggle: (id: string) => void;
+  selectedNeighborhood: string | null;
+  onNeighborhoodChange: (n: string | null) => void;
 }
 
 // SF center
 const SF_CENTER: [number, number] = [37.7749, -122.4194];
 
-export function ExploreAllMap({ listings }: ExploreAllMapProps) {
+export function ExploreAllMap({
+  listings,
+  allListings,
+  selectedCategories,
+  onCategoryToggle,
+  selectedNeighborhood,
+  onNeighborhoodChange,
+}: ExploreAllMapProps) {
+  // Task #14: compute neighbourhood clusters from all listings
+  const neighborhoodClusters = useMemo<NeighborhoodCluster[]>(() => {
+    const groups: Record<string, { lats: number[]; lngs: number[]; count: number }> = {};
+    for (const l of allListings) {
+      const n = l.neighborhood;
+      if (!n) continue;
+      if (!groups[n]) groups[n] = { lats: [], lngs: [], count: 0 };
+      groups[n].lats.push(l.lat);
+      groups[n].lngs.push(l.lng);
+      groups[n].count++;
+    }
+    return Object.entries(groups)
+      .map(([name, g]) => ({
+        name,
+        count: g.count,
+        lat: g.lats.reduce((a, b) => a + b, 0) / g.count,
+        lng: g.lngs.reduce((a, b) => a + b, 0) / g.count,
+      }))
+      .sort((a, b) => b.count - a.count);
+  }, [allListings]);
+
+  const uniqueNeighborhoods = useMemo(
+    () => [...new Set(allListings.map(l => l.neighborhood).filter(Boolean))].sort() as string[],
+    [allListings],
+  );
+
   return (
-    <div className="relative w-full rounded-xl overflow-hidden border shadow-sm" style={{ height: 'calc(100vh - 280px)', minHeight: 480 }}>
+    <div
+      className="relative w-full rounded-xl overflow-hidden border shadow-sm"
+      style={{ height: 'calc(100vh - 280px)', minHeight: 480 }}
+    >
+      {/* Task #13: Floating filter bar */}
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] flex flex-wrap items-center justify-center gap-1.5 px-3 max-w-[calc(100%-2rem)]">
+        {/* Category toggles */}
+        {CATEGORIES.map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => onCategoryToggle(cat.id)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border shadow-sm transition-colors whitespace-nowrap ${
+              selectedCategories.includes(cat.id)
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-background/90 backdrop-blur-sm text-foreground border-border hover:bg-accent'
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
+
+        {uniqueNeighborhoods.length > 0 && (
+          <span className="w-px h-4 bg-border mx-1 hidden sm:block" />
+        )}
+
+        {/* Neighbourhood chips */}
+        {uniqueNeighborhoods.map(n => (
+          <button
+            key={n}
+            onClick={() => onNeighborhoodChange(selectedNeighborhood === n ? null : n)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border shadow-sm transition-colors whitespace-nowrap ${
+              selectedNeighborhood === n
+                ? 'bg-amber-500 text-white border-amber-500'
+                : 'bg-background/90 backdrop-blur-sm text-foreground border-border hover:bg-accent'
+            }`}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+
       <MapContainer
         center={SF_CENTER}
         zoom={13}
@@ -45,6 +136,37 @@ export function ExploreAllMap({ listings }: ExploreAllMapProps) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
+
+        {/* Task #14: Neighbourhood cluster circles with hover tooltip */}
+        {neighborhoodClusters.map(({ name, count, lat, lng }) => {
+          const isSelected = selectedNeighborhood === name;
+          const radius = 12 + count * 8; // scale with venue density
+          return (
+            <CircleMarker
+              key={`cluster-${name}`}
+              center={[lat, lng]}
+              radius={radius}
+              pathOptions={{
+                color: isSelected ? '#F59E0B' : '#94a3b8',
+                fillColor: isSelected ? '#F59E0B' : '#94a3b8',
+                fillOpacity: isSelected ? 0.22 : 0.12,
+                weight: isSelected ? 2 : 1,
+                opacity: isSelected ? 0.8 : 0.35,
+              }}
+              eventHandlers={{
+                click: () => onNeighborhoodChange(isSelected ? null : name),
+              }}
+            >
+              <Tooltip direction="top" offset={[0, -radius / 2]}>
+                <span style={{ fontWeight: 600 }}>{name}</span>
+                {' · '}
+                {count} {count === 1 ? 'place' : 'places'}
+              </Tooltip>
+            </CircleMarker>
+          );
+        })}
+
+        {/* Individual venue pins */}
         {listings.map((listing) => (
           <Marker
             key={listing.id}
@@ -86,7 +208,7 @@ export function ExploreAllMap({ listings }: ExploreAllMapProps) {
       </MapContainer>
 
       {listings.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-[1000]">
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-[1000] pointer-events-none">
           <div className="text-center">
             <p className="text-lg font-semibold mb-1">No places match your filters</p>
             <p className="text-sm text-muted-foreground">Try clearing some filters to see pins on the map.</p>

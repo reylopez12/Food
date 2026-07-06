@@ -20,7 +20,13 @@ import { setBaseUrl, setAuthTokenGetter } from '@workspace/api-client-react';
 
 SplashScreen.preventAutoHideAsync();
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes — reduces noisy refetches on app focus
+    },
+  },
+});
 
 // Point the API client at the Replit dev domain so the mobile app can reach
 // the API server.  EXPO_PUBLIC_DOMAIN is injected by the dev script.

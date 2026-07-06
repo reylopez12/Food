@@ -13,7 +13,13 @@ import ListingDetail from '@/pages/ListingDetail';
 import Saved from '@/pages/Saved';
 import Spin from '@/pages/Spin';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes — reduces noisy refetches on tab focus
+    },
+  },
+});
 
 function Router() {
   return (

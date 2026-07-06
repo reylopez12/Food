@@ -20,6 +20,8 @@ const CATEGORIES = [
 
 const PRICE_RANGES = ['$', '$$', '$$$', '$$$$'];
 
+const VIEW_MODE_KEY = 'bay-bites-explore-view';
+
 export default function Explore() {
   const [locationStr] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
@@ -32,7 +34,22 @@ export default function Explore() {
   const [selectedPrices, setSelectedPrices] = useState<string[]>([]);
   const [minRating, setMinRating] = useState<number[]>([0]);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState<string | null>(null);
+
+  // Task #15: persist List/Map preference in localStorage
+  const [viewMode, setViewMode] = useState<'list' | 'map'>(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_MODE_KEY);
+      return saved === 'map' ? 'map' : 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewMode = (mode: 'list' | 'map') => {
+    setViewMode(mode);
+    try { localStorage.setItem(VIEW_MODE_KEY, mode); } catch {}
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -63,12 +80,13 @@ export default function Explore() {
         selectedPrices.includes(listing.priceRange);
 
       const matchesRating = listing.rating >= minRating[0];
-
       const matchesVerified = !verifiedOnly || listing.verified;
+      const matchesNeighborhood =
+        !selectedNeighborhood || listing.neighborhood === selectedNeighborhood;
 
-      return matchesSearch && matchesCategory && matchesPrice && matchesRating && matchesVerified;
+      return matchesSearch && matchesCategory && matchesPrice && matchesRating && matchesVerified && matchesNeighborhood;
     });
-  }, [allListings, searchQuery, selectedCategories, selectedPrices, minRating, verifiedOnly]);
+  }, [allListings, searchQuery, selectedCategories, selectedPrices, minRating, verifiedOnly, selectedNeighborhood]);
 
   const toggleCategory = (categoryId: string) => {
     setSelectedCategories(prev =>
@@ -92,6 +110,7 @@ export default function Explore() {
     setSelectedPrices([]);
     setMinRating([0]);
     setVerifiedOnly(false);
+    setSelectedNeighborhood(null);
 
     const url = new URL(window.location.href);
     url.search = '';
@@ -103,7 +122,8 @@ export default function Explore() {
     selectedCategories.length +
     selectedPrices.length +
     (minRating[0] > 0 ? 1 : 0) +
-    (verifiedOnly ? 1 : 0);
+    (verifiedOnly ? 1 : 0) +
+    (selectedNeighborhood ? 1 : 0);
 
   const FilterContent = () => (
     <div className="space-y-8">
@@ -211,7 +231,7 @@ export default function Explore() {
           {/* List / Map toggle */}
           <div className="flex items-center border rounded-lg overflow-hidden shrink-0 bg-card">
             <button
-              onClick={() => setViewMode('list')}
+              onClick={() => handleViewMode('list')}
               className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
                 viewMode === 'list'
                   ? 'bg-primary text-primary-foreground'
@@ -222,7 +242,7 @@ export default function Explore() {
               <span className="hidden sm:inline">List</span>
             </button>
             <button
-              onClick={() => setViewMode('map')}
+              onClick={() => handleViewMode('map')}
               className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
                 viewMode === 'map'
                   ? 'bg-primary text-primary-foreground'
@@ -256,7 +276,14 @@ export default function Explore() {
       </div>
 
       {viewMode === 'map' ? (
-        <ExploreAllMap listings={filteredListings} />
+        <ExploreAllMap
+          listings={filteredListings}
+          allListings={allListings}
+          selectedCategories={selectedCategories}
+          onCategoryToggle={toggleCategory}
+          selectedNeighborhood={selectedNeighborhood}
+          onNeighborhoodChange={setSelectedNeighborhood}
+        />
       ) : (
         <div className="flex flex-col md:flex-row gap-8">
           {/* Desktop Sidebar */}
