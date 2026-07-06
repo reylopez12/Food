@@ -14,6 +14,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { useDirectory } from '@/context/DirectoryContext';
 import { CATEGORIES } from '@/constants/data';
+import { useAuth } from '@/lib/auth';
 
 interface SettingRowProps {
   icon: string;
@@ -55,6 +56,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { listings, savedListings } = useDirectory();
+  const { user, isAuthenticated, isLoading, login, logout } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
 
@@ -65,6 +67,11 @@ export default function ProfileScreen() {
     { label: 'Saved', value: savedListings.length.toString() },
     { label: 'Categories', value: (CATEGORIES.length - 1).toString() },
   ];
+
+  const displayName = user
+    ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || 'User'
+    : null;
+  const displayEmail = user?.email ?? null;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -78,20 +85,51 @@ export default function ProfileScreen() {
         </View>
 
         {/* Avatar + name */}
-        <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            <Ionicons name="person" size={32} color={colors.primaryForeground} />
+        {isAuthenticated ? (
+          <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
+            <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+              <Ionicons name="person" size={32} color={colors.primaryForeground} />
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={[styles.profileName, { color: colors.foreground }]}>
+                {displayName}
+              </Text>
+              {displayEmail ? (
+                <Text style={[styles.profileEmail, { color: colors.mutedForeground }]}>
+                  {displayEmail}
+                </Text>
+              ) : null}
+            </View>
+            <Pressable
+              style={[styles.editBtn, { borderColor: colors.border }]}
+              onPress={() =>
+                Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Sign out', style: 'destructive', onPress: logout },
+                ])
+              }
+            >
+              <Feather name="log-out" size={16} color={colors.foreground} />
+            </Pressable>
           </View>
-          <View style={styles.profileInfo}>
-            <Text style={[styles.profileName, { color: colors.foreground }]}>Your Name</Text>
-            <Text style={[styles.profileEmail, { color: colors.mutedForeground }]}>
-              your@email.com
-            </Text>
-          </View>
-          <Pressable style={[styles.editBtn, { borderColor: colors.border }]}>
-            <Feather name="edit-2" size={16} color={colors.foreground} />
+        ) : (
+          <Pressable
+            style={[styles.profileCard, { backgroundColor: colors.card }]}
+            onPress={login}
+            disabled={isLoading}
+          >
+            <View style={[styles.avatar, { backgroundColor: colors.secondary }]}>
+              <Ionicons name="person-outline" size={32} color={colors.mutedForeground} />
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={[styles.profileName, { color: colors.foreground }]}>Sign in</Text>
+              <Text style={[styles.profileEmail, { color: colors.mutedForeground }]}>
+                Tap to log in to your account
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
           </Pressable>
-        </View>
+        )}
 
         {/* Stats */}
         <View style={styles.statsRow}>

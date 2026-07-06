@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Linking,
@@ -8,6 +8,7 @@ import {
   Share,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -28,6 +29,39 @@ function getApiBase() {
     : '';
 }
 
+// ── Announcement types ────────────────────────────────────────────────────────
+interface Announcement {
+  id: string;
+  venueId: string;
+  title: string;
+  body: string;
+  type: string;
+  createdAt: string;
+}
+
+const TYPE_LABEL: Record<string, string> = {
+  closed: 'Closed today',
+  special: 'Daily special',
+  general: 'Update',
+};
+const TYPE_COLOR: Record<string, string> = {
+  closed: '#ef4444',
+  special: '#f59e0b',
+  general: '#3b82f6',
+};
+
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function ListingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
@@ -39,10 +73,10 @@ export default function ListingDetailScreen() {
   const listing = listings.find((l) => l.id === id);
   const saved = listing ? isSaved(listing.id) : false;
 
+  // ── Follow state ──────────────────────────────────────────────────────────
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
-  // Fetch follow status when authenticated
   useEffect(() => {
     if (!isAuthenticated || !listing) return;
     let cancelled = false;
@@ -63,6 +97,83 @@ export default function ListingDetailScreen() {
     return () => { cancelled = true; };
   }, [isAuthenticated, listing?.id]);
 
+  // ── Announcements + broadcaster status ────────────────────────────────────
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [broadcasterActive, setBroadcasterActive] = useState(false);
+  const [canPost, setCanPost] = useState(false);
+
+  const loadAnnouncements = useCallback(async () => {
+    if (!listing) return;
+    try {
+      const apiBase = getApiBase();
+      const r = await fetch(`${apiBase}/api/listings/${listing.id}/announcements`);
+      if (r.ok) setAnnouncements(await r.json());
+    } catch {}
+  }, [listing?.id]);
+
+  useEffect(() => {
+    loadAnnouncements();
+  }, [loadAnnouncements]);
+
+  useEffect(() => {
+    if (!listing) return;
+    let cancelled = false;
+    const apiBase = getApiBase();
+    const fetchStatus = async () => {
+      try {
+        const token = await SecureStore.getItemAsync('auth_session_token');
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const r = await fetch(`${apiBase}/api/broadcaster/status/${listing.id}`, { headers });
+        if (r.ok && !cancelled) {
+          const data = await r.json();
+          setBroadcasterActive(data.active ?? false);
+          setCanPost(data.canPost ?? false);
+        }
+      } catch {}
+    };
+    fetchStatus();
+    return () => { cancelled = true; };
+  }, [listing?.id, isAuthenticated]);
+
+  // ── Post form state ───────────────────────────────────────────────────────
+  const [postTitle, setPostTitle] = useState('');
+  const [postBody, setPostBody] = useState('');
+  const [postType, setPostType] = useState<'general' | 'special' | 'closed'>('general');
+  const [postSaving, setPostSaving] = useState(false);
+
+  const handlePostAnnouncement = async () => {
+    if (!postTitle.trim() || !postBody.trim() || !listing) return;
+    setPostSaving(true);
+    try {
+      const token = await SecureStore.getItemAsync('auth_session_token');
+      if (!token) { login(); return; }
+      const apiBase = getApiBase();
+      const res = await fetch(`${apiBase}/api/listings/${listing.id}/announcements`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: postTitle, body: postBody, type: postType }),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setAnnouncements((prev) => [created, ...prev]);
+        setPostTitle('');
+        setPostBody('');
+        setPostType('general');
+      } else {
+        Alert.alert('Error', 'Could not post announcement.');
+      }
+    } catch {
+      Alert.alert('Error', 'Could not post announcement.');
+    } finally {
+      setPostSaving(false);
+    }
+  };
+
+  // ── Not found guard ───────────────────────────────────────────────────────
   if (!listing) {
     return (
       <View style={[styles.notFound, { backgroundColor: colors.background }]}>
@@ -75,16 +186,14 @@ export default function ListingDetailScreen() {
     );
   }
 
+  // ── Action handlers ───────────────────────────────────────────────────────
   const handleSave = () => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     toggleSave(listing.id);
   };
 
   const handleFollow = async () => {
-    if (!isAuthenticated) {
-      login();
-      return;
-    }
+    if (!isAuthenticated) { login(); return; }
     if (followLoading) return;
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setFollowLoading(true);
@@ -129,7 +238,7 @@ export default function ListingDetailScreen() {
 
   const handleCopyAddress = () => {
     const fullAddress = `${listing.address}, ${listing.city}`;
-    Share.share({ message: fullAddress }).catch(() => {/* dismissed — ignore */});
+    Share.share({ message: fullAddress }).catch(() => {/* dismissed */});
   };
 
   const handleDirections = () => {
@@ -147,12 +256,15 @@ export default function ListingDetailScreen() {
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
 
+  // Show section if there are announcements to read OR the venue has a broadcaster
+  // subscription — same gate as the web version.
+  const showAnnouncementsSection = announcements.length > 0 || broadcasterActive;
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: bottomPad + 24 }}>
         {/* Hero block */}
         <View style={[styles.hero, { backgroundColor: listing.color, paddingTop: topPad + 16 }]}>
-          {/* Top bar */}
           <View style={styles.topBar}>
             <Pressable
               style={[styles.circleBtn, { backgroundColor: 'rgba(0,0,0,0.3)' }]}
@@ -167,17 +279,12 @@ export default function ListingDetailScreen() {
               >
                 <Feather name="share-2" size={18} color="#fff" />
               </Pressable>
-              {/* Follow button */}
               <Pressable
                 style={[styles.circleBtn, { backgroundColor: following ? 'rgba(239,68,68,0.7)' : 'rgba(0,0,0,0.3)' }]}
                 onPress={handleFollow}
                 disabled={followLoading}
               >
-                <Ionicons
-                  name={following ? 'heart' : 'heart-outline'}
-                  size={18}
-                  color="#fff"
-                />
+                <Ionicons name={following ? 'heart' : 'heart-outline'} size={18} color="#fff" />
               </Pressable>
               <Pressable
                 style={[styles.circleBtn, { backgroundColor: 'rgba(0,0,0,0.3)' }]}
@@ -192,7 +299,6 @@ export default function ListingDetailScreen() {
             </View>
           </View>
 
-          {/* Initials */}
           <View style={styles.heroCenter}>
             <Text style={styles.heroInitials}>{listing.initials}</Text>
             {listing.verified && (
@@ -203,7 +309,6 @@ export default function ListingDetailScreen() {
             )}
           </View>
 
-          {/* Hero info */}
           <View style={styles.heroInfo}>
             <Text style={styles.heroName}>{listing.name}</Text>
             <View style={styles.heroCat}>
@@ -284,13 +389,133 @@ export default function ListingDetailScreen() {
           </View>
         )}
 
+        {/* ── Announcements ─────────────────────────────────────────────────── */}
+        {showAnnouncementsSection && (
+          <View style={styles.section}>
+            <View style={styles.sectionRow}>
+              <Ionicons name="megaphone-outline" size={18} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Announcements</Text>
+            </View>
+
+            {/* Post form — admin only when canPost */}
+            {canPost && (
+              <View style={[styles.postCard, { backgroundColor: colors.card, borderColor: colors.primary + '44' }]}>
+                <Text style={[styles.postLabel, { color: colors.primary }]}>POST AN ANNOUNCEMENT</Text>
+
+                {/* Type selector */}
+                <View style={styles.typeRow}>
+                  {(['general', 'special', 'closed'] as const).map((t) => (
+                    <Pressable
+                      key={t}
+                      style={[
+                        styles.typeChip,
+                        {
+                          borderColor: postType === t ? colors.primary : colors.border,
+                          backgroundColor: postType === t ? colors.primary : 'transparent',
+                        },
+                      ]}
+                      onPress={() => setPostType(t)}
+                    >
+                      <Text
+                        style={[
+                          styles.typeChipText,
+                          { color: postType === t ? colors.primaryForeground : colors.mutedForeground },
+                        ]}
+                      >
+                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+
+                <TextInput
+                  style={[styles.textInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+                  placeholder="Title (e.g. Closed for the holiday)"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={postTitle}
+                  onChangeText={setPostTitle}
+                  maxLength={120}
+                />
+                <TextInput
+                  style={[styles.textArea, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+                  placeholder="Message… (up to 280 characters)"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={postBody}
+                  onChangeText={setPostBody}
+                  maxLength={280}
+                  multiline
+                  numberOfLines={3}
+                  textAlignVertical="top"
+                />
+
+                <Pressable
+                  style={[
+                    styles.postBtn,
+                    {
+                      backgroundColor: colors.primary,
+                      opacity: postSaving || !postTitle.trim() || !postBody.trim() ? 0.5 : 1,
+                    },
+                  ]}
+                  onPress={handlePostAnnouncement}
+                  disabled={postSaving || !postTitle.trim() || !postBody.trim()}
+                >
+                  <Ionicons name="send" size={14} color={colors.primaryForeground} />
+                  <Text style={[styles.postBtnText, { color: colors.primaryForeground }]}>
+                    {postSaving ? 'Posting…' : 'Post'}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+
+            {/* Broadcaster CTA — visible to any authenticated user who can't post */}
+            {!canPost && isAuthenticated && (
+              <View style={[styles.ctaCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Ionicons name="megaphone-outline" size={22} color={colors.mutedForeground} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.ctaTitle, { color: colors.foreground }]}>Broadcaster subscription</Text>
+                  <Text style={[styles.ctaBody, { color: colors.mutedForeground }]}>
+                    Post announcements to all your followers — specials, closures, and more. $29/month.
+                  </Text>
+                </View>
+                <View style={[styles.comingSoon, { backgroundColor: colors.secondary }]}>
+                  <Text style={[styles.comingSoonText, { color: colors.mutedForeground }]}>Soon</Text>
+                </View>
+              </View>
+            )}
+
+            {/* Announcement list */}
+            {announcements.length > 0 ? (
+              <View style={{ gap: 10 }}>
+                {announcements.map((a) => (
+                  <View key={a.id} style={[styles.annoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <View style={styles.annoTop}>
+                      <View style={[styles.annoBadge, { backgroundColor: (TYPE_COLOR[a.type] ?? TYPE_COLOR.general) + '22' }]}>
+                        <Text style={[styles.annoBadgeText, { color: TYPE_COLOR[a.type] ?? TYPE_COLOR.general }]}>
+                          {TYPE_LABEL[a.type] ?? 'Update'}
+                        </Text>
+                      </View>
+                      <Text style={[styles.annoTime, { color: colors.mutedForeground }]}>
+                        {timeAgo(a.createdAt)}
+                      </Text>
+                    </View>
+                    <Text style={[styles.annoTitle, { color: colors.foreground }]}>{a.title}</Text>
+                    <Text style={[styles.annoBody, { color: colors.mutedForeground }]}>{a.body}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={[styles.annoEmpty, { color: colors.mutedForeground }]}>No announcements yet.</Text>
+            )}
+          </View>
+        )}
+
         {/* Map */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Location</Text>
           <ListingMapWebView lat={listing.lat} lng={listing.lng} name={listing.name} />
         </View>
 
-        {/* Info */}
+        {/* Details */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Details</Text>
           <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
@@ -307,7 +532,7 @@ export default function ListingDetailScreen() {
 
             <View style={[styles.dividerH, { backgroundColor: colors.border }]} />
 
-            {/* Phone — tap to call or search */}
+            {/* Phone */}
             <Pressable style={styles.infoRow} onPress={handleCall} android_ripple={{ color: colors.border }}>
               <Ionicons name="call-outline" size={18} color={colors.primary} />
               <Text
@@ -330,14 +555,11 @@ export default function ListingDetailScreen() {
 
             <View style={[styles.dividerH, { backgroundColor: colors.border }]} />
 
-            {/* Website — tap to open or search */}
+            {/* Website */}
             <Pressable style={styles.infoRow} onPress={handleWebsite} android_ripple={{ color: colors.border }}>
               <Ionicons name="globe-outline" size={18} color={colors.primary} />
               <Text
-                style={[
-                  styles.infoText,
-                  { color: listing.website ? colors.primary : colors.mutedForeground },
-                ]}
+                style={[styles.infoText, { color: listing.website ? colors.primary : colors.mutedForeground }]}
                 numberOfLines={1}
               >
                 {listing.website
@@ -360,34 +582,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
   },
-  notFoundText: {
-    fontSize: 18,
-    fontFamily: 'Inter_600SemiBold',
-  },
+  notFoundText: { fontSize: 18, fontFamily: 'Inter_600SemiBold' },
   backBtn: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,
     marginTop: 8,
   },
-  backBtnText: {
-    fontSize: 15,
-    fontFamily: 'Inter_600SemiBold',
-  },
-  hero: {
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-  },
+  backBtnText: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
+  hero: { paddingHorizontal: 20, paddingBottom: 24 },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
   },
-  topBarRight: {
-    flexDirection: 'row',
-    gap: 10,
-  },
+  topBarRight: { flexDirection: 'row', gap: 10 },
   circleBtn: {
     width: 38,
     height: 38,
@@ -395,10 +605,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroCenter: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
+  heroCenter: { alignItems: 'center', marginBottom: 16 },
   heroInitials: {
     fontSize: 64,
     fontFamily: 'Inter_700Bold',
@@ -414,41 +621,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 6,
   },
-  verifiedText: {
-    fontSize: 12,
-    fontFamily: 'Inter_600SemiBold',
-    color: '#fff',
-  },
-  heroInfo: {
-    alignItems: 'center',
-    gap: 6,
-  },
+  verifiedText: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#fff' },
+  heroInfo: { alignItems: 'center', gap: 6 },
   heroName: {
     fontSize: 24,
     fontFamily: 'Inter_700Bold',
     color: '#fff',
     textAlign: 'center',
   },
-  heroCat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  catChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  catChipText: {
-    fontSize: 13,
-    fontFamily: 'Inter_500Medium',
-    color: '#fff',
-  },
-  heroPrice: {
-    fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
-    color: 'rgba(255,255,255,0.8)',
-  },
+  heroCat: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  catChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  catChipText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: '#fff' },
+  heroPrice: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: 'rgba(255,255,255,0.8)' },
   ratingCard: {
     flexDirection: 'row',
     marginHorizontal: 20,
@@ -462,36 +646,13 @@ const styles = StyleSheet.create({
     gap: 20,
     alignItems: 'center',
   },
-  ratingLeft: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-  },
-  ratingNum: {
-    fontSize: 28,
-    fontFamily: 'Inter_700Bold',
-  },
-  ratingCount: {
-    fontSize: 12,
-    fontFamily: 'Inter_400Regular',
-  },
-  dividerV: {
-    width: 1,
-    height: 50,
-  },
-  ratingRight: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-  },
-  ratingLabel: {
-    fontSize: 12,
-    fontFamily: 'Inter_400Regular',
-  },
-  ratingPrice: {
-    fontSize: 22,
-    fontFamily: 'Inter_700Bold',
-  },
+  ratingLeft: { flex: 1, alignItems: 'center', gap: 4 },
+  ratingNum: { fontSize: 28, fontFamily: 'Inter_700Bold' },
+  ratingCount: { fontSize: 12, fontFamily: 'Inter_400Regular' },
+  dividerV: { width: 1, height: 50 },
+  ratingRight: { flex: 1, alignItems: 'center', gap: 4 },
+  ratingLabel: { fontSize: 12, fontFamily: 'Inter_400Regular' },
+  ratingPrice: { fontSize: 22, fontFamily: 'Inter_700Bold' },
   actions: {
     flexDirection: 'row',
     marginHorizontal: 20,
@@ -506,39 +667,103 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 4,
   },
-  actionLabel: {
-    fontSize: 12,
-    fontFamily: 'Inter_500Medium',
-  },
-  section: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    gap: 10,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontFamily: 'Inter_700Bold',
-  },
+  actionLabel: { fontSize: 12, fontFamily: 'Inter_500Medium' },
+  section: { paddingHorizontal: 20, paddingTop: 24, gap: 10 },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  sectionTitle: { fontSize: 17, fontFamily: 'Inter_700Bold' },
   description: {
     fontSize: 15,
     fontFamily: 'Inter_400Regular',
     lineHeight: 23,
   },
-  tagsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
+  tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tag: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
     borderWidth: 1,
   },
-  tagText: {
-    fontSize: 13,
-    fontFamily: 'Inter_500Medium',
+  tagText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
+
+  // ── Announcements ─────────────────────────────────────────────────────────
+  postCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+    gap: 10,
   },
+  postLabel: {
+    fontSize: 11,
+    fontFamily: 'Inter_600SemiBold',
+    letterSpacing: 0.6,
+  },
+  typeRow: { flexDirection: 'row', gap: 8 },
+  typeChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  typeChipText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
+  textInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+  },
+  textArea: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    minHeight: 80,
+  },
+  postBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignSelf: 'flex-end',
+    paddingHorizontal: 20,
+  },
+  postBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold' },
+  ctaCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
+  },
+  ctaTitle: { fontSize: 13, fontFamily: 'Inter_600SemiBold', marginBottom: 2 },
+  ctaBody: { fontSize: 12, fontFamily: 'Inter_400Regular', lineHeight: 17 },
+  comingSoon: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  comingSoonText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+  annoCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
+    gap: 4,
+  },
+  annoTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  annoBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  annoBadgeText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+  annoTime: { fontSize: 11, fontFamily: 'Inter_400Regular' },
+  annoTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', lineHeight: 20 },
+  annoBody: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 19 },
+  annoEmpty: { fontSize: 14, fontFamily: 'Inter_400Regular', fontStyle: 'italic' },
+
+  // ── Details card ──────────────────────────────────────────────────────────
   infoCard: {
     borderRadius: 14,
     overflow: 'hidden',

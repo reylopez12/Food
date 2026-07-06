@@ -1,5 +1,5 @@
-import React from 'react';
-import { Platform, StyleSheet, useColorScheme, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Platform, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -7,8 +7,42 @@ import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Tabs } from 'expo-router';
 import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 import { SymbolView } from 'expo-symbols';
+import * as SecureStore from 'expo-secure-store';
+import { useAuth } from '@/lib/auth';
 
-function NativeTabLayout() {
+function getApiBase() {
+  return process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : '';
+}
+
+function useUnreadCount() {
+  const { isAuthenticated } = useAuth();
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated) { setCount(0); return; }
+    let cancelled = false;
+    const fetch_ = async () => {
+      try {
+        const token = await SecureStore.getItemAsync('auth_session_token');
+        if (!token || cancelled) return;
+        const res = await fetch(`${getApiBase()}/api/notifications/unread-count`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setCount(data.count ?? 0);
+        }
+      } catch {}
+    };
+    fetch_();
+    const interval = setInterval(fetch_, 30_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [isAuthenticated]);
+
+  return count;
+}
+
+function NativeTabLayout({ unreadCount }: { unreadCount: number }) {
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
@@ -32,7 +66,17 @@ function NativeTabLayout() {
         <Label>Saved</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="notifications">
-        <Icon sf={{ default: 'bell', selected: 'bell.fill' }} />
+        {/* Custom bell with badge overlay for NativeTabs */}
+        <View style={styles.nativeBellWrap}>
+          <Icon sf={{ default: 'bell', selected: 'bell.fill' }} />
+          {unreadCount > 0 && (
+            <View style={styles.nativeBadge}>
+              <Text style={styles.nativeBadgeText}>
+                {unreadCount > 99 ? '99+' : String(unreadCount)}
+              </Text>
+            </View>
+          )}
+        </View>
         <Label>Alerts</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
@@ -43,7 +87,7 @@ function NativeTabLayout() {
   );
 }
 
-function ClassicTabLayout() {
+function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -145,6 +189,7 @@ function ClassicTabLayout() {
         name="notifications"
         options={{
           title: 'Alerts',
+          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="bell" tintColor={color} size={24} />
@@ -170,8 +215,31 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
+  const unreadCount = useUnreadCount();
   if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
+    return <NativeTabLayout unreadCount={unreadCount} />;
   }
-  return <ClassicTabLayout />;
+  return <ClassicTabLayout unreadCount={unreadCount} />;
 }
+
+const styles = StyleSheet.create({
+  nativeBellWrap: { position: 'relative' },
+  nativeBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#ef4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  nativeBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#fff',
+    lineHeight: 12,
+  },
+});
