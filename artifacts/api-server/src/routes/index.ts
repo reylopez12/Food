@@ -14,7 +14,7 @@ router.use(healthRouter);
 router.use(listingsRouter);
 router.use(authRouter);
 router.use(followsRouter);
-router.use(adminRouter);
+router.use("/admin", adminRouter);
 router.use(announcementsRouter);
 router.use(notificationsRouter);
 router.use(broadcasterRouter);

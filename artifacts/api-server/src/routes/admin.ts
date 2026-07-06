@@ -58,7 +58,7 @@ function clamp(value: number, min: number, max: number) {
 // ---------------------------------------------------------------------------
 // POST /admin/listings — create a new venue listing
 // ---------------------------------------------------------------------------
-router.post("/admin/listings", async (req, res) => {
+router.post("/listings", async (req, res) => {
   try {
     const {
       name, category, rating, reviewCount, address, city, neighborhood,
@@ -133,7 +133,7 @@ router.post("/admin/listings", async (req, res) => {
 // ---------------------------------------------------------------------------
 // PUT /admin/listings/:id — update an existing venue listing
 // ---------------------------------------------------------------------------
-router.put("/admin/listings/:id", async (req, res) => {
+router.put("/listings/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const body = req.body;
@@ -203,7 +203,7 @@ router.put("/admin/listings/:id", async (req, res) => {
 // ---------------------------------------------------------------------------
 // DELETE /admin/listings/:id — remove a venue listing
 // ---------------------------------------------------------------------------
-router.delete("/admin/listings/:id", async (req, res) => {
+router.delete("/listings/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const [deleted] = await db
