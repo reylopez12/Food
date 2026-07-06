@@ -5,6 +5,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -109,13 +110,26 @@ export default function ListingDetailScreen() {
   const handleCall = () => {
     if (listing.phone) {
       Linking.openURL(`tel:${listing.phone}`);
+    } else {
+      Linking.openURL(
+        `https://www.google.com/search?q=${encodeURIComponent(listing.name + ' ' + listing.city + ' phone number')}`,
+      );
     }
   };
 
   const handleWebsite = () => {
     if (listing.website) {
       Linking.openURL(listing.website);
+    } else {
+      Linking.openURL(
+        `https://www.google.com/search?q=${encodeURIComponent(listing.name + ' ' + listing.city)}`,
+      );
     }
+  };
+
+  const handleCopyAddress = () => {
+    const fullAddress = `${listing.address}, ${listing.city}`;
+    Share.share({ message: fullAddress }).catch(() => {/* dismissed — ignore */});
   };
 
   const handleDirections = () => {
@@ -280,24 +294,57 @@ export default function ListingDetailScreen() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Details</Text>
           <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
-            {[
-              { icon: 'location-outline', text: `${listing.address}, ${listing.city}` },
-              { icon: 'call-outline', text: listing.phone },
-              { icon: 'time-outline', text: listing.hours },
-              { icon: 'globe-outline', text: listing.website },
-            ].map((item, i, arr) => (
-              <React.Fragment key={item.icon}>
-                <View style={styles.infoRow}>
-                  <Ionicons name={item.icon as any} size={18} color={colors.primary} />
-                  <Text style={[styles.infoText, { color: colors.foreground }]} numberOfLines={2}>
-                    {item.text}
-                  </Text>
-                </View>
-                {i < arr.length - 1 && (
-                  <View style={[styles.dividerH, { backgroundColor: colors.border }]} />
-                )}
-              </React.Fragment>
-            ))}
+            {/* Address — tap to copy/share */}
+            <Pressable style={styles.infoRow} onPress={handleCopyAddress} android_ripple={{ color: colors.border }}>
+              <Ionicons name="location-outline" size={18} color={colors.primary} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.infoText, { color: colors.foreground }]} numberOfLines={2}>
+                  {listing.address}, {listing.city}
+                </Text>
+              </View>
+              <Ionicons name="copy-outline" size={14} color={colors.mutedForeground} />
+            </Pressable>
+
+            <View style={[styles.dividerH, { backgroundColor: colors.border }]} />
+
+            {/* Phone — tap to call or search */}
+            <Pressable style={styles.infoRow} onPress={handleCall} android_ripple={{ color: colors.border }}>
+              <Ionicons name="call-outline" size={18} color={colors.primary} />
+              <Text
+                style={[styles.infoText, { color: listing.phone ? colors.foreground : colors.mutedForeground }]}
+                numberOfLines={1}
+              >
+                {listing.phone || 'Not listed — tap to search'}
+              </Text>
+            </Pressable>
+
+            <View style={[styles.dividerH, { backgroundColor: colors.border }]} />
+
+            {/* Hours */}
+            <View style={styles.infoRow}>
+              <Ionicons name="time-outline" size={18} color={colors.primary} />
+              <Text style={[styles.infoText, { color: colors.foreground }]} numberOfLines={2}>
+                {listing.hours}
+              </Text>
+            </View>
+
+            <View style={[styles.dividerH, { backgroundColor: colors.border }]} />
+
+            {/* Website — tap to open or search */}
+            <Pressable style={styles.infoRow} onPress={handleWebsite} android_ripple={{ color: colors.border }}>
+              <Ionicons name="globe-outline" size={18} color={colors.primary} />
+              <Text
+                style={[
+                  styles.infoText,
+                  { color: listing.website ? colors.primary : colors.mutedForeground },
+                ]}
+                numberOfLines={1}
+              >
+                {listing.website
+                  ? listing.website.replace(/^https?:\/\//, '')
+                  : 'Not listed — tap to search'}
+              </Text>
+            </Pressable>
           </View>
         </View>
       </ScrollView>

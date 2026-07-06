@@ -13,6 +13,7 @@ import ListingDetail from '@/pages/ListingDetail';
 import Saved from '@/pages/Saved';
 import Spin from '@/pages/Spin';
 import Admin from '@/pages/Admin';
+import Notifications from '@/pages/Notifications';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/saved" component={Saved} />
           <Route path="/spin" component={Spin} />
           <Route path="/admin" component={Admin} />
+          <Route path="/notifications" component={Notifications} />
           <Route component={NotFound} />
         </Switch>
       </main>

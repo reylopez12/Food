@@ -31,6 +31,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: 'bookmark', selected: 'bookmark.fill' }} />
         <Label>Saved</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="notifications">
+        <Icon sf={{ default: 'bell', selected: 'bell.fill' }} />
+        <Label>Alerts</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <Icon sf={{ default: 'person', selected: 'person.fill' }} />
         <Label>Profile</Label>
@@ -134,6 +138,18 @@ function ClassicTabLayout() {
               <SymbolView name="bookmark" tintColor={color} size={24} />
             ) : (
               <Feather name="bookmark" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: 'Alerts',
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="bell" tintColor={color} size={24} />
+            ) : (
+              <Feather name="bell" size={22} color={color} />
             ),
         }}
       />

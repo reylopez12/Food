@@ -33,6 +33,8 @@ export const venuesTable = pgTable("venues", {
   video: jsonb("video").$type<VideoHighlight | null>().default(null),
   lat: real("lat").notNull(),
   lng: real("lng").notNull(),
+  // Broadcaster subscription flag — set true via admin once venue owner has paid
+  broadcasterActive: boolean("broadcaster_active").notNull().default(false),
 });
 
 export type Venue = typeof venuesTable.$inferSelect;
@@ -53,3 +55,33 @@ export const followsTable = pgTable(
 );
 
 export type Follow = typeof followsTable.$inferSelect;
+
+// Announcements — posted by broadcaster venues
+export const announcementsTable = pgTable("announcements", {
+  id: text("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  venueId: text("venue_id").notNull(),
+  /** User id (from usersTable) of the person who posted it */
+  postedById: text("posted_by_id").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  /** 'closed' | 'special' | 'general' */
+  type: text("type").notNull().default("general"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type Announcement = typeof announcementsTable.$inferSelect;
+
+// Notifications — one per follower per announcement
+export const notificationsTable = pgTable("notifications", {
+  id: text("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  announcementId: text("announcement_id").notNull(),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type Notification = typeof notificationsTable.$inferSelect;

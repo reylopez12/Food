@@ -1,5 +1,6 @@
+import { useState, useCallback } from "react";
 import { useRoute, Link } from "wouter";
-import { ArrowLeft, Phone, Globe, Navigation, Share2, MapPin, Clock, CheckCircle2, Bookmark, BookmarkCheck, Heart, HeartOff } from "lucide-react";
+import { ArrowLeft, Phone, Globe, Navigation, Share2, MapPin, Clock, CheckCircle2, Bookmark, BookmarkCheck, Heart, HeartOff, Megaphone, Send, Copy, Check } from "lucide-react";
 import { useListing } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { StarRating } from "../components/StarRating";
@@ -8,8 +9,11 @@ import { ListingMap } from "../components/ListingMap";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { useSavedListings } from "../hooks/useSavedListings";
 import { useFollows } from "../hooks/useFollows";
+import { useAnnouncements, useBroadcasterStatus } from "../hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
 import "leaflet/dist/leaflet.css";
 
@@ -19,8 +23,22 @@ export default function ListingDetail() {
   const { toast } = useToast();
   const { isAuthenticated, login } = useAuth();
   const { isFollowing, toggleFollow } = useFollows(isAuthenticated);
+  const [addressCopied, setAddressCopied] = useState(false);
+
+  const copyAddress = useCallback((address: string, city: string) => {
+    navigator.clipboard.writeText(`${address}, ${city}`).then(() => {
+      setAddressCopied(true);
+      setTimeout(() => setAddressCopied(false), 2000);
+    });
+  }, []);
 
   const id = params?.id ?? "";
+  const { announcements, post: postAnnouncement } = useAnnouncements(id);
+  const { active: isBroadcaster, canPost } = useBroadcasterStatus(id);
+  const [postTitle, setPostTitle] = useState("");
+  const [postBody, setPostBody] = useState("");
+  const [postType, setPostType] = useState<"general" | "special" | "closed">("general");
+  const [postSaving, setPostSaving] = useState(false);
   // useListing already sets enabled: id !== null && id !== undefined internally
   const { data: listing, isLoading, isError } = useListing(id);
 
@@ -158,18 +176,36 @@ export default function ListingDetail() {
 
               {/* Action Buttons Row - Desktop right, Mobile below */}
               <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto shrink-0 overflow-x-auto pb-2 md:pb-0">
-                <Button size="lg" className="flex-1 md:w-full gap-2" asChild>
-                  <a href={`tel:${listing.phone.replace(/[^0-9]/g, '')}`}>
-                    <Phone className="w-4 h-4" />
-                    <span>Call Now</span>
-                  </a>
-                </Button>
-                <Button size="lg" variant="outline" className="flex-1 md:w-full gap-2" asChild>
-                  <a href={listing.website} target="_blank" rel="noreferrer">
-                    <Globe className="w-4 h-4" />
-                    <span>Website</span>
-                  </a>
-                </Button>
+                {listing.phone ? (
+                  <Button size="lg" className="flex-1 md:w-full gap-2" asChild>
+                    <a href={`tel:${listing.phone.replace(/[^0-9]/g, '')}`}>
+                      <Phone className="w-4 h-4" />
+                      <span>Call Now</span>
+                    </a>
+                  </Button>
+                ) : (
+                  <Button size="lg" className="flex-1 md:w-full gap-2" variant="outline" asChild>
+                    <a href={`https://www.google.com/search?q=${encodeURIComponent(listing.name + ' ' + listing.city + ' phone number')}`} target="_blank" rel="noreferrer">
+                      <Phone className="w-4 h-4" />
+                      <span>Find Phone</span>
+                    </a>
+                  </Button>
+                )}
+                {listing.website ? (
+                  <Button size="lg" variant="outline" className="flex-1 md:w-full gap-2" asChild>
+                    <a href={listing.website} target="_blank" rel="noreferrer">
+                      <Globe className="w-4 h-4" />
+                      <span>Website</span>
+                    </a>
+                  </Button>
+                ) : (
+                  <Button size="lg" variant="outline" className="flex-1 md:w-full gap-2" asChild>
+                    <a href={`https://www.google.com/search?q=${encodeURIComponent(listing.name + ' ' + listing.city)}`} target="_blank" rel="noreferrer">
+                      <Globe className="w-4 h-4" />
+                      <span>Search Online</span>
+                    </a>
+                  </Button>
+                )}
                 <Button size="lg" variant="secondary" className="flex-1 md:w-full gap-2" asChild>
                   <a href={`https://maps.google.com/maps?q=${listing.lat},${listing.lng}`} target="_blank" rel="noreferrer">
                     <Navigation className="w-4 h-4" />
@@ -209,6 +245,121 @@ export default function ListingDetail() {
                 ))}
               </div>
             </section>
+
+            {/* Announcements section */}
+            {(announcements.length > 0 || isBroadcaster) && (
+              <section>
+                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                  <Megaphone className="w-5 h-5 text-primary" />
+                  Announcements
+                </h2>
+
+                {/* Post form — visible when broadcaster active + authenticated */}
+                {canPost && (
+                  <Card className="mb-4 border-primary/20 bg-primary/5">
+                    <CardContent className="p-4 space-y-3">
+                      <p className="text-xs font-semibold text-primary uppercase tracking-wide">Post an announcement</p>
+                      <div className="flex gap-2">
+                        {(["general", "special", "closed"] as const).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setPostType(t)}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors capitalize ${
+                              postType === t
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "border-border text-muted-foreground hover:border-foreground/30"
+                            }`}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                      <Input
+                        placeholder="Title (e.g. Closed for the holiday)"
+                        value={postTitle}
+                        onChange={(e) => setPostTitle(e.target.value)}
+                        maxLength={120}
+                      />
+                      <Textarea
+                        placeholder="Message… (up to 280 characters)"
+                        value={postBody}
+                        onChange={(e) => setPostBody(e.target.value)}
+                        maxLength={280}
+                        rows={3}
+                      />
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          className="gap-2"
+                          disabled={postSaving || !postTitle.trim() || !postBody.trim()}
+                          onClick={async () => {
+                            setPostSaving(true);
+                            try {
+                              await postAnnouncement({ title: postTitle, body: postBody, type: postType });
+                              setPostTitle("");
+                              setPostBody("");
+                              setPostType("general");
+                              toast({ title: "Announcement posted!" });
+                            } catch (err) {
+                              toast({ title: "Failed to post", description: String(err), variant: "destructive" });
+                            } finally {
+                              setPostSaving(false);
+                            }
+                          }}
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          {postSaving ? "Posting…" : "Post"}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Get Broadcaster CTA */}
+                {!canPost && isAuthenticated && (
+                  <Card className="mb-4 border-dashed">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <Megaphone className="w-8 h-8 text-muted-foreground shrink-0" />
+                      <div className="flex-1">
+                        <p className="font-semibold text-sm">Broadcaster subscription</p>
+                        <p className="text-xs text-muted-foreground">Post announcements to all your followers — specials, closures, and more. $29/month.</p>
+                      </div>
+                      <Button size="sm" variant="outline" disabled>Coming soon</Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Announcement list */}
+                {announcements.length > 0 ? (
+                  <div className="space-y-3">
+                    {announcements.map((a) => {
+                      const typeColors: Record<string, string> = {
+                        closed: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+                        special: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+                        general: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+                      };
+                      const typeLabels: Record<string, string> = { closed: "Closed today", special: "Daily special", general: "Update" };
+                      return (
+                        <div key={a.id} className="border rounded-xl p-4 bg-card">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${typeColors[a.type] ?? typeColors.general}`}>
+                              {typeLabels[a.type] ?? "Update"}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(a.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="font-semibold text-sm">{a.title}</p>
+                          <p className="text-sm text-muted-foreground mt-1">{a.body}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">No announcements yet.</p>
+                )}
+              </section>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -220,8 +371,23 @@ export default function ListingDetail() {
                     <MapPin className="w-5 h-5 text-primary" />
                     Location
                   </h3>
-                  <p className="text-sm text-muted-foreground">{listing.address}</p>
-                  <p className="text-sm text-muted-foreground">{listing.city}</p>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-muted-foreground">{listing.address}</p>
+                      <p className="text-sm text-muted-foreground">{listing.city}</p>
+                    </div>
+                    <button
+                      onClick={() => copyAddress(listing.address, listing.city)}
+                      title="Copy address"
+                      className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                    >
+                      {addressCopied ? (
+                        <Check className="w-3.5 h-3.5 text-green-500" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
                   <div className="mt-4">
                     <ListingMap lat={listing.lat} lng={listing.lng} name={listing.name} address={listing.address} />
                   </div>
@@ -257,14 +423,38 @@ export default function ListingDetail() {
                   <h3 className="font-semibold mb-4">Contact Info</h3>
                   <div className="space-y-3 text-sm">
                     <div className="flex items-center gap-3">
-                      <Phone className="w-4 h-4 text-muted-foreground" />
-                      <a href={`tel:${listing.phone.replace(/[^0-9]/g, '')}`} className="font-medium hover:text-primary transition-colors">{listing.phone}</a>
+                      <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+                      {listing.phone ? (
+                        <a href={`tel:${listing.phone.replace(/[^0-9]/g, '')}`} className="font-medium hover:text-primary transition-colors">
+                          {listing.phone}
+                        </a>
+                      ) : (
+                        <a
+                          href={`https://www.google.com/search?q=${encodeURIComponent(listing.name + ' ' + listing.city + ' phone number')}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-muted-foreground hover:text-primary transition-colors italic"
+                        >
+                          Not listed — search Google
+                        </a>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
-                      <Globe className="w-4 h-4 text-muted-foreground" />
-                      <a href={listing.website} target="_blank" rel="noreferrer" className="font-medium hover:text-primary transition-colors text-primary overflow-hidden text-ellipsis whitespace-nowrap">
-                        {listing.website.replace(/^https?:\/\//, '')}
-                      </a>
+                      <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                      {listing.website ? (
+                        <a href={listing.website} target="_blank" rel="noreferrer" className="font-medium hover:text-primary transition-colors text-primary overflow-hidden text-ellipsis whitespace-nowrap">
+                          {listing.website.replace(/^https?:\/\//, '')}
+                        </a>
+                      ) : (
+                        <a
+                          href={`https://www.google.com/search?q=${encodeURIComponent(listing.name + ' ' + listing.city)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-muted-foreground hover:text-primary transition-colors italic"
+                        >
+                          Not listed — search Google
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>

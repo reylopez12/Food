@@ -1,8 +1,9 @@
 import { Link, useLocation } from "wouter";
-import { UtensilsCrossed, Search, Moon, Sun, Menu, Shuffle, LogIn, LogOut, User } from "lucide-react";
+import { UtensilsCrossed, Search, Moon, Sun, Menu, Shuffle, LogIn, LogOut, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "../hooks/useTheme";
 import { useAuth } from "@workspace/replit-auth-web";
+import { useNotifications } from "../hooks/useNotifications";
 import {
   Sheet,
   SheetContent,
@@ -28,6 +29,7 @@ export function Navbar() {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
+  const { unreadCount } = useNotifications(isAuthenticated);
 
   const navLinks: NavLink[] = [
     { href: "/", label: "Home" },
@@ -96,6 +98,20 @@ export function Navbar() {
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
 
+          {/* Notifications bell — only when authenticated */}
+          {isAuthenticated && (
+            <Button variant="ghost" size="icon" asChild className="relative hidden md:flex" aria-label="Notifications">
+              <Link href="/notifications">
+                <Bell className="w-4 h-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </Link>
+            </Button>
+          )}
+
           {/* Auth button — desktop */}
           {!isLoading && (
             isAuthenticated ? (
@@ -115,6 +131,18 @@ export function Navbar() {
                   {user?.email && (
                     <div className="px-2 pb-1.5 text-xs text-muted-foreground">{user.email}</div>
                   )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                    <Link href="/notifications">
+                      <Bell className="w-4 h-4" />
+                      Notifications
+                      {unreadCount > 0 && (
+                        <span className="ml-auto bg-primary text-primary-foreground text-xs font-bold px-1.5 py-0.5 rounded-full">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="gap-2 cursor-pointer">
                     <LogOut className="w-4 h-4" />
@@ -152,6 +180,22 @@ export function Navbar() {
                     {link.label}
                   </Link>
                 ))}
+                {isAuthenticated && (
+                  <Link
+                    href="/notifications"
+                    className={`flex items-center gap-2 text-lg font-medium transition-colors ${
+                      location === "/notifications" ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  >
+                    <Bell className="w-4 h-4" />
+                    Notifications
+                    {unreadCount > 0 && (
+                      <span className="bg-primary text-primary-foreground text-xs font-bold px-1.5 py-0.5 rounded-full">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                )}
                 <div className="pt-4 border-t">
                   {!isLoading && (
                     isAuthenticated ? (
