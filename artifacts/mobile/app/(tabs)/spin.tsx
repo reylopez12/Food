@@ -224,11 +224,17 @@ export default function SpinScreen() {
     });
   };
 
-  // Look up the full listing when in directory mode
-  const winnerListing: Listing | undefined =
-    mode === 'directory' && winner
+  // Look up the full listing for the result card.
+  // Directory mode: match by id (exact).
+  // Custom mode: match by name (case-insensitive) — shows the rich card when the
+  //   typed entry corresponds to a real listing, otherwise falls back to simple card.
+  const winnerListing: Listing | undefined = winner
+    ? mode === 'directory'
       ? allListings.find((l) => l.id === winner.id)
-      : undefined;
+      : allListings.find(
+          (l) => l.name.toLowerCase() === winner.name.toLowerCase()
+        )
+    : undefined;
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -490,8 +496,8 @@ export default function SpinScreen() {
             <View style={[styles.accentBar, { backgroundColor: winner.color }]} />
 
             <View style={styles.cardInner}>
-              {/* ── Custom result ── */}
-              {mode === 'custom' && (
+              {/* ── Simple custom result (no matching listing) ── */}
+              {!winnerListing && (
                 <View style={styles.customResult}>
                   <View style={[styles.customResultDot, { backgroundColor: winner.color }]}>
                     <Text style={styles.customResultDotText}>
@@ -507,8 +513,8 @@ export default function SpinScreen() {
                 </View>
               )}
 
-              {/* ── Directory result ── */}
-              {mode === 'directory' && winnerListing && (
+              {/* ── Rich listing result (directory mode OR custom entry matched a listing) ── */}
+              {winnerListing && (
                 <>
                   <View style={styles.cardTop}>
                     <View style={[styles.initials, { backgroundColor: winnerListing.color }]}>

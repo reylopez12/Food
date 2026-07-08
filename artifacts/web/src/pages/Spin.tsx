@@ -298,11 +298,17 @@ export default function Spin() {
     setWinner(null);
   };
 
-  // Look up the full listing for the directory result card
-  const winnerListing: Listing | undefined =
-    mode === "directory" && winner
+  // Look up the full listing for the result card.
+  // Directory mode: match by id (exact).
+  // Custom mode: match by name (case-insensitive) — shows the rich card when the
+  //   typed entry corresponds to a real listing, otherwise falls back to simple card.
+  const winnerListing: Listing | undefined = winner
+    ? mode === "directory"
       ? allListings.find((l) => l.id === winner.id)
-      : undefined;
+      : allListings.find(
+          (l) => l.name.toLowerCase() === winner.name.toLowerCase()
+        )
+    : undefined;
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -493,8 +499,8 @@ export default function Spin() {
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="mt-10 w-full max-w-md"
           >
-            {/* ── Custom result ── */}
-            {mode === "custom" && (
+            {/* ── Simple custom result (no matching listing) ── */}
+            {!winnerListing && (
               <>
                 <div
                   className="h-1.5 rounded-t-2xl w-full"
@@ -519,8 +525,8 @@ export default function Spin() {
               </>
             )}
 
-            {/* ── Directory result ── */}
-            {mode === "directory" && winnerListing && (
+            {/* ── Rich listing result (directory mode OR custom entry matched a listing) ── */}
+            {winnerListing && (
               <>
                 <div
                   className="h-1.5 rounded-t-2xl w-full"
