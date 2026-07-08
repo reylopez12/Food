@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import Svg, { Path, G, Text as SvgText, Circle } from 'react-native-svg';
@@ -20,6 +21,10 @@ import type { Venue as Listing } from '@workspace/api-client-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+/** Minimal item the wheel needs from either source */
+type SpinItem = { id: string; name: string; color: string };
+
+type Mode     = 'directory' | 'custom';
 type FilterId = 'all' | 'restaurants' | 'food-trucks';
 type PriceId  = 'all' | '$' | '$$' | '$$$';
 
@@ -38,6 +43,11 @@ const PRICE_OPTIONS: { id: PriceId; label: string }[] = [
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+const CUSTOM_COLORS = [
+  '#1B4FD8', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6', '#EC4899',
+];
+const MAX_CUSTOM = 6;
+
 const SPIN_ROTATIONS = 8;
 const SPIN_DURATION  = 4200;
 const WHEEL_SIZE     = 300;
@@ -52,13 +62,6 @@ function polarXY(cx: number, cy: number, r: number, angleDeg: number) {
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
-/**
- * SVG arc path for one pie slice.
- * Segment i spans [-90 + i*slice, -90 + (i+1)*slice]. Top = -90°.
- *
- * Landing math:
- *   angle ≡ -(winnerIdx + 0.5) * slice  (mod 360)
- */
 function slicePath(startDeg: number, endDeg: number): string {
   const s = polarXY(CX, CY, R, startDeg);
   const e = polarXY(CX, CY, R, endDeg);
@@ -78,16 +81,22 @@ export default function SpinScreen() {
   const insets  = useSafeAreaInsets();
   const router  = useRouter();
 
+  const [mode,     setMode]     = useState<Mode>('directory');
   const [filter,   setFilter]   = useState<FilterId>('all');
   const [price,    setPrice]    = useState<PriceId>('all');
   const [spinning, setSpinning] = useState(false);
-  const [winner,   setWinner]   = useState<Listing | null>(null);
+  const [winner,   setWinner]   = useState<SpinItem | null>(null);
 
-  // Result card animation (slide + fade)
+  // Custom entries — array of 6 strings (empty = unused slot)
+  const [customEntries, setCustomEntries] = useState<string[]>(
+    Array(MAX_CUSTOM).fill('')
+  );
+
+  // Result card animation
   const resultOpacity    = useRef(new Animated.Value(0)).current;
   const resultTranslateY = useRef(new Animated.Value(24)).current;
 
-  // Absolute accumulated rotation in degrees (never modded — ensures continuity)
+  // Accumulated rotation
   const currentRotation = useRef(0);
   const spinAnim        = useRef(new Animated.Value(0)).current;
 
@@ -97,16 +106,23 @@ export default function SpinScreen() {
   });
 
   const { listings: allListings } = useDirectory();
-  const listings = allListings.filter(
+
+  const directoryItems: SpinItem[] = allListings.filter(
     (l) =>
       (filter === 'all' || l.category === filter) &&
       (price  === 'all' || l.priceRange === price)
   );
 
+  const customItems: SpinItem[] = customEntries
+    .map((name, i) => ({ id: `custom-${i}`, name: name.trim(), color: CUSTOM_COLORS[i] }))
+    .filter((e) => e.name.length > 0);
+
+  const spinItems = mode === 'directory' ? directoryItems : customItems;
+
   const topPad   = Platform.OS === 'web' ? 67 : insets.top;
   const botPad   = Platform.OS === 'web' ? 120 : insets.bottom + 100;
-  const sliceDeg = listings.length > 0 ? 360 / listings.length : 360;
-  const fontSize = Math.min(12, Math.max(8, 160 / Math.max(listings.length, 1)));
+  const sliceDeg = spinItems.length > 0 ? 360 / spinItems.length : 360;
+  const fontSize = Math.min(12, Math.max(8, 160 / Math.max(spinItems.length, 1)));
 
   useEffect(() => () => { spinAnim.stopAnimation(); }, [spinAnim]);
 
@@ -121,6 +137,14 @@ export default function SpinScreen() {
   const resetResult = () => {
     resultOpacity.setValue(0);
     resultTranslateY.setValue(24);
+  };
+
+  const switchMode = (m: Mode) => {
+    if (spinning) return;
+    resetWheel();
+    setMode(m);
+    setWinner(null);
+    resetResult();
   };
 
   // ── Handlers ───────────────────────────────────────────────────────────────
@@ -147,8 +171,18 @@ export default function SpinScreen() {
     resetResult();
   };
 
+  const updateEntry = (idx: number, value: string) => {
+    if (spinning) return;
+    const next = [...customEntries];
+    next[idx] = value.slice(0, 30);
+    setCustomEntries(next);
+    resetWheel();
+    setWinner(null);
+    resetResult();
+  };
+
   const handleSpin = () => {
-    if (spinning || listings.length === 0) return;
+    if (spinning || spinItems.length === 0) return;
 
     setSpinning(true);
     setWinner(null);
@@ -156,13 +190,13 @@ export default function SpinScreen() {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    const n        = listings.length;
+    const n         = spinItems.length;
     const winnerIdx = Math.floor(Math.random() * n);
 
     const targetNorm =
-      (( -(winnerIdx + 0.5) * sliceDeg ) % 360 + 360) % 360;
+      ((-(winnerIdx + 0.5) * sliceDeg) % 360 + 360) % 360;
     const currentNorm =
-      (( currentRotation.current % 360 ) + 360) % 360;
+      ((currentRotation.current % 360) + 360) % 360;
 
     let delta = targetNorm - currentNorm;
     if (delta < 0.01) delta += 360;
@@ -170,7 +204,7 @@ export default function SpinScreen() {
     const newTotal = currentRotation.current + delta + (SPIN_ROTATIONS - 1) * 360;
     currentRotation.current = newTotal;
 
-    const snapshot = listings.slice();
+    const snapshot = spinItems.slice();
 
     Animated.timing(spinAnim, {
       toValue:         newTotal,
@@ -189,6 +223,12 @@ export default function SpinScreen() {
       ]).start();
     });
   };
+
+  // Look up the full listing when in directory mode
+  const winnerListing: Listing | undefined =
+    mode === 'directory' && winner
+      ? allListings.find((l) => l.id === winner.id)
+      : undefined;
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -210,21 +250,17 @@ export default function SpinScreen() {
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: botPad }]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
 
-        {/* ── Category filter ── */}
-        <View style={[styles.pillRow, { backgroundColor: colors.muted }]}>
-          {FILTER_OPTIONS.map((opt) => {
-            const count = allListings.filter(
-              (l) =>
-                (opt.id === 'all' || l.category === opt.id) &&
-                (price  === 'all' || l.priceRange === price)
-            ).length;
-            const active = filter === opt.id;
+        {/* ── Mode toggle ── */}
+        <View style={[styles.pillRow, { backgroundColor: colors.muted, marginBottom: 12 }]}>
+          {(['directory', 'custom'] as Mode[]).map((m) => {
+            const active = mode === m;
             return (
               <Pressable
-                key={opt.id}
-                onPress={() => handleFilterChange(opt.id)}
+                key={m}
+                onPress={() => switchMode(m)}
                 disabled={spinning}
                 style={[
                   styles.pill,
@@ -235,44 +271,113 @@ export default function SpinScreen() {
                 ]}
               >
                 <Text style={[styles.pillText, { color: active ? colors.foreground : colors.mutedForeground }]}>
-                  {opt.label}
-                  <Text style={{ opacity: 0.55 }}> ({count})</Text>
+                  {m === 'directory' ? 'Directory' : 'Custom'}
                 </Text>
               </Pressable>
             );
           })}
         </View>
 
-        {/* ── Price filter ── */}
-        <View style={[styles.pillRow, { backgroundColor: colors.muted, marginTop: 8 }]}>
-          {PRICE_OPTIONS.map((opt) => {
-            const count = allListings.filter(
-              (l) =>
-                (filter === 'all' || l.category === filter) &&
-                (opt.id === 'all' || l.priceRange === opt.id)
-            ).length;
-            const active = price === opt.id;
-            return (
-              <Pressable
-                key={opt.id}
-                onPress={() => handlePriceChange(opt.id)}
-                disabled={spinning}
-                style={[
-                  styles.pill,
-                  {
-                    backgroundColor: active ? colors.card : 'transparent',
-                    opacity: spinning ? 0.45 : 1,
-                  },
-                ]}
-              >
-                <Text style={[styles.pillText, { color: active ? colors.foreground : colors.mutedForeground }]}>
-                  {opt.label}
-                  <Text style={{ opacity: 0.55 }}> ({count})</Text>
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {/* ── Directory: category filter ── */}
+        {mode === 'directory' && (
+          <>
+            <View style={[styles.pillRow, { backgroundColor: colors.muted }]}>
+              {FILTER_OPTIONS.map((opt) => {
+                const count = allListings.filter(
+                  (l) =>
+                    (opt.id === 'all' || l.category === opt.id) &&
+                    (price  === 'all' || l.priceRange === price)
+                ).length;
+                const active = filter === opt.id;
+                return (
+                  <Pressable
+                    key={opt.id}
+                    onPress={() => handleFilterChange(opt.id)}
+                    disabled={spinning}
+                    style={[
+                      styles.pill,
+                      {
+                        backgroundColor: active ? colors.card : 'transparent',
+                        opacity: spinning ? 0.45 : 1,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.pillText, { color: active ? colors.foreground : colors.mutedForeground }]}>
+                      {opt.label}
+                      <Text style={{ opacity: 0.55 }}> ({count})</Text>
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {/* ── Directory: price filter ── */}
+            <View style={[styles.pillRow, { backgroundColor: colors.muted, marginTop: 8 }]}>
+              {PRICE_OPTIONS.map((opt) => {
+                const count = allListings.filter(
+                  (l) =>
+                    (filter === 'all' || l.category === filter) &&
+                    (opt.id === 'all' || l.priceRange === opt.id)
+                ).length;
+                const active = price === opt.id;
+                return (
+                  <Pressable
+                    key={opt.id}
+                    onPress={() => handlePriceChange(opt.id)}
+                    disabled={spinning}
+                    style={[
+                      styles.pill,
+                      {
+                        backgroundColor: active ? colors.card : 'transparent',
+                        opacity: spinning ? 0.45 : 1,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.pillText, { color: active ? colors.foreground : colors.mutedForeground }]}>
+                      {opt.label}
+                      <Text style={{ opacity: 0.55 }}> ({count})</Text>
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        )}
+
+        {/* ── Custom: entry inputs ── */}
+        {mode === 'custom' && (
+          <View style={styles.customWrap}>
+            <Text style={[styles.customHint, { color: colors.mutedForeground }]}>
+              Enter up to 6 options — filled slots appear on the wheel
+            </Text>
+            {customEntries.map((entry, i) => (
+              <View key={i} style={styles.entryRow}>
+                {/* Numbered colour dot */}
+                <View style={[styles.entryDot, { backgroundColor: CUSTOM_COLORS[i] }]}>
+                  <Text style={styles.entryDotText}>{i + 1}</Text>
+                </View>
+                <TextInput
+                  value={entry}
+                  onChangeText={(v) => updateEntry(i, v)}
+                  placeholder={`Entry ${i + 1}`}
+                  placeholderTextColor={colors.mutedForeground}
+                  maxLength={30}
+                  editable={!spinning}
+                  returnKeyType="next"
+                  style={[
+                    styles.entryInput,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                      opacity: spinning ? 0.5 : 1,
+                    },
+                  ]}
+                />
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* ── Wheel + pointer ── */}
         <View style={styles.wheelWrap}>
@@ -282,22 +387,22 @@ export default function SpinScreen() {
 
           <Animated.View style={[styles.wheelAnim, { transform: [{ rotate: rotateStr }] }]}>
             <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
-              {listings.length === 0 ? (
+              {spinItems.length === 0 ? (
                 <Circle cx={CX} cy={CY} r={R} fill={colors.muted} />
               ) : (
-                listings.map((listing, i) => {
+                spinItems.map((item, i) => {
                   const startDeg = -90 + i * sliceDeg;
                   const endDeg   = startDeg + sliceDeg;
                   const midDeg   = startDeg + sliceDeg / 2;
                   const maxChars = 12;
-                  const label    = listing.name.length > maxChars
-                    ? listing.name.slice(0, maxChars - 1) + '…'
-                    : listing.name;
+                  const label    = item.name.length > maxChars
+                    ? item.name.slice(0, maxChars - 1) + '…'
+                    : item.name;
                   return (
-                    <G key={listing.id}>
+                    <G key={item.id}>
                       <Path
                         d={slicePath(startDeg, endDeg)}
-                        fill={listing.color}
+                        fill={item.color}
                         stroke="rgba(255,255,255,0.22)"
                         strokeWidth={1.5}
                       />
@@ -325,9 +430,11 @@ export default function SpinScreen() {
         </View>
 
         {/* ── Empty state ── */}
-        {listings.length === 0 && (
+        {spinItems.length === 0 && (
           <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-            No listings match these filters.
+            {mode === 'directory'
+              ? 'No listings match these filters.'
+              : 'Add at least one entry above to spin.'}
           </Text>
         )}
 
@@ -335,12 +442,12 @@ export default function SpinScreen() {
         <View style={styles.btnRow}>
           <Pressable
             onPress={handleSpin}
-            disabled={spinning || listings.length === 0}
+            disabled={spinning || spinItems.length === 0}
             style={({ pressed }) => [
               styles.spinBtn,
               {
                 backgroundColor: colors.primary,
-                opacity: pressed ? 0.82 : spinning || listings.length === 0 ? 0.5 : 1,
+                opacity: pressed ? 0.82 : spinning || spinItems.length === 0 ? 0.5 : 1,
               },
             ]}
           >
@@ -383,61 +490,83 @@ export default function SpinScreen() {
             <View style={[styles.accentBar, { backgroundColor: winner.color }]} />
 
             <View style={styles.cardInner}>
-              <View style={styles.cardTop}>
-                <View style={[styles.initials, { backgroundColor: winner.color }]}>
-                  <Text style={styles.initialsText}>{winner.initials}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.cardName, { color: colors.foreground }]} numberOfLines={1}>
-                    {winner.name}
-                  </Text>
-                  <View style={styles.cardMeta}>
-                    <Feather name="map-pin" size={12} color={colors.mutedForeground} />
-                    <Text style={[styles.cardMetaText, { color: colors.mutedForeground }]}>
-                      {winner.neighborhood}
+              {/* ── Custom result ── */}
+              {mode === 'custom' && (
+                <View style={styles.customResult}>
+                  <View style={[styles.customResultDot, { backgroundColor: winner.color }]}>
+                    <Text style={styles.customResultDotText}>
+                      {winner.name.slice(0, 2).toUpperCase()}
                     </Text>
                   </View>
+                  <Text style={[styles.customResultLabel, { color: colors.mutedForeground }]}>
+                    The wheel chose
+                  </Text>
+                  <Text style={[styles.customResultName, { color: colors.foreground }]}>
+                    {winner.name}
+                  </Text>
                 </View>
-              </View>
+              )}
 
-              <View style={styles.chips}>
-                <View style={[styles.chip, { backgroundColor: colors.muted }]}>
-                  <Text style={[styles.chipText, { color: colors.mutedForeground }]}>
-                    {winner.category.replace('-', ' ')}
-                  </Text>
-                </View>
-                <View style={[styles.chip, { backgroundColor: colors.muted }]}>
-                  <Text style={[styles.chipText, { color: colors.mutedForeground }]}>
-                    {winner.priceRange}
-                  </Text>
-                </View>
-                <View style={styles.ratingChip}>
-                  <Feather name="star" size={11} color="#F59E0B" />
-                  <Text style={[styles.chipText, { color: colors.foreground, marginLeft: 3 }]}>
-                    {winner.rating}
-                  </Text>
-                </View>
-                {winner.hasVideo && (
-                  <View style={[styles.chip, { backgroundColor: colors.secondary }]}>
-                    <Text style={[styles.chipText, { color: colors.primary }]}>▶ Video</Text>
+              {/* ── Directory result ── */}
+              {mode === 'directory' && winnerListing && (
+                <>
+                  <View style={styles.cardTop}>
+                    <View style={[styles.initials, { backgroundColor: winnerListing.color }]}>
+                      <Text style={styles.initialsText}>{winnerListing.initials}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.cardName, { color: colors.foreground }]} numberOfLines={1}>
+                        {winnerListing.name}
+                      </Text>
+                      <View style={styles.cardMeta}>
+                        <Feather name="map-pin" size={12} color={colors.mutedForeground} />
+                        <Text style={[styles.cardMetaText, { color: colors.mutedForeground }]}>
+                          {winnerListing.neighborhood}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                )}
-              </View>
 
-              <Text style={[styles.cardDesc, { color: colors.mutedForeground }]} numberOfLines={2}>
-                {winner.description}
-              </Text>
+                  <View style={styles.chips}>
+                    <View style={[styles.chip, { backgroundColor: colors.muted }]}>
+                      <Text style={[styles.chipText, { color: colors.mutedForeground }]}>
+                        {winnerListing.category.replace('-', ' ')}
+                      </Text>
+                    </View>
+                    <View style={[styles.chip, { backgroundColor: colors.muted }]}>
+                      <Text style={[styles.chipText, { color: colors.mutedForeground }]}>
+                        {winnerListing.priceRange}
+                      </Text>
+                    </View>
+                    <View style={styles.ratingChip}>
+                      <Feather name="star" size={11} color="#F59E0B" />
+                      <Text style={[styles.chipText, { color: colors.foreground, marginLeft: 3 }]}>
+                        {winnerListing.rating}
+                      </Text>
+                    </View>
+                    {winnerListing.hasVideo && (
+                      <View style={[styles.chip, { backgroundColor: colors.secondary }]}>
+                        <Text style={[styles.chipText, { color: colors.primary }]}>▶ Video</Text>
+                      </View>
+                    )}
+                  </View>
 
-              <Pressable
-                onPress={() => router.push(`/listing/${winner!.id}`)}
-                style={({ pressed }) => [
-                  styles.ctaBtn,
-                  { backgroundColor: colors.primary, opacity: pressed ? 0.82 : 1 },
-                ]}
-              >
-                <Text style={styles.ctaText}>View full listing</Text>
-                <Feather name="arrow-right" size={16} color="#fff" />
-              </Pressable>
+                  <Text style={[styles.cardDesc, { color: colors.mutedForeground }]} numberOfLines={2}>
+                    {winnerListing.description}
+                  </Text>
+
+                  <Pressable
+                    onPress={() => router.push(`/listing/${winnerListing!.id}`)}
+                    style={({ pressed }) => [
+                      styles.ctaBtn,
+                      { backgroundColor: colors.primary, opacity: pressed ? 0.82 : 1 },
+                    ]}
+                  >
+                    <Text style={styles.ctaText}>View full listing</Text>
+                    <Feather name="arrow-right" size={16} color="#fff" />
+                  </Pressable>
+                </>
+              )}
             </View>
           </Animated.View>
         )}
@@ -485,7 +614,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 4,
   },
-  // Filter pills
+  // Filter / mode pills
   pillRow: {
     flexDirection: 'row',
     borderRadius: 100,
@@ -501,6 +630,47 @@ const styles = StyleSheet.create({
   pillText: {
     fontSize: 13,
     fontFamily: 'Inter_500Medium',
+  },
+  // Custom entries
+  customWrap: {
+    width: '88%',
+    maxWidth: 380,
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  customHint: {
+    fontSize: 13,
+    fontFamily: 'Inter_400Regular',
+    textAlign: 'center',
+    marginBottom: 14,
+  },
+  entryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  entryDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  entryDotText: {
+    color: '#fff',
+    fontSize: 13,
+    fontFamily: 'Inter_700Bold',
+  },
+  entryInput: {
+    flex: 1,
+    height: 42,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
   },
   // Wheel
   wheelWrap: {
@@ -543,6 +713,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_400Regular',
     marginBottom: 12,
     marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 32,
   },
   // Buttons
   btnRow: {
@@ -582,6 +754,37 @@ const styles = StyleSheet.create({
   },
   accentBar: { height: 5 },
   cardInner: { padding: 20 },
+  // Custom result layout
+  customResult: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 10,
+  },
+  customResultDot: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  customResultDotText: {
+    color: '#fff',
+    fontSize: 22,
+    fontFamily: 'Inter_700Bold',
+  },
+  customResultLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter_500Medium',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginTop: 2,
+  },
+  customResultName: {
+    fontSize: 26,
+    fontFamily: 'Inter_700Bold',
+    textAlign: 'center',
+  },
+  // Directory result layout
   cardTop: {
     flexDirection: 'row',
     alignItems: 'center',

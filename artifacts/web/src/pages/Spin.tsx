@@ -7,10 +7,22 @@ import { Badge } from "@/components/ui/badge";
 import { useListings } from "@workspace/api-client-react";
 import type { Venue as Listing } from "@workspace/api-client-react";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+/** Minimal item the wheel and result card need from either source */
+type SpinItem = { id: string; name: string; color: string };
+
+type Mode   = "directory" | "custom";
 type Filter = "all" | "restaurants" | "food-trucks";
 type Price  = "all" | "budget" | "mid" | "upscale";
 
-// Internal price-range identifiers avoid shell/regex issues with bare $ signs
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const CUSTOM_COLORS = [
+  "#1B4FD8", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6", "#EC4899",
+];
+const MAX_CUSTOM = 6;
+
 const PRICE_MAP: Record<Price, string | null> = {
   all:     null,
   budget:  "$",
@@ -31,33 +43,19 @@ const PRICE_OPTIONS: { id: Price; label: string }[] = [
   { id: "upscale", label: "$$$" },
 ];
 
-const SPIN_ROTATIONS = 8;   // full extra rotations added for drama
-const SPIN_DURATION  = 4200; // ms
+const SPIN_ROTATIONS = 8;
+const SPIN_DURATION  = 4200;
 const TWO_PI = 2 * Math.PI;
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
 
-/**
- * Draw the coloured wheel.
- *
- * Coordinate convention:
- *   ctx.rotate(angle) is applied before drawing the segments.
- *   Segment i spans  [i*slice - π/2 , (i+1)*slice - π/2]  (so segment 0 starts at the top).
- *   The amber pointer is drawn fixed at the top of the canvas (world-space angle -π/2).
- *
- * Landing math (to land segment `winnerIdx` under the top pointer):
- *   We need the centre of segment winnerIdx to coincide with world angle -π/2.
- *   Centre in rotated frame: -π/2 + (winnerIdx + 0.5) * slice
- *   World angle of centre:   angle + (-π/2 + (winnerIdx + 0.5) * slice) = -π/2
- *   ⟹  angle = -(winnerIdx + 0.5) * slice   (mod 2π)
- */
-function drawWheel(canvas: HTMLCanvasElement, listings: Listing[], angle: number) {
+function drawWheel(canvas: HTMLCanvasElement, items: SpinItem[], angle: number) {
   const ctx = canvas.getContext("2d")!;
   const { width, height } = canvas;
   const cx = width / 2;
   const cy = height / 2;
   const r  = Math.min(cx, cy) - 6;
-  const n  = listings.length;
+  const n  = items.length;
 
   ctx.clearRect(0, 0, width, height);
   if (n === 0) return;
@@ -68,24 +66,21 @@ function drawWheel(canvas: HTMLCanvasElement, listings: Listing[], angle: number
 
   const slice = TWO_PI / n;
 
-  listings.forEach((listing, i) => {
+  items.forEach((item, i) => {
     const start = i * slice - Math.PI / 2;
     const end   = start + slice;
 
-    // Fill segment
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.arc(0, 0, r, start, end);
     ctx.closePath();
-    ctx.fillStyle = listing.color;
+    ctx.fillStyle = item.color;
     ctx.fill();
 
-    // Divider line
     ctx.strokeStyle = "rgba(255,255,255,0.25)";
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Label — rotated to read along the segment
     const midAngle = start + slice / 2;
     ctx.save();
     ctx.rotate(midAngle);
@@ -94,14 +89,14 @@ function drawWheel(canvas: HTMLCanvasElement, listings: Listing[], angle: number
     const fontSize = Math.min(14, Math.max(9, 200 / n));
     ctx.font = `bold ${fontSize}px Inter, sans-serif`;
     const maxChars = 14;
-    const label = listing.name.length > maxChars
-      ? listing.name.slice(0, maxChars - 1) + "…"
-      : listing.name;
+    const label = item.name.length > maxChars
+      ? item.name.slice(0, maxChars - 1) + "…"
+      : item.name;
     ctx.fillText(label, r - 12, fontSize / 3);
     ctx.restore();
   });
 
-  // Hub circle
+  // Hub
   ctx.beginPath();
   ctx.arc(0, 0, 20, 0, TWO_PI);
   ctx.fillStyle = "#fff";
@@ -110,7 +105,6 @@ function drawWheel(canvas: HTMLCanvasElement, listings: Listing[], angle: number
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Hub dot
   ctx.beginPath();
   ctx.arc(0, 0, 7, 0, TWO_PI);
   ctx.fillStyle = "#1B4FD8";
@@ -128,12 +122,11 @@ function drawPointer(canvas: HTMLCanvasElement) {
   ctx.save();
   ctx.translate(cx, cy);
 
-  // Amber downward-pointing triangle sitting just outside the top of the wheel
   const tipY = -(r + 2);
   ctx.beginPath();
-  ctx.moveTo(0,   tipY + 26); // base-centre (inside wheel)
-  ctx.lineTo(-10, tipY + 4);  // left
-  ctx.lineTo(10,  tipY + 4);  // right
+  ctx.moveTo(0,   tipY + 26);
+  ctx.lineTo(-10, tipY + 4);
+  ctx.lineTo(10,  tipY + 4);
   ctx.closePath();
   ctx.fillStyle = "#F59E0B";
   ctx.shadowColor = "rgba(0,0,0,0.3)";
@@ -143,9 +136,6 @@ function drawPointer(canvas: HTMLCanvasElement) {
   ctx.restore();
 }
 
-// ─── Easing ───────────────────────────────────────────────────────────────────
-
-/** Ease-out cubic */
 function easeOut(t: number) {
   return 1 - Math.pow(1 - t, 3);
 }
@@ -155,40 +145,49 @@ function easeOut(t: number) {
 export default function Spin() {
   const [, setLocation] = useLocation();
 
-  const [filter,   setFilter]   = useState<Filter>("all");
-  const [price,    setPrice]    = useState<Price>("all");
+  const [mode,    setMode]    = useState<Mode>("directory");
+  const [filter,  setFilter]  = useState<Filter>("all");
+  const [price,   setPrice]   = useState<Price>("all");
   const [spinning, setSpinning] = useState(false);
-  const [winner,   setWinner]   = useState<Listing | null>(null);
+  const [winner,  setWinner]  = useState<SpinItem | null>(null);
 
-  // Running total angle (never modded — keeps continuity across spins)
+  // Custom entries — array of 6 strings (empty = unused slot)
+  const [customEntries, setCustomEntries] = useState<string[]>(
+    Array(MAX_CUSTOM).fill("")
+  );
+
   const currentAngleRef = useRef(0);
-  const [displayAngle, setDisplayAngle] = useState(0); // triggers redraws
-
-  const canvasRef      = useRef<HTMLCanvasElement>(null);
-  const rafRef         = useRef<number | null>(null);
+  const [displayAngle, setDisplayAngle] = useState(0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rafRef    = useRef<number | null>(null);
 
   const { data: allListings = [] } = useListings();
 
   const priceVal = PRICE_MAP[price];
-  const listings = allListings.filter(
+  const directoryItems: SpinItem[] = allListings.filter(
     (l) =>
       (filter === "all" || l.category === filter) &&
       (priceVal === null || l.priceRange === priceVal)
   );
 
+  const customItems: SpinItem[] = customEntries
+    .map((name, i) => ({ id: `custom-${i}`, name: name.trim(), color: CUSTOM_COLORS[i] }))
+    .filter((e) => e.name.length > 0);
+
+  const spinItems = mode === "directory" ? directoryItems : customItems;
+
   // ── Draw ──────────────────────────────────────────────────────────────────
 
   const redraw = useCallback(
-    (angle: number, lsOverride?: Listing[]) => {
+    (angle: number, override?: SpinItem[]) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      drawWheel(canvas, lsOverride ?? listings, angle);
+      drawWheel(canvas, override ?? spinItems, angle);
       drawPointer(canvas);
     },
-    [listings]
+    [spinItems]
   );
 
-  // Size canvas + redraw on listing/angle change
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -196,54 +195,38 @@ export default function Spin() {
     canvas.width  = size;
     canvas.height = size;
     redraw(currentAngleRef.current);
-  }, [listings, redraw]);
+  }, [spinItems, redraw]);
 
-  // Redraw whenever displayAngle changes (driven by RAF during spin)
-  useEffect(() => {
-    redraw(displayAngle);
-  }, [displayAngle, redraw]);
+  useEffect(() => { redraw(displayAngle); }, [displayAngle, redraw]);
 
-  // Cleanup RAF on unmount
   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
 
   // ── Spin ──────────────────────────────────────────────────────────────────
 
   const handleSpin = () => {
-    if (spinning || listings.length === 0) return;
+    if (spinning || spinItems.length === 0) return;
 
     setWinner(null);
     setSpinning(true);
 
-    // Cancel any in-progress animation
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
-    const n     = listings.length;
+    const n     = spinItems.length;
     const slice = TWO_PI / n;
-
-    // Pick winner
     const winnerIdx = Math.floor(Math.random() * n);
 
-    // Landing angle (normalized 0…2π):
-    //   angle = -(winnerIdx + 0.5) * slice  (mod 2π)
     const targetNorm =
-      (( -(winnerIdx + 0.5) * slice ) % TWO_PI + TWO_PI) % TWO_PI;
-
-    // Current normalized position
+      ((-(winnerIdx + 0.5) * slice) % TWO_PI + TWO_PI) % TWO_PI;
     const currentNorm =
-      (currentAngleRef.current % TWO_PI + TWO_PI) % TWO_PI;
+      ((currentAngleRef.current % TWO_PI) + TWO_PI) % TWO_PI;
 
-    // Always rotate *forward*; guarantee at least a small arc
     let delta = targetNorm - currentNorm;
     if (delta < 0.01) delta += TWO_PI;
 
-    // Total target = current + delta + (SPIN_ROTATIONS-1) extra loops
     const totalTarget = currentAngleRef.current + delta + (SPIN_ROTATIONS - 1) * TWO_PI;
-
     const startAngle  = currentAngleRef.current;
     const startTime   = { v: -1 };
-
-    // Capture listings snapshot so filter changes mid-spin don't corrupt result
-    const spinListings = listings.slice();
+    const snapshot    = spinItems.slice();
 
     const animate = (ts: number) => {
       if (startTime.v < 0) startTime.v = ts;
@@ -251,10 +234,9 @@ export default function Spin() {
       const t       = Math.min(elapsed / SPIN_DURATION, 1);
       const current = startAngle + (totalTarget - startAngle) * easeOut(t);
 
-      // Draw with snapshot so a filter change doesn't corrupt the visual
       const canvas = canvasRef.current;
       if (canvas) {
-        drawWheel(canvas, spinListings, current);
+        drawWheel(canvas, snapshot, current);
         drawPointer(canvas);
       }
 
@@ -264,19 +246,26 @@ export default function Spin() {
         currentAngleRef.current = totalTarget;
         setDisplayAngle(totalTarget);
         setSpinning(false);
-        setWinner(spinListings[winnerIdx]);
+        setWinner(snapshot[winnerIdx]);
       }
     };
 
     rafRef.current = requestAnimationFrame(animate);
   };
 
-  // ── Filter change ─────────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
   const resetWheel = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     currentAngleRef.current = 0;
     setDisplayAngle(0);
+  };
+
+  const switchMode = (m: Mode) => {
+    if (spinning) return;
+    resetWheel();
+    setMode(m);
+    setWinner(null);
   };
 
   const handleFilterChange = (f: Filter) => {
@@ -293,8 +282,6 @@ export default function Spin() {
     setWinner(null);
   };
 
-  // ── Reset ─────────────────────────────────────────────────────────────────
-
   const handleReset = () => {
     if (spinning) return;
     currentAngleRef.current = 0;
@@ -302,12 +289,27 @@ export default function Spin() {
     setWinner(null);
   };
 
+  const updateEntry = (idx: number, value: string) => {
+    if (spinning) return;
+    const next = [...customEntries];
+    next[idx] = value.slice(0, 30);
+    setCustomEntries(next);
+    resetWheel();
+    setWinner(null);
+  };
+
+  // Look up the full listing for the directory result card
+  const winnerListing: Listing | undefined =
+    mode === "directory" && winner
+      ? allListings.find((l) => l.id === winner.id)
+      : undefined;
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center pb-20 pt-10 px-4 bg-background">
       {/* Header */}
-      <div className="text-center mb-8 max-w-lg">
+      <div className="text-center mb-6 max-w-lg">
         <div className="inline-flex items-center gap-2 bg-accent/10 text-accent-foreground px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
           <Shuffle className="w-4 h-4" />
           Can't decide?
@@ -320,60 +322,107 @@ export default function Spin() {
         </p>
       </div>
 
-      {/* Filters — disabled during spin */}
-      <div className="flex flex-col items-center gap-2 mb-8">
-        {/* Category */}
-        <div className="flex items-center gap-2 p-1 bg-muted rounded-full">
-          {FILTER_OPTIONS.map((opt) => {
-            const count = allListings.filter(
-              (l) =>
-                (opt.id === "all" || l.category === opt.id) &&
-                (priceVal === null || l.priceRange === priceVal)
-            ).length;
-            return (
-              <button
-                key={opt.id}
-                onClick={() => handleFilterChange(opt.id)}
-                disabled={spinning}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                  filter === opt.id
-                    ? "bg-background shadow text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {opt.label}
-                <span className="ml-1.5 text-xs opacity-60">({count})</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Price */}
-        <div className="flex items-center gap-2 p-1 bg-muted rounded-full">
-          {PRICE_OPTIONS.map((opt) => {
-            const count = allListings.filter(
-              (l) =>
-                (filter === "all" || l.category === filter) &&
-                (PRICE_MAP[opt.id] === null || l.priceRange === PRICE_MAP[opt.id])
-            ).length;
-            return (
-              <button
-                key={opt.id}
-                onClick={() => handlePriceChange(opt.id)}
-                disabled={spinning}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                  price === opt.id
-                    ? "bg-background shadow text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {opt.label}
-                <span className="ml-1.5 text-xs opacity-60">({count})</span>
-              </button>
-            );
-          })}
-        </div>
+      {/* Mode toggle */}
+      <div className="flex items-center gap-1 p-1 bg-muted rounded-full mb-6">
+        {(["directory", "custom"] as Mode[]).map((m) => (
+          <button
+            key={m}
+            onClick={() => switchMode(m)}
+            disabled={spinning}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed capitalize ${
+              mode === m
+                ? "bg-background shadow text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {m === "directory" ? "Directory" : "Custom"}
+          </button>
+        ))}
       </div>
+
+      {/* Directory filters */}
+      {mode === "directory" && (
+        <div className="flex flex-col items-center gap-2 mb-8">
+          <div className="flex items-center gap-2 p-1 bg-muted rounded-full">
+            {FILTER_OPTIONS.map((opt) => {
+              const count = allListings.filter(
+                (l) =>
+                  (opt.id === "all" || l.category === opt.id) &&
+                  (priceVal === null || l.priceRange === priceVal)
+              ).length;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => handleFilterChange(opt.id)}
+                  disabled={spinning}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                    filter === opt.id
+                      ? "bg-background shadow text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {opt.label}
+                  <span className="ml-1.5 text-xs opacity-60">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2 p-1 bg-muted rounded-full">
+            {PRICE_OPTIONS.map((opt) => {
+              const count = allListings.filter(
+                (l) =>
+                  (filter === "all" || l.category === filter) &&
+                  (PRICE_MAP[opt.id] === null || l.priceRange === PRICE_MAP[opt.id])
+              ).length;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => handlePriceChange(opt.id)}
+                  disabled={spinning}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                    price === opt.id
+                      ? "bg-background shadow text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {opt.label}
+                  <span className="ml-1.5 text-xs opacity-60">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Custom entry inputs */}
+      {mode === "custom" && (
+        <div className="w-full max-w-sm mb-8">
+          <p className="text-sm text-muted-foreground text-center mb-4">
+            Enter up to 6 options — filled slots appear on the wheel
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {customEntries.map((entry, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span
+                  className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center text-white shrink-0"
+                  style={{ backgroundColor: CUSTOM_COLORS[i] }}
+                >
+                  {i + 1}
+                </span>
+                <input
+                  value={entry}
+                  onChange={(e) => updateEntry(i, e.target.value)}
+                  placeholder={`Entry ${i + 1}`}
+                  maxLength={30}
+                  disabled={spinning}
+                  className="flex-1 min-w-0 text-sm border border-border rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Wheel + controls */}
       <div className="flex flex-col items-center gap-6 w-full max-w-[440px]">
@@ -390,12 +439,11 @@ export default function Spin() {
           />
         </div>
 
-        {/* Buttons */}
         <div className="flex items-center gap-3">
           <Button
             size="lg"
             onClick={handleSpin}
-            disabled={spinning || listings.length === 0}
+            disabled={spinning || spinItems.length === 0}
             className="rounded-full px-10 text-base font-bold gap-2 min-w-36"
           >
             {spinning ? (
@@ -426,9 +474,11 @@ export default function Spin() {
       </div>
 
       {/* Empty state */}
-      {listings.length === 0 && (
+      {spinItems.length === 0 && (
         <p className="mt-8 text-muted-foreground text-sm">
-          No listings match this filter.
+          {mode === "directory"
+            ? "No listings match this filter."
+            : "Add at least one entry above to spin."}
         </p>
       )}
 
@@ -443,68 +493,93 @@ export default function Spin() {
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="mt-10 w-full max-w-md"
           >
-            {/* Accent bar */}
-            <div
-              className="h-1.5 rounded-t-2xl w-full"
-              style={{ backgroundColor: winner.color }}
-            />
-            <div className="border border-t-0 rounded-b-2xl bg-card shadow-lg p-6">
-              {/* Badges */}
-              <div className="flex items-center gap-2 mb-3">
-                <Badge variant="outline" className="capitalize">
-                  {winner.category.replace("-", " ")}
-                </Badge>
-                <Badge variant="secondary">{winner.priceRange}</Badge>
-                {winner.hasVideo && (
-                  <Badge className="bg-primary/10 text-primary border-primary/20 font-semibold">
-                    ▶ Video
-                  </Badge>
-                )}
-              </div>
-
-              {/* Name + initials */}
-              <div className="flex items-center gap-4 mb-4">
+            {/* ── Custom result ── */}
+            {mode === "custom" && (
+              <>
                 <div
-                  className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-black text-lg shrink-0"
+                  className="h-1.5 rounded-t-2xl w-full"
                   style={{ backgroundColor: winner.color }}
-                >
-                  {winner.initials}
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black tracking-tight leading-tight">
-                    {winner.name}
-                  </h2>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                    <MapPin className="w-3.5 h-3.5 shrink-0" />
-                    {winner.neighborhood}
+                />
+                <div className="border border-t-0 rounded-b-2xl bg-card shadow-lg px-8 py-10 flex flex-col items-center gap-3">
+                  <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-2xl"
+                    style={{ backgroundColor: winner.color }}
+                  >
+                    {winner.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+                      The wheel chose
+                    </p>
+                    <h2 className="text-3xl font-black tracking-tight">
+                      {winner.name}
+                    </h2>
                   </div>
                 </div>
-              </div>
+              </>
+            )}
 
-              {/* Rating */}
-              <div className="flex items-center gap-2 mb-4">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                <span className="font-bold">{winner.rating}</span>
-                <span className="text-muted-foreground text-sm">
-                  ({winner.reviewCount.toLocaleString()} reviews)
-                </span>
-              </div>
+            {/* ── Directory result ── */}
+            {mode === "directory" && winnerListing && (
+              <>
+                <div
+                  className="h-1.5 rounded-t-2xl w-full"
+                  style={{ backgroundColor: winnerListing.color }}
+                />
+                <div className="border border-t-0 rounded-b-2xl bg-card shadow-lg p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge variant="outline" className="capitalize">
+                      {winnerListing.category.replace("-", " ")}
+                    </Badge>
+                    <Badge variant="secondary">{winnerListing.priceRange}</Badge>
+                    {winnerListing.hasVideo && (
+                      <Badge className="bg-primary/10 text-primary border-primary/20 font-semibold">
+                        ▶ Video
+                      </Badge>
+                    )}
+                  </div>
 
-              {/* Description snippet */}
-              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-5">
-                {winner.description}
-              </p>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div
+                      className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-black text-lg shrink-0"
+                      style={{ backgroundColor: winnerListing.color }}
+                    >
+                      {winnerListing.initials}
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-black tracking-tight leading-tight">
+                        {winnerListing.name}
+                      </h2>
+                      <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                        <MapPin className="w-3.5 h-3.5 shrink-0" />
+                        {winnerListing.neighborhood}
+                      </div>
+                    </div>
+                  </div>
 
-              {/* CTA */}
-              <Button
-                className="w-full gap-2 rounded-xl"
-                size="lg"
-                onClick={() => setLocation(`/listing/${winner.id}`)}
-              >
-                <ExternalLink className="w-4 h-4" />
-                View full listing
-              </Button>
-            </div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <span className="font-bold">{winnerListing.rating}</span>
+                    <span className="text-muted-foreground text-sm">
+                      ({winnerListing.reviewCount.toLocaleString()} reviews)
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-5">
+                    {winnerListing.description}
+                  </p>
+
+                  <Button
+                    className="w-full gap-2 rounded-xl"
+                    size="lg"
+                    onClick={() => setLocation(`/listing/${winnerListing.id}`)}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    View full listing
+                  </Button>
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
