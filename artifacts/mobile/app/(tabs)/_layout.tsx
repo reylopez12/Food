@@ -59,7 +59,7 @@ function NativeTabLayout({ unreadCount }: { unreadCount: number }) {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="spin">
         <Icon sf={{ default: 'shuffle', selected: 'shuffle' }} />
-        <Label>Indecisive</Label>
+        <Label>Spin</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="notifications">
         <View style={styles.nativeBellWrap}>
@@ -74,9 +74,13 @@ function NativeTabLayout({ unreadCount }: { unreadCount: number }) {
         </View>
         <Label>Alerts</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="more">
-        <Icon sf={{ default: 'ellipsis', selected: 'ellipsis.circle.fill' }} />
-        <Label>More</Label>
+      <NativeTabs.Trigger name="saved">
+        <Icon sf={{ default: 'bookmark', selected: 'bookmark.fill' }} />
+        <Label>Saved</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="profile">
+        <Icon sf={{ default: 'person', selected: 'person.fill' }} />
+        <Label>Profile</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -128,9 +132,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Home',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="house" tintColor={color} size={24} />
+              <SymbolView name="house" tintColor={color} size={22} />
             ) : (
-              <Feather name="home" size={22} color={color} />
+              <Feather name="home" size={20} color={color} />
             ),
         }}
       />
@@ -140,9 +144,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Explore',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="magnifyingglass" tintColor={color} size={24} />
+              <SymbolView name="magnifyingglass" tintColor={color} size={22} />
             ) : (
-              <Feather name="search" size={22} color={color} />
+              <Feather name="search" size={20} color={color} />
             ),
         }}
       />
@@ -152,9 +156,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Map',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="map" tintColor={color} size={24} />
+              <SymbolView name="map" tintColor={color} size={22} />
             ) : (
-              <Feather name="map" size={22} color={color} />
+              <Feather name="map" size={20} color={color} />
             ),
         }}
       />
@@ -164,9 +168,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Spin',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="shuffle" tintColor={color} size={24} />
+              <SymbolView name="shuffle" tintColor={color} size={22} />
             ) : (
-              <Feather name="shuffle" size={22} color={color} />
+              <Feather name="shuffle" size={20} color={color} />
             ),
         }}
       />
@@ -177,33 +181,40 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="bell" tintColor={color} size={24} />
+              <SymbolView name="bell" tintColor={color} size={22} />
             ) : (
-              <Feather name="bell" size={22} color={color} />
+              <Feather name="bell" size={20} color={color} />
             ),
         }}
       />
-      {/* More — replaces Saved + Profile in the tab bar */}
-      <Tabs.Screen
-        name="more"
-        options={{
-          title: 'More',
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="ellipsis.circle" tintColor={color} size={24} />
-            ) : (
-              <Feather name="more-horizontal" size={22} color={color} />
-            ),
-        }}
-      />
-      {/* Hidden screens — still navigable, just not shown in tab bar */}
       <Tabs.Screen
         name="saved"
-        options={{ tabBarButton: () => null, title: 'Saved' }}
+        options={{
+          title: 'Saved',
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="bookmark" tintColor={color} size={22} />
+            ) : (
+              <Feather name="bookmark" size={20} color={color} />
+            ),
+        }}
       />
       <Tabs.Screen
         name="profile"
-        options={{ tabBarButton: () => null, title: 'Profile' }}
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="person" tintColor={color} size={22} />
+            ) : (
+              <Feather name="user" size={20} color={color} />
+            ),
+        }}
+      />
+      {/* More screen — navigable but not shown in tab bar */}
+      <Tabs.Screen
+        name="more"
+        options={{ tabBarButton: () => null, title: 'More' }}
       />
     </Tabs>
   );
