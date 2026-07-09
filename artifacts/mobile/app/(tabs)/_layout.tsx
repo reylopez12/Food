@@ -95,6 +95,7 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
+        tabBarItemStyle: { flex: 1 },
         tabBarStyle: {
           position: 'absolute',
           backgroundColor: isIOS ? 'transparent' : colors.background,
