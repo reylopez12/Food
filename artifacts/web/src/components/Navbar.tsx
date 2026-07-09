@@ -1,5 +1,17 @@
 import { Link, useLocation } from "wouter";
-import { UtensilsCrossed, Search, Moon, Sun, Menu, Shuffle, LogIn, LogOut, Bell } from "lucide-react";
+import {
+  UtensilsCrossed,
+  Search,
+  Moon,
+  Sun,
+  Menu,
+  Shuffle,
+  LogIn,
+  LogOut,
+  Bell,
+  Bookmark,
+  User,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "../hooks/useTheme";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -31,10 +43,10 @@ export function Navbar() {
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
   const { unreadCount } = useNotifications(isAuthenticated);
 
+  // Saved and Profile live in the dropdown — not in the top nav
   const navLinks: NavLink[] = [
     { href: "/", label: "Home" },
     { href: "/explore", label: "Explore" },
-    { href: "/saved", label: "Saved" },
     { href: "/spin", label: "Indecisive Spin", icon: <Shuffle className="w-3.5 h-3.5" />, highlight: true },
   ];
 
@@ -112,9 +124,10 @@ export function Navbar() {
             </Button>
           )}
 
-          {/* Auth button — desktop */}
+          {/* ── Desktop account menu ── */}
           {!isLoading && (
             isAuthenticated ? (
+              /* Authenticated: avatar dropdown with Profile, Saved, Notifications, Log out */
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="hidden md:flex rounded-full">
@@ -126,12 +139,25 @@ export function Navbar() {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <div className="px-2 py-1.5 text-sm font-medium">{displayName}</div>
-                  {user?.email && (
-                    <div className="px-2 pb-1.5 text-xs text-muted-foreground">{user.email}</div>
-                  )}
+                <DropdownMenuContent align="end" className="w-52">
+                  {/* Profile header */}
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium">{displayName}</p>
+                    {user?.email && (
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    )}
+                  </div>
                   <DropdownMenuSeparator />
+
+                  {/* Saved */}
+                  <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                    <Link href="/saved">
+                      <Bookmark className="w-4 h-4" />
+                      Saved
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {/* Notifications */}
                   <DropdownMenuItem asChild className="gap-2 cursor-pointer">
                     <Link href="/notifications">
                       <Bell className="w-4 h-4" />
@@ -143,6 +169,7 @@ export function Navbar() {
                       )}
                     </Link>
                   </DropdownMenuItem>
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="gap-2 cursor-pointer">
                     <LogOut className="w-4 h-4" />
@@ -151,14 +178,32 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant="outline" size="sm" onClick={login} className="hidden md:flex gap-1.5">
-                <LogIn className="w-3.5 h-3.5" />
-                Log in
-              </Button>
+              /* Unauthenticated: dropdown with Saved + Log in */
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="hidden md:flex gap-1.5">
+                    <User className="w-3.5 h-3.5" />
+                    Menu
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                    <Link href="/saved">
+                      <Bookmark className="w-4 h-4" />
+                      Saved
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={login} className="gap-2 cursor-pointer">
+                    <LogIn className="w-4 h-4" />
+                    Log in
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )
           )}
 
-          {/* Mobile Nav */}
+          {/* ── Mobile hamburger sheet ── */}
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
@@ -168,6 +213,7 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent side="right">
               <div className="flex flex-col gap-6 mt-8">
+                {/* Core nav links */}
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
@@ -180,6 +226,19 @@ export function Navbar() {
                     {link.label}
                   </Link>
                 ))}
+
+                {/* Saved — always accessible */}
+                <Link
+                  href="/saved"
+                  className={`flex items-center gap-2 text-lg font-medium transition-colors ${
+                    location === "/saved" ? "text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  <Bookmark className="w-4 h-4" />
+                  Saved
+                </Link>
+
+                {/* Notifications — authenticated only */}
                 {isAuthenticated && (
                   <Link
                     href="/notifications"
@@ -196,6 +255,8 @@ export function Navbar() {
                     )}
                   </Link>
                 )}
+
+                {/* Profile / auth section */}
                 <div className="pt-4 border-t">
                   {!isLoading && (
                     isAuthenticated ? (
