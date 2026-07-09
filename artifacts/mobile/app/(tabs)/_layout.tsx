@@ -234,10 +234,14 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
             ),
         }}
       />
-      {/* More screen — navigable but not shown in tab bar */}
+      {/* More screen — navigable but takes no space in the tab bar */}
       <Tabs.Screen
         name="more"
-        options={{ tabBarButton: () => null, title: 'More' }}
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none', width: 0 },
+          title: 'More',
+        }}
       />
     </Tabs>
   );
