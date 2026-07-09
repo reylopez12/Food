@@ -86,7 +86,24 @@ function NativeTabLayout({ unreadCount }: { unreadCount: number }) {
   );
 }
 
+function useTabBarEdgeFix() {
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const id = 'rnav-tab-edge-fix';
+    if (document.getElementById(id)) return;
+    const el = document.createElement('style');
+    el.id = id;
+    // React Navigation puts paddingHorizontal on the Animated.View that wraps
+    // [role="tablist"]. It comes from safe-area insets and can't be overridden
+    // via tabBarStyle on the web renderer. This zeros it out.
+    el.textContent = `div:has(> [role="tablist"]) { padding-left: 0 !important; padding-right: 0 !important; }`;
+    document.head.appendChild(el);
+    return () => { el.remove(); };
+  }, []);
+}
+
 function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
+  useTabBarEdgeFix();
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -99,14 +116,20 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
-        tabBarItemStyle: { flex: 1 },
+        tabBarItemStyle: { flex: 1, margin: 0, padding: 0 },
         tabBarLabelStyle: { fontSize: 10 },
+        tabBarContentContainerStyle: { paddingHorizontal: 0 },
         tabBarStyle: {
           position: 'absolute',
+          left: 0,
+          right: 0,
           backgroundColor: isIOS ? 'transparent' : colors.background,
           borderTopWidth: isWeb ? 1 : 0,
           borderTopColor: colors.border,
           elevation: 0,
+          paddingHorizontal: 0,
+          paddingLeft: 0,
+          paddingRight: 0,
           ...(isWeb ? { height: 84 } : {}),
         },
         tabBarBackground: () =>
