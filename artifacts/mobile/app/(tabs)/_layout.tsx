@@ -96,6 +96,7 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarItemStyle: { flex: 1 },
+        tabBarLabelStyle: { fontSize: 10 },
         tabBarStyle: {
           position: 'absolute',
           backgroundColor: isIOS ? 'transparent' : colors.background,
@@ -160,7 +161,7 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
       <Tabs.Screen
         name="spin"
         options={{
-          title: 'Indecisive',
+          title: 'Spin',
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="shuffle" tintColor={color} size={24} />
