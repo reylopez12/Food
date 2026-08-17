@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import {
   Animated,
   Easing,
@@ -50,7 +50,17 @@ const MAX_CUSTOM = 6;
 
 const SPIN_ROTATIONS = 8;
 const SPIN_DURATION  = 4200;
+const MAX_DIR_SLOTS  = 10;
 const WHEEL_SIZE     = 300;
+
+function shuffled<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 const CX             = WHEEL_SIZE / 2;
 const CY             = WHEEL_SIZE / 2;
 const R              = WHEEL_SIZE / 2 - 4;
@@ -86,6 +96,7 @@ export default function SpinScreen() {
   const [price,    setPrice]    = useState<PriceId>('all');
   const [spinning, setSpinning] = useState(false);
   const [winner,   setWinner]   = useState<SpinItem | null>(null);
+  const [dirSeed,  setDirSeed]  = useState(0);
 
   // Custom entries — array of 6 strings (empty = unused slot)
   const [customEntries, setCustomEntries] = useState<string[]>(
@@ -107,11 +118,16 @@ export default function SpinScreen() {
 
   const { listings: allListings } = useDirectory();
 
-  const directoryItems: SpinItem[] = allListings.filter(
-    (l) =>
-      (filter === 'all' || l.category === filter) &&
-      (price  === 'all' || l.priceRange === price)
-  );
+  // Cap directory mode to 10 random listings; reseed on filter/price change or manual reshuffle
+  const directoryItems: SpinItem[] = useMemo(() => {
+    const filtered = allListings.filter(
+      (l) =>
+        (filter === 'all' || l.category === filter) &&
+        (price  === 'all' || l.priceRange === price)
+    );
+    return shuffled(filtered).slice(0, MAX_DIR_SLOTS);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allListings, filter, price, dirSeed]);
 
   const customItems: SpinItem[] = customEntries
     .map((name, i) => ({ id: `custom-${i}`, name: name.trim(), color: CUSTOM_COLORS[i] }))
@@ -169,6 +185,14 @@ export default function SpinScreen() {
     if (spinning) return;
     setWinner(null);
     resetResult();
+  };
+
+  const handleReshuffle = () => {
+    if (spinning) return;
+    resetWheel();
+    setWinner(null);
+    resetResult();
+    setDirSeed(s => s + 1);
   };
 
   const updateEntry = (idx: number, value: string) => {
@@ -287,6 +311,16 @@ export default function SpinScreen() {
         {/* ── Directory: category filter ── */}
         {mode === 'directory' && (
           <>
+            <View style={styles.reshuffleRow}>
+              <Text style={[styles.reshuffleHint, { color: colors.mutedForeground }]}>
+                10 random spots —{' '}
+              </Text>
+              <Pressable onPress={handleReshuffle} disabled={spinning}>
+                <Text style={[styles.reshuffleLink, { color: colors.primary, opacity: spinning ? 0.4 : 1 }]}>
+                  reshuffle
+                </Text>
+              </Pressable>
+            </View>
             <View style={[styles.pillRow, { backgroundColor: colors.muted }]}>
               {FILTER_OPTIONS.map((opt) => {
                 const count = allListings.filter(
@@ -713,6 +747,20 @@ const styles = StyleSheet.create({
     shadowRadius:  18,
     shadowOffset:  { width: 0, height: 4 },
     elevation: 6,
+  },
+  reshuffleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  reshuffleHint: {
+    fontSize: 12,
+    fontFamily: 'Inter_400Regular',
+  },
+  reshuffleLink: {
+    fontSize: 12,
+    fontFamily: 'Inter_500Medium',
+    textDecorationLine: 'underline',
   },
   emptyText: {
     fontSize: 14,

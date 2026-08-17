@@ -17,6 +17,7 @@ import { FeaturedCard } from '@/components/FeaturedCard';
 import { ListingCard } from '@/components/ListingCard';
 import { CategoryPillRow } from '@/components/CategoryPill';
 import { VideoShowcase } from '@/components/VideoShowcase';
+import { HomeSpinWidget } from '@/components/HomeSpinWidget';
 const LOCATION = 'San Francisco Bay Area';
 
 export default function HomeScreen() {
@@ -72,6 +73,9 @@ export default function HomeScreen() {
             <Feather name="sliders" size={14} color="#fff" />
           </View>
         </TouchableOpacity>
+
+        {/* Spin wheel — first feature users see */}
+        <HomeSpinWidget />
 
         {/* Video Showcase */}
         <VideoShowcase />

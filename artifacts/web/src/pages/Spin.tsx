@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
-import { Shuffle, RotateCcw, ExternalLink, Star, MapPin } from "lucide-react";
+import { Shuffle, RotateCcw, RefreshCw, ExternalLink, Star, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useListings } from "@workspace/api-client-react";
@@ -43,9 +43,19 @@ const PRICE_OPTIONS: { id: Price; label: string }[] = [
   { id: "upscale", label: "$$$" },
 ];
 
-const SPIN_ROTATIONS = 8;
-const SPIN_DURATION  = 4200;
-const TWO_PI = 2 * Math.PI;
+const SPIN_ROTATIONS  = 8;
+const SPIN_DURATION   = 4200;
+const TWO_PI          = 2 * Math.PI;
+const MAX_DIR_SLOTS   = 10;
+
+function shuffled<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
 
@@ -150,6 +160,7 @@ export default function Spin() {
   const [price,   setPrice]   = useState<Price>("all");
   const [spinning, setSpinning] = useState(false);
   const [winner,  setWinner]  = useState<SpinItem | null>(null);
+  const [dirSeed, setDirSeed] = useState(0);
 
   // Custom entries — array of 6 strings (empty = unused slot)
   const [customEntries, setCustomEntries] = useState<string[]>(
@@ -164,11 +175,17 @@ export default function Spin() {
   const { data: allListings = [] } = useListings();
 
   const priceVal = PRICE_MAP[price];
-  const directoryItems: SpinItem[] = allListings.filter(
-    (l) =>
-      (filter === "all" || l.category === filter) &&
-      (priceVal === null || l.priceRange === priceVal)
-  );
+
+  // Cap directory mode to 10 random listings; reseed on filter/price change or manual reshuffle
+  const directoryItems: SpinItem[] = useMemo(() => {
+    const filtered = allListings.filter(
+      (l) =>
+        (filter === "all" || l.category === filter) &&
+        (priceVal === null || l.priceRange === priceVal)
+    );
+    return shuffled(filtered).slice(0, MAX_DIR_SLOTS);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allListings, filter, priceVal, dirSeed]);
 
   const customItems: SpinItem[] = customEntries
     .map((name, i) => ({ id: `custom-${i}`, name: name.trim(), color: CUSTOM_COLORS[i] }))
@@ -289,6 +306,14 @@ export default function Spin() {
     setWinner(null);
   };
 
+  const handleReshuffle = () => {
+    if (spinning) return;
+    currentAngleRef.current = 0;
+    setDisplayAngle(0);
+    setWinner(null);
+    setDirSeed(s => s + 1);
+  };
+
   const updateEntry = (idx: number, value: string) => {
     if (spinning) return;
     const next = [...customEntries];
@@ -349,6 +374,9 @@ export default function Spin() {
       {/* Directory filters */}
       {mode === "directory" && (
         <div className="flex flex-col items-center gap-2 mb-8">
+          <p className="text-xs text-muted-foreground mb-1">
+            Showing 10 random spots — <button onClick={handleReshuffle} disabled={spinning} className="underline hover:text-foreground transition-colors disabled:opacity-40">reshuffle</button>
+          </p>
           <div className="flex items-center gap-2 p-1 bg-muted rounded-full">
             {FILTER_OPTIONS.map((opt) => {
               const count = allListings.filter(
