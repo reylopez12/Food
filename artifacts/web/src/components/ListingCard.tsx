@@ -8,9 +8,11 @@ import { useSavedListings } from "../hooks/useSavedListings";
 
 interface ListingCardProps {
   listing: Listing;
+  /** Distance from the user's current location in miles, if available. */
+  distanceMi?: number;
 }
 
-export function ListingCard({ listing }: ListingCardProps) {
+export function ListingCard({ listing, distanceMi }: ListingCardProps) {
   const { isSaved, toggleSaved } = useSavedListings();
   const saved = isSaved(listing.id);
 
@@ -19,11 +21,18 @@ export function ListingCard({ listing }: ListingCardProps) {
     toggleSaved(listing.id);
   };
 
+  const distanceLabel =
+    distanceMi !== undefined
+      ? distanceMi < 0.1
+        ? '< 0.1 mi'
+        : `${distanceMi.toFixed(1)} mi`
+      : null;
+
   return (
     <Link href={`/listing/${listing.id}`} className="group block h-full outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg">
       <Card className="h-full overflow-hidden transition-all hover:shadow-md dark:hover:border-primary/50 flex flex-col bg-card">
         {/* Top colored band */}
-        <div 
+        <div
           className="h-20 w-full relative flex items-center justify-center transition-colors"
           style={{ backgroundColor: listing.color }}
         >
@@ -35,8 +44,8 @@ export function ListingCard({ listing }: ListingCardProps) {
               <span className="text-[10px] font-bold text-white tracking-widest uppercase">Video</span>
             </div>
           )}
-          
-          <button 
+
+          <button
             onClick={handleSave}
             className="absolute top-3 right-3 p-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors text-white"
             aria-label={saved ? "Remove from saved" : "Save listing"}
@@ -44,7 +53,7 @@ export function ListingCard({ listing }: ListingCardProps) {
             {saved ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
           </button>
         </div>
-        
+
         <CardContent className="p-5 flex-1 flex flex-col">
           <div className="flex justify-between items-start mb-2">
             <div>
@@ -70,11 +79,18 @@ export function ListingCard({ listing }: ListingCardProps) {
 
           <div className="flex items-start gap-1.5 text-sm text-muted-foreground mt-auto pt-4 border-t border-border/50">
             <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
-            <span className="line-clamp-1">
-              {listing.neighborhood ? `${listing.neighborhood} · ${listing.city}` : `${listing.address}, ${listing.city}`}
+            <span className="line-clamp-1 flex-1">
+              {listing.neighborhood
+                ? `${listing.neighborhood} · ${listing.city}`
+                : `${listing.address}, ${listing.city}`}
             </span>
+            {distanceLabel && (
+              <span className="ml-2 text-xs font-medium text-primary shrink-0">
+                {distanceLabel}
+              </span>
+            )}
           </div>
-          
+
           <div className="flex flex-wrap gap-1.5 mt-3">
             {listing.tags.slice(0, 3).map(tag => (
               <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">

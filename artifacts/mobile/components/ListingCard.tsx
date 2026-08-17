@@ -10,9 +10,11 @@ import * as Haptics from 'expo-haptics';
 
 interface ListingCardProps {
   listing: Listing;
+  /** Distance from the user's current location in miles, if available. */
+  distanceMi?: number;
 }
 
-export function ListingCard({ listing }: ListingCardProps) {
+export function ListingCard({ listing, distanceMi }: ListingCardProps) {
   const colors = useColors();
   const router = useRouter();
   const { isSaved, toggleSave } = useDirectory();
@@ -22,6 +24,13 @@ export function ListingCard({ listing }: ListingCardProps) {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     toggleSave(listing.id);
   };
+
+  const distanceLabel =
+    distanceMi !== undefined
+      ? distanceMi < 0.1
+        ? '< 0.1 mi'
+        : `${distanceMi.toFixed(1)} mi`
+      : null;
 
   return (
     <Pressable
@@ -59,6 +68,11 @@ export function ListingCard({ listing }: ListingCardProps) {
           <Text style={[styles.city, { color: colors.mutedForeground }]} numberOfLines={1}>
             {listing.address}, {listing.city}
           </Text>
+          {distanceLabel && (
+            <Text style={[styles.distance, { color: colors.primary }]}>
+              {distanceLabel}
+            </Text>
+          )}
         </View>
         {listing.tags.length > 0 && (
           <View style={styles.tagsRow}>
@@ -145,6 +159,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Inter_400Regular',
     flex: 1,
+  },
+  distance: {
+    fontSize: 11,
+    fontFamily: 'Inter_600SemiBold',
+    marginLeft: 4,
   },
   tagsRow: {
     flexDirection: 'row',
