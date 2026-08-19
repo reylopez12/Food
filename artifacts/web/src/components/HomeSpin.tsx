@@ -1,15 +1,22 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "wouter";
-import { Shuffle, RotateCcw, RefreshCw, ExternalLink, Star, MapPin } from "lucide-react";
+import { Shuffle, RotateCcw, RefreshCw, ExternalLink, Star, MapPin, Navigation, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useListings } from "@workspace/api-client-react";
 import type { Venue as Listing } from "@workspace/api-client-react";
+import {
+  RADIUS_OPTIONS,
+  hasValidCoordinates,
+  haversineDistanceMi,
+  useNearMe,
+  type RadiusMiles,
+} from "../hooks/useNearMe";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type SpinItem = { id: string; name: string; color: string };
+type SpinItem = { id: string; name: string; color: string; distanceMi?: number };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -44,7 +51,18 @@ function drawWheel(canvas: HTMLCanvasElement, items: SpinItem[], angle: number) 
   const n  = items.length;
 
   ctx.clearRect(0, 0, width, height);
-  if (n === 0) return;
+  if (n === 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, TWO_PI);
+    ctx.fillStyle = "rgba(255,255,255,0.08)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.22)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 8]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    return;
+  }
 
   ctx.save();
   ctx.translate(cx, cy);
@@ -123,6 +141,15 @@ function drawPointer(canvas: HTMLCanvasElement) {
 export function HomeSpin() {
   const [, setLocation] = useLocation();
   const { data: allListings = [] } = useListings();
+  const {
+    status: locationStatus,
+    userLat,
+    userLng,
+    radius,
+    requestLocation,
+    clearLocation,
+    setRadius,
+  } = useNearMe();
 
   const [seed,     setSeed]     = useState(0);
   const [spinning, setSpinning] = useState(false);
@@ -133,14 +160,35 @@ export function HomeSpin() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef    = useRef<number | null>(null);
 
-  // Pick 10 random listings; reshuffles when seed changes
+  const locationReady =
+    locationStatus === "granted" &&
+    userLat !== null &&
+    userLng !== null &&
+    radius !== null;
+
+  // Distance is applied before random selection, so every wheel slot is nearby.
   const spinItems = useMemo<SpinItem[]>(() => {
-    if (allListings.length === 0) return [];
+    if (!locationReady) return [];
     return shuffled(
-      allListings.map(l => ({ id: l.id, name: l.name, color: l.color }))
+      allListings.flatMap((listing) => {
+        if (!hasValidCoordinates(listing.lat, listing.lng)) return [];
+        const distanceMi = haversineDistanceMi(
+          userLat,
+          userLng,
+          listing.lat,
+          listing.lng,
+        );
+        if (distanceMi > radius) return [];
+        return [{
+          id: listing.id,
+          name: listing.name,
+          color: listing.color,
+          distanceMi,
+        }];
+      })
     ).slice(0, MAX_SLOTS);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allListings, seed]);
+  }, [allListings, locationReady, radius, seed, userLat, userLng]);
 
   // ── Draw ────────────────────────────────────────────────────────────────────
 
@@ -227,6 +275,24 @@ export function HomeSpin() {
     setSeed(s => s + 1);
   };
 
+  const handleLocationRequest = () => {
+    if (spinning) return;
+    handleReset();
+    requestLocation();
+  };
+
+  const handleLocationClear = () => {
+    if (spinning) return;
+    handleReset();
+    clearLocation();
+  };
+
+  const handleRadiusChange = (nextRadius: RadiusMiles) => {
+    if (spinning) return;
+    handleReset();
+    setRadius(nextRadius);
+  };
+
   const winnerListing: Listing | undefined = winner
     ? allListings.find(l => l.id === winner.id)
     : undefined;
@@ -255,8 +321,89 @@ export function HomeSpin() {
             </h1>
 
             <p className="text-primary-foreground/75 text-lg max-w-md mx-auto lg:mx-0 mb-8">
-              10 Bay Area spots, one spin. No more endless scrolling — just tap and go.
+              Nearby Bay Area spots, one spin. Choose your distance and let the wheel decide.
             </p>
+
+            <div className="max-w-md mx-auto lg:mx-0 mb-6 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-sm p-4 text-left">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0">
+                  <Navigation className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white">
+                    {locationStatus === "granted" ? "Using your current location" : "Find a meal near you"}
+                  </p>
+                  <p className="text-xs text-white/65">
+                    {locationStatus === "requesting"
+                      ? "Getting your location…"
+                      : locationStatus === "denied"
+                        ? "Location was denied. Allow access and try again."
+                        : locationStatus === "unavailable"
+                          ? "Location is unavailable in this browser."
+                          : locationStatus === "granted"
+                            ? "Every recommendation stays inside your preferred distance."
+                            : "Location is required before spinning."}
+                  </p>
+                </div>
+                {locationStatus === "granted" ? (
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={handleLocationRequest}
+                      disabled={spinning}
+                      className="p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-40"
+                      aria-label="Refresh location"
+                      data-testid="home-spin-refresh-location"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleLocationClear}
+                      disabled={spinning}
+                      className="text-xs text-white/70 hover:text-white underline disabled:opacity-40"
+                      data-testid="home-spin-clear-location"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleLocationRequest}
+                    disabled={spinning || locationStatus === "requesting" || locationStatus === "unavailable"}
+                    className="rounded-full bg-white text-primary hover:bg-white/90 shrink-0 gap-1.5"
+                    data-testid="home-spin-use-location"
+                  >
+                    {locationStatus === "requesting" ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Navigation className="w-3.5 h-3.5" />
+                    )}
+                    {locationStatus === "requesting" ? "Locating…" : "Use location"}
+                  </Button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/10">
+                {RADIUS_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => handleRadiusChange(option)}
+                    disabled={spinning}
+                    className={`px-3 py-1 rounded-full border text-xs font-semibold transition-colors disabled:opacity-40 ${
+                      radius === option
+                        ? "bg-accent text-accent-foreground border-accent"
+                        : "border-white/20 text-white/75 hover:text-white hover:border-white/40"
+                    }`}
+                    data-testid={`home-spin-radius-${option}`}
+                  >
+                    {option} mi
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div className="flex items-center gap-3 justify-center lg:justify-start flex-wrap">
               <Button
@@ -339,6 +486,12 @@ export function HomeSpin() {
                               {winnerListing.category.replace("-", " ")}
                             </Badge>
                             <Badge variant="secondary" className="text-xs">{winnerListing.priceRange}</Badge>
+                            {winner.distanceMi !== undefined && (
+                              <Badge className="text-xs gap-1 bg-emerald-500/10 text-emerald-700 border-emerald-500/20 hover:bg-emerald-500/10">
+                                <Navigation className="w-3 h-3" />
+                                {winner.distanceMi < 0.1 ? "< 0.1 mi" : `${winner.distanceMi.toFixed(1)} mi`}
+                              </Badge>
+                            )}
                             <div className="flex items-center gap-1 text-sm ml-auto">
                               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                               <span className="font-bold">{winnerListing.rating}</span>
@@ -387,7 +540,16 @@ export function HomeSpin() {
               />
             </div>
             <p className="text-center text-white/50 text-xs mt-3">
-              {spinItems.length} randomly selected spots · <button onClick={handleReshuffle} disabled={spinning} className="underline hover:text-white/80 transition-colors disabled:opacity-40">Reshuffle</button>
+              {locationReady
+                ? `${spinItems.length} nearby ${spinItems.length === 1 ? "spot" : "spots"} within ${radius} mi`
+                : locationStatus === "requesting"
+                  ? "Getting your location…"
+                  : radius === null
+                    ? "Choose a distance and enable location"
+                    : "Enable location to see nearby spots"}
+              {spinItems.length > 0 && (
+                <> · <button onClick={handleReshuffle} disabled={spinning} className="underline hover:text-white/80 transition-colors disabled:opacity-40">Reshuffle</button></>
+              )}
             </p>
           </div>
 

@@ -1,16 +1,23 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
-import { Shuffle, RotateCcw, RefreshCw, ExternalLink, Star, MapPin } from "lucide-react";
+import { Shuffle, RotateCcw, RefreshCw, ExternalLink, Star, MapPin, Navigation, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useListings } from "@workspace/api-client-react";
 import type { Venue as Listing } from "@workspace/api-client-react";
+import {
+  RADIUS_OPTIONS,
+  hasValidCoordinates,
+  haversineDistanceMi,
+  useNearMe,
+  type RadiusMiles,
+} from "../hooks/useNearMe";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /** Minimal item the wheel and result card need from either source */
-type SpinItem = { id: string; name: string; color: string };
+type SpinItem = { id: string; name: string; color: string; distanceMi?: number };
 
 type Mode   = "directory" | "custom";
 type Filter = "all" | "restaurants" | "food-trucks";
@@ -68,7 +75,18 @@ function drawWheel(canvas: HTMLCanvasElement, items: SpinItem[], angle: number) 
   const n  = items.length;
 
   ctx.clearRect(0, 0, width, height);
-  if (n === 0) return;
+  if (n === 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, TWO_PI);
+    ctx.fillStyle = "rgba(148,163,184,0.12)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(148,163,184,0.28)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 8]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    return;
+  }
 
   ctx.save();
   ctx.translate(cx, cy);
@@ -173,19 +191,55 @@ export default function Spin() {
   const rafRef    = useRef<number | null>(null);
 
   const { data: allListings = [] } = useListings();
+  const {
+    status: locationStatus,
+    userLat,
+    userLng,
+    radius,
+    requestLocation,
+    clearLocation,
+    setRadius,
+  } = useNearMe();
 
   const priceVal = PRICE_MAP[price];
+  const locationReady =
+    locationStatus === "granted" &&
+    userLat !== null &&
+    userLng !== null &&
+    radius !== null;
 
-  // Cap directory mode to 10 random listings; reseed on filter/price change or manual reshuffle
+  const nearbyListings = useMemo(() => {
+    if (!locationReady) return [] as Array<{ listing: Listing; distanceMi: number }>;
+
+    return allListings.flatMap((listing) => {
+      if (!hasValidCoordinates(listing.lat, listing.lng)) return [];
+      const distanceMi = haversineDistanceMi(
+        userLat,
+        userLng,
+        listing.lat,
+        listing.lng,
+      );
+      return distanceMi <= radius ? [{ listing, distanceMi }] : [];
+    });
+  }, [allListings, locationReady, radius, userLat, userLng]);
+
+  // Distance is applied before random selection, so every wheel slot is in range.
   const directoryItems: SpinItem[] = useMemo(() => {
-    const filtered = allListings.filter(
-      (l) =>
-        (filter === "all" || l.category === filter) &&
-        (priceVal === null || l.priceRange === priceVal)
-    );
+    const filtered = nearbyListings
+      .filter(
+        ({ listing }) =>
+          (filter === "all" || listing.category === filter) &&
+          (priceVal === null || listing.priceRange === priceVal)
+      )
+      .map(({ listing, distanceMi }) => ({
+        id: listing.id,
+        name: listing.name,
+        color: listing.color,
+        distanceMi,
+      }));
     return shuffled(filtered).slice(0, MAX_DIR_SLOTS);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allListings, filter, priceVal, dirSeed]);
+  }, [nearbyListings, filter, priceVal, dirSeed]);
 
   const customItems: SpinItem[] = customEntries
     .map((name, i) => ({ id: `custom-${i}`, name: name.trim(), color: CUSTOM_COLORS[i] }))
@@ -314,6 +368,29 @@ export default function Spin() {
     setDirSeed(s => s + 1);
   };
 
+  const resetDirectoryState = () => {
+    resetWheel();
+    setWinner(null);
+  };
+
+  const handleLocationRequest = () => {
+    if (spinning) return;
+    resetDirectoryState();
+    requestLocation();
+  };
+
+  const handleLocationClear = () => {
+    if (spinning) return;
+    resetDirectoryState();
+    clearLocation();
+  };
+
+  const handleRadiusChange = (nextRadius: RadiusMiles) => {
+    if (spinning) return;
+    resetDirectoryState();
+    setRadius(nextRadius);
+  };
+
   const updateEntry = (idx: number, value: string) => {
     if (spinning) return;
     const next = [...customEntries];
@@ -371,61 +448,175 @@ export default function Spin() {
         ))}
       </div>
 
-      {/* Directory filters */}
+      {/* Directory location + filters */}
       {mode === "directory" && (
-        <div className="flex flex-col items-center gap-2 mb-8">
-          <p className="text-xs text-muted-foreground mb-1">
-            Showing 10 random spots — <button onClick={handleReshuffle} disabled={spinning} className="underline hover:text-foreground transition-colors disabled:opacity-40">reshuffle</button>
-          </p>
-          <div className="flex items-center gap-2 p-1 bg-muted rounded-full">
-            {FILTER_OPTIONS.map((opt) => {
-              const count = allListings.filter(
-                (l) =>
-                  (opt.id === "all" || l.category === opt.id) &&
-                  (priceVal === null || l.priceRange === priceVal)
-              ).length;
-              return (
-                <button
-                  key={opt.id}
-                  onClick={() => handleFilterChange(opt.id)}
-                  disabled={spinning}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                    filter === opt.id
-                      ? "bg-background shadow text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+        <div className="flex flex-col items-center gap-4 mb-8 w-full max-w-xl">
+          <div
+            className="w-full rounded-2xl border bg-card p-4 shadow-sm"
+            aria-live="polite"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center gap-3 flex-1">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  locationStatus === "granted"
+                    ? "bg-emerald-500/10 text-emerald-600"
+                    : "bg-primary/10 text-primary"
+                }`}>
+                  <Navigation className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">
+                    {locationStatus === "granted"
+                      ? "Using your current location"
+                      : "Find a meal near you"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {locationStatus === "requesting"
+                      ? "Getting your location…"
+                      : locationStatus === "denied"
+                        ? "Location was denied. Allow it in your browser and try again."
+                        : locationStatus === "unavailable"
+                          ? "Location is not available in this browser."
+                          : locationStatus === "granted"
+                            ? "Every wheel option will stay inside your selected distance."
+                            : "Location is required for directory recommendations."}
+                  </p>
+                </div>
+              </div>
+
+              {locationStatus === "granted" ? (
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleLocationRequest}
+                    disabled={spinning}
+                    className="gap-1.5"
+                    data-testid="spin-refresh-location"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Refresh
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleLocationClear}
+                    disabled={spinning}
+                    data-testid="spin-clear-location"
+                  >
+                    Clear
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleLocationRequest}
+                  disabled={spinning || locationStatus === "requesting" || locationStatus === "unavailable"}
+                  className="gap-1.5 shrink-0"
+                  data-testid="spin-use-location"
                 >
-                  {opt.label}
-                  <span className="ml-1.5 text-xs opacity-60">({count})</span>
-                </button>
-              );
-            })}
+                  {locationStatus === "requesting" ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Navigation className="w-3.5 h-3.5" />
+                  )}
+                  {locationStatus === "requesting" ? "Locating…" : "Use my location"}
+                </Button>
+              )}
+            </div>
+
+            <div className="mt-4 pt-4 border-t">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">
+                Preferred distance
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {RADIUS_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => handleRadiusChange(option)}
+                    disabled={spinning}
+                    className={`px-4 py-1.5 rounded-full border text-sm font-semibold transition-colors disabled:opacity-40 ${
+                      radius === option
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-muted-foreground hover:text-foreground hover:border-primary/50"
+                    }`}
+                    data-testid={`spin-radius-${option}`}
+                  >
+                    {option} mi
+                  </button>
+                ))}
+              </div>
+              {radius === null && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                  Choose a distance before spinning.
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 p-1 bg-muted rounded-full">
-            {PRICE_OPTIONS.map((opt) => {
-              const count = allListings.filter(
-                (l) =>
-                  (filter === "all" || l.category === filter) &&
-                  (PRICE_MAP[opt.id] === null || l.priceRange === PRICE_MAP[opt.id])
-              ).length;
-              return (
-                <button
-                  key={opt.id}
-                  onClick={() => handlePriceChange(opt.id)}
-                  disabled={spinning}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                    price === opt.id
-                      ? "bg-background shadow text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {opt.label}
-                  <span className="ml-1.5 text-xs opacity-60">({count})</span>
-                </button>
-              );
-            })}
-          </div>
+          {locationReady && (
+            <>
+              <p className="text-xs text-muted-foreground">
+                {directoryItems.length} nearby {directoryItems.length === 1 ? "spot" : "spots"} on the wheel
+                {nearbyListings.length > 0 && (
+                  <> — <button onClick={handleReshuffle} disabled={spinning} className="underline hover:text-foreground transition-colors disabled:opacity-40">reshuffle</button></>
+                )}
+              </p>
+              <div className="flex items-center gap-2 p-1 bg-muted rounded-full max-w-full overflow-x-auto">
+                {FILTER_OPTIONS.map((opt) => {
+                  const count = nearbyListings.filter(
+                    ({ listing }) =>
+                      (opt.id === "all" || listing.category === opt.id) &&
+                      (priceVal === null || listing.priceRange === priceVal)
+                  ).length;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => handleFilterChange(opt.id)}
+                      disabled={spinning}
+                      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
+                        filter === opt.id
+                          ? "bg-background shadow text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {opt.label}
+                      <span className="ml-1.5 text-xs opacity-60">({count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-2 p-1 bg-muted rounded-full max-w-full overflow-x-auto">
+                {PRICE_OPTIONS.map((opt) => {
+                  const count = nearbyListings.filter(
+                    ({ listing }) =>
+                      (filter === "all" || listing.category === filter) &&
+                      (PRICE_MAP[opt.id] === null || listing.priceRange === PRICE_MAP[opt.id])
+                  ).length;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => handlePriceChange(opt.id)}
+                      disabled={spinning}
+                      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
+                        price === opt.id
+                          ? "bg-background shadow text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {opt.label}
+                      <span className="ml-1.5 text-xs opacity-60">({count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -509,10 +700,16 @@ export default function Spin() {
 
       {/* Empty state */}
       {spinItems.length === 0 && (
-        <p className="mt-8 text-muted-foreground text-sm">
-          {mode === "directory"
-            ? "No listings match this filter."
-            : "Add at least one entry above to spin."}
+        <p className="mt-8 text-muted-foreground text-sm text-center max-w-md">
+          {mode === "custom"
+            ? "Add at least one entry above to spin."
+            : locationStatus === "requesting"
+              ? "Getting your location…"
+              : locationStatus !== "granted"
+                ? "Enable location to build a wheel of nearby recommendations."
+                : radius === null
+                  ? "Choose your preferred distance to build the wheel."
+                  : `No venues with location data match within ${radius} miles. Try a wider distance or different filters.`}
         </p>
       )}
 
@@ -566,6 +763,12 @@ export default function Spin() {
                       {winnerListing.category.replace("-", " ")}
                     </Badge>
                     <Badge variant="secondary">{winnerListing.priceRange}</Badge>
+                    {winner.distanceMi !== undefined && (
+                      <Badge className="gap-1 bg-emerald-500/10 text-emerald-700 border-emerald-500/20 hover:bg-emerald-500/10 dark:text-emerald-300">
+                        <Navigation className="w-3 h-3" />
+                        {winner.distanceMi < 0.1 ? "< 0.1 mi" : `${winner.distanceMi.toFixed(1)} mi`}
+                      </Badge>
+                    )}
                     {winnerListing.hasVideo && (
                       <Badge className="bg-primary/10 text-primary border-primary/20 font-semibold">
                         ▶ Video

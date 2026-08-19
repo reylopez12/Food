@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -31,12 +32,18 @@ const queryClient = new QueryClient({
 // Point the API client at the Replit dev domain so the mobile app can reach
 // the API server.  EXPO_PUBLIC_DOMAIN is injected by the dev script.
 const apiDomain = process.env.EXPO_PUBLIC_DOMAIN;
-if (apiDomain) {
-  setBaseUrl(`https://${apiDomain}`);
+if (Platform.OS === 'web') {
+  // Expo Web is served behind the same Replit proxy as /api, so relative
+  // requests preserve browser caching and cookie semantics.
+  setBaseUrl(null);
+  setAuthTokenGetter(null);
+} else {
+  if (apiDomain) {
+    setBaseUrl(`https://${apiDomain}`);
+  }
+  // Native clients cannot use browser session cookies.
+  setAuthTokenGetter(() => SecureStore.getItemAsync('auth_session_token'));
 }
-
-// Attach stored auth token to every API client request as Bearer token.
-setAuthTokenGetter(() => SecureStore.getItemAsync('auth_session_token'));
 
 function RootLayoutNav() {
   return (

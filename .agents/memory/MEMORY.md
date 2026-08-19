@@ -1,3 +1,4 @@
 - [DB schema + seed pattern](db-seed-pattern.md) — how to run the seed script and the venues table shape
 - [DB schema build step](db-schema-build.md) — after editing lib/db schema, must run `tsc -b` in lib/db before api-server typecheck
 - [SSE in-process emitter scope](sse-in-process-emitter.md) — notifEmitter only works within a single Node process; Redis needed for multi-instance
+- [Expo Web API routing](expo-web-api-routing.md) — use same-origin API requests on web; reserve the external API base and bearer-token getter for native

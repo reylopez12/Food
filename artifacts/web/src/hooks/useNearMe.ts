@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 
 const RADIUS_KEY = 'bay-bites-preferred-radius';
+let cachedLocation: { lat: number; lng: number } | null = null;
 
 export const RADIUS_OPTIONS = [1, 5, 10, 25] as const;
 export type RadiusMiles = typeof RADIUS_OPTIONS[number];
@@ -20,6 +21,19 @@ export function haversineDistanceMi(
     Math.cos(toRad(lat2)) *
     Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/** Imported venues without coordinates use (0, 0), which is not a usable location. */
+export function hasValidCoordinates(lat: number, lng: number): boolean {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180 &&
+    !(lat === 0 && lng === 0)
+  );
 }
 
 export type LocationStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable';
@@ -42,26 +56,37 @@ function loadRadius(): RadiusMiles | null {
 }
 
 export function useNearMe() {
-  const [state, setState] = useState<NearMeState>({
-    status: 'idle',
-    userLat: null,
-    userLng: null,
+  const [state, setState] = useState<NearMeState>(() => ({
+    status: cachedLocation ? 'granted' : 'idle',
+    userLat: cachedLocation?.lat ?? null,
+    userLng: cachedLocation?.lng ?? null,
     radius: loadRadius(),
-  });
+  }));
 
   const requestLocation = useCallback(() => {
+    cachedLocation = null;
+    setState(s => ({
+      ...s,
+      status: 'requesting',
+      userLat: null,
+      userLng: null,
+    }));
     if (!navigator.geolocation) {
       setState(s => ({ ...s, status: 'unavailable' }));
       return;
     }
-    setState(s => ({ ...s, status: 'requesting' }));
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        const location = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        };
+        cachedLocation = location;
         setState(s => ({
           ...s,
           status: 'granted',
-          userLat: pos.coords.latitude,
-          userLng: pos.coords.longitude,
+          userLat: location.lat,
+          userLng: location.lng,
         }));
       },
       () => {
@@ -72,6 +97,7 @@ export function useNearMe() {
   }, []);
 
   const clearLocation = useCallback(() => {
+    cachedLocation = null;
     setState(s => ({ ...s, status: 'idle', userLat: null, userLng: null }));
   }, []);
 

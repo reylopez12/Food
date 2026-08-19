@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { listings } from '@workspace/api-client-react';
 import type { Venue } from '@workspace/api-client-react';
@@ -22,7 +23,7 @@ const RADIUS_KEY   = '@directory_preferred_radius';
 
 export const RADIUS_OPTIONS = [1, 5, 10, 25] as const;
 export type RadiusMiles = typeof RADIUS_OPTIONS[number];
-export type LocationStatus = 'idle' | 'requesting' | 'granted' | 'denied';
+export type LocationStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable';
 
 /** Haversine great-circle distance in miles between two lat/lng points. */
 export function haversineDistanceMi(
@@ -40,8 +41,16 @@ export function haversineDistanceMi(
 }
 
 /** Venues imported without GPS default to (0, 0) — treat as no-data. */
-function hasValidCoords(lat: number, lng: number): boolean {
-  return !(lat === 0 && lng === 0);
+export function hasValidCoordinates(lat: number, lng: number): boolean {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180 &&
+    !(lat === 0 && lng === 0)
+  );
 }
 
 interface DirectoryContextValue {
@@ -114,6 +123,23 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
   const requestLocation = useCallback(async () => {
     setLocationStatus('requesting');
     try {
+      if (Platform.OS === 'web') {
+        if (!navigator.geolocation) {
+          setLocationStatus('unavailable');
+          return;
+        }
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: false,
+            timeout: 10_000,
+          });
+        });
+        setUserLat(position.coords.latitude);
+        setUserLng(position.coords.longitude);
+        setLocationStatus('granted');
+        return;
+      }
+
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setLocationStatus('denied');
@@ -167,7 +193,7 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
 
     if (distanceActive) {
       result = result.filter((l) => {
-        if (!hasValidCoords(l.lat, l.lng)) return false;
+        if (!hasValidCoordinates(l.lat, l.lng)) return false;
         return haversineDistanceMi(userLat!, userLng!, l.lat, l.lng) <= preferredRadius!;
       });
     }

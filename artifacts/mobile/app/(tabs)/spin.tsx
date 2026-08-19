@@ -16,13 +16,19 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
-import { useDirectory } from '@/context/DirectoryContext';
+import {
+  RADIUS_OPTIONS,
+  hasValidCoordinates,
+  haversineDistanceMi,
+  useDirectory,
+  type RadiusMiles,
+} from '@/context/DirectoryContext';
 import type { Venue as Listing } from '@workspace/api-client-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /** Minimal item the wheel needs from either source */
-type SpinItem = { id: string; name: string; color: string };
+type SpinItem = { id: string; name: string; color: string; distanceMi?: number };
 
 type Mode     = 'directory' | 'custom';
 type FilterId = 'all' | 'restaurants' | 'food-trucks';
@@ -116,18 +122,54 @@ export default function SpinScreen() {
     outputRange: ['-360000deg', '360000deg'],
   });
 
-  const { listings: allListings } = useDirectory();
+  const {
+    listings: allListings,
+    locationStatus,
+    userLat,
+    userLng,
+    preferredRadius,
+    requestLocation,
+    clearLocation,
+    setPreferredRadius,
+  } = useDirectory();
+  const locationReady =
+    locationStatus === 'granted' &&
+    userLat !== null &&
+    userLng !== null &&
+    preferredRadius !== null;
 
-  // Cap directory mode to 10 random listings; reseed on filter/price change or manual reshuffle
+  const nearbyListings = useMemo(() => {
+    if (!locationReady) return [] as Array<{ listing: Listing; distanceMi: number }>;
+
+    return allListings.flatMap((listing) => {
+      if (!hasValidCoordinates(listing.lat, listing.lng)) return [];
+      const distanceMi = haversineDistanceMi(
+        userLat,
+        userLng,
+        listing.lat,
+        listing.lng,
+      );
+      return distanceMi <= preferredRadius ? [{ listing, distanceMi }] : [];
+    });
+  }, [allListings, locationReady, preferredRadius, userLat, userLng]);
+
+  // Distance is applied before random selection, so every wheel slot is in range.
   const directoryItems: SpinItem[] = useMemo(() => {
-    const filtered = allListings.filter(
-      (l) =>
-        (filter === 'all' || l.category === filter) &&
-        (price  === 'all' || l.priceRange === price)
-    );
+    const filtered = nearbyListings
+      .filter(
+        ({ listing }) =>
+          (filter === 'all' || listing.category === filter) &&
+          (price === 'all' || listing.priceRange === price),
+      )
+      .map(({ listing, distanceMi }) => ({
+        id: listing.id,
+        name: listing.name,
+        color: listing.color,
+        distanceMi,
+      }));
     return shuffled(filtered).slice(0, MAX_DIR_SLOTS);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allListings, filter, price, dirSeed]);
+  }, [nearbyListings, filter, price, dirSeed]);
 
   const customItems: SpinItem[] = customEntries
     .map((name, i) => ({ id: `custom-${i}`, name: name.trim(), color: CUSTOM_COLORS[i] }))
@@ -193,6 +235,30 @@ export default function SpinScreen() {
     setWinner(null);
     resetResult();
     setDirSeed(s => s + 1);
+  };
+
+  const resetDirectoryState = () => {
+    resetWheel();
+    setWinner(null);
+    resetResult();
+  };
+
+  const handleLocationRequest = () => {
+    if (spinning) return;
+    resetDirectoryState();
+    void requestLocation();
+  };
+
+  const handleLocationClear = () => {
+    if (spinning) return;
+    resetDirectoryState();
+    clearLocation();
+  };
+
+  const handleRadiusChange = (nextRadius: RadiusMiles) => {
+    if (spinning) return;
+    resetDirectoryState();
+    setPreferredRadius(nextRadius);
   };
 
   const updateEntry = (idx: number, value: string) => {
@@ -308,14 +374,146 @@ export default function SpinScreen() {
           })}
         </View>
 
-        {/* ── Directory: category filter ── */}
+        {/* ── Directory: location + preferred distance ── */}
         {mode === 'directory' && (
+          <View style={[styles.locationCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.locationHeader}>
+              <View
+                style={[
+                  styles.locationIcon,
+                  { backgroundColor: locationStatus === 'granted' ? colors.primary + '18' : colors.muted },
+                ]}
+              >
+                <Feather
+                  name="navigation"
+                  size={17}
+                  color={locationStatus === 'granted' ? colors.primary : colors.mutedForeground}
+                />
+              </View>
+              <View style={styles.locationCopy}>
+                <Text style={[styles.locationTitle, { color: colors.foreground }]}>
+                  {locationStatus === 'granted' ? 'Using your current location' : 'Find a meal near you'}
+                </Text>
+                <Text style={[styles.locationText, { color: colors.mutedForeground }]}>
+                  {locationStatus === 'requesting'
+                    ? 'Getting your location…'
+                    : locationStatus === 'denied'
+                      ? 'Location was denied. Allow access and try again.'
+                      : locationStatus === 'unavailable'
+                        ? 'Location is unavailable on this device.'
+                        : locationStatus === 'granted'
+                          ? 'Every wheel option stays inside your selected distance.'
+                          : 'Location is required for directory recommendations.'}
+                </Text>
+              </View>
+            </View>
+
+            {locationStatus === 'granted' ? (
+              <View style={styles.locationActions}>
+                <Pressable
+                  testID="spin-refresh-location"
+                  onPress={handleLocationRequest}
+                  disabled={spinning}
+                  style={({ pressed }) => [
+                    styles.locationAction,
+                    {
+                      borderColor: colors.border,
+                      opacity: pressed || spinning ? 0.55 : 1,
+                    },
+                  ]}
+                >
+                  <Feather name="refresh-cw" size={13} color={colors.primary} />
+                  <Text style={[styles.locationActionText, { color: colors.primary }]}>Refresh</Text>
+                </Pressable>
+                <Pressable
+                  testID="spin-clear-location"
+                  onPress={handleLocationClear}
+                  disabled={spinning}
+                  style={({ pressed }) => [
+                    styles.locationAction,
+                    {
+                      borderColor: colors.border,
+                      opacity: pressed || spinning ? 0.55 : 1,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.locationActionText, { color: colors.mutedForeground }]}>Clear</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                testID="spin-use-location"
+                onPress={handleLocationRequest}
+                disabled={spinning || locationStatus === 'requesting' || locationStatus === 'unavailable'}
+                style={({ pressed }) => [
+                  styles.useLocationBtn,
+                  {
+                    backgroundColor: colors.primary,
+                    opacity:
+                      pressed || spinning || locationStatus === 'requesting' || locationStatus === 'unavailable'
+                        ? 0.55
+                        : 1,
+                  },
+                ]}
+              >
+                <Feather name="navigation" size={14} color="#fff" />
+                <Text style={styles.useLocationText}>
+                  {locationStatus === 'requesting' ? 'Locating…' : 'Use my location'}
+                </Text>
+              </Pressable>
+            )}
+
+            <View style={[styles.radiusSection, { borderTopColor: colors.border }]}>
+              <Text style={[styles.radiusLabel, { color: colors.mutedForeground }]}>
+                Preferred distance
+              </Text>
+              <View style={styles.radiusRow}>
+                {RADIUS_OPTIONS.map((option) => {
+                  const active = preferredRadius === option;
+                  return (
+                    <Pressable
+                      key={option}
+                      testID={`spin-radius-${option}`}
+                      onPress={() => handleRadiusChange(option)}
+                      disabled={spinning}
+                      style={({ pressed }) => [
+                        styles.radiusPill,
+                        {
+                          backgroundColor: active ? colors.primary : colors.background,
+                          borderColor: active ? colors.primary : colors.border,
+                          opacity: pressed || spinning ? 0.6 : 1,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.radiusText,
+                          { color: active ? '#fff' : colors.mutedForeground },
+                        ]}
+                      >
+                        {option} mi
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {preferredRadius === null && (
+                <Text style={[styles.radiusHint, { color: colors.accent }]}>
+                  Choose a distance before spinning.
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* ── Directory: category filter ── */}
+        {mode === 'directory' && locationReady && (
           <>
             <View style={styles.reshuffleRow}>
               <Text style={[styles.reshuffleHint, { color: colors.mutedForeground }]}>
-                10 random spots —{' '}
+                {directoryItems.length} nearby {directoryItems.length === 1 ? 'spot' : 'spots'} —{' '}
               </Text>
-              <Pressable onPress={handleReshuffle} disabled={spinning}>
+              <Pressable onPress={handleReshuffle} disabled={spinning || nearbyListings.length === 0}>
                 <Text style={[styles.reshuffleLink, { color: colors.primary, opacity: spinning ? 0.4 : 1 }]}>
                   reshuffle
                 </Text>
@@ -323,10 +521,10 @@ export default function SpinScreen() {
             </View>
             <View style={[styles.pillRow, { backgroundColor: colors.muted }]}>
               {FILTER_OPTIONS.map((opt) => {
-                const count = allListings.filter(
-                  (l) =>
-                    (opt.id === 'all' || l.category === opt.id) &&
-                    (price  === 'all' || l.priceRange === price)
+                const count = nearbyListings.filter(
+                  ({ listing }) =>
+                    (opt.id === 'all' || listing.category === opt.id) &&
+                    (price === 'all' || listing.priceRange === price)
                 ).length;
                 const active = filter === opt.id;
                 return (
@@ -354,10 +552,10 @@ export default function SpinScreen() {
             {/* ── Directory: price filter ── */}
             <View style={[styles.pillRow, { backgroundColor: colors.muted, marginTop: 8 }]}>
               {PRICE_OPTIONS.map((opt) => {
-                const count = allListings.filter(
-                  (l) =>
-                    (filter === 'all' || l.category === filter) &&
-                    (opt.id === 'all' || l.priceRange === opt.id)
+                const count = nearbyListings.filter(
+                  ({ listing }) =>
+                    (filter === 'all' || listing.category === filter) &&
+                    (opt.id === 'all' || listing.priceRange === opt.id)
                 ).length;
                 const active = price === opt.id;
                 return (
@@ -472,9 +670,15 @@ export default function SpinScreen() {
         {/* ── Empty state ── */}
         {spinItems.length === 0 && (
           <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-            {mode === 'directory'
-              ? 'No listings match these filters.'
-              : 'Add at least one entry above to spin.'}
+            {mode === 'custom'
+              ? 'Add at least one entry above to spin.'
+              : locationStatus === 'requesting'
+                ? 'Getting your location…'
+                : locationStatus !== 'granted'
+                  ? 'Enable location to build a wheel of nearby recommendations.'
+                  : preferredRadius === null
+                    ? 'Choose your preferred distance to build the wheel.'
+                    : `No venues with location data match within ${preferredRadius} miles. Try a wider distance or different filters.`}
           </Text>
         )}
 
@@ -578,6 +782,14 @@ export default function SpinScreen() {
                         {winnerListing.priceRange}
                       </Text>
                     </View>
+                    {winner.distanceMi !== undefined && (
+                      <View style={[styles.distanceChip, { backgroundColor: colors.primary + '15' }]}>
+                        <Feather name="navigation" size={11} color={colors.primary} />
+                        <Text style={[styles.chipText, { color: colors.primary, marginLeft: 3 }]}>
+                          {winner.distanceMi < 0.1 ? '< 0.1 mi' : `${winner.distanceMi.toFixed(1)} mi`}
+                        </Text>
+                      </View>
+                    )}
                     <View style={styles.ratingChip}>
                       <Feather name="star" size={11} color="#F59E0B" />
                       <Text style={[styles.chipText, { color: colors.foreground, marginLeft: 3 }]}>
@@ -670,6 +882,104 @@ const styles = StyleSheet.create({
   pillText: {
     fontSize: 13,
     fontFamily: 'Inter_500Medium',
+  },
+  // Location requirement
+  locationCard: {
+    width: '90%',
+    maxWidth: 440,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 16,
+    marginBottom: 14,
+  },
+  locationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  locationIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  locationCopy: {
+    flex: 1,
+  },
+  locationTitle: {
+    fontSize: 14,
+    fontFamily: 'Inter_600SemiBold',
+    marginBottom: 2,
+  },
+  locationText: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: 'Inter_400Regular',
+  },
+  locationActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  locationAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    minHeight: 38,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  locationActionText: {
+    fontSize: 13,
+    fontFamily: 'Inter_600SemiBold',
+  },
+  useLocationBtn: {
+    minHeight: 42,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    marginTop: 12,
+  },
+  useLocationText: {
+    color: '#fff',
+    fontSize: 14,
+    fontFamily: 'Inter_600SemiBold',
+  },
+  radiusSection: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    marginTop: 14,
+    paddingTop: 13,
+  },
+  radiusLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter_600SemiBold',
+    marginBottom: 9,
+  },
+  radiusRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  radiusPill: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 100,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+  },
+  radiusText: {
+    fontSize: 13,
+    fontFamily: 'Inter_600SemiBold',
+  },
+  radiusHint: {
+    fontSize: 12,
+    fontFamily: 'Inter_500Medium',
+    marginTop: 8,
   },
   // Custom entries
   customWrap: {
@@ -892,6 +1202,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 4,
+  },
+  distanceChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 100,
   },
   cardDesc: {
     fontSize: 13,
