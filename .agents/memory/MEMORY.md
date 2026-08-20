@@ -3,3 +3,4 @@
 - [SSE in-process emitter scope](sse-in-process-emitter.md) — notifEmitter only works within a single Node process; Redis needed for multi-instance
 - [Expo Web API routing](expo-web-api-routing.md) — use same-origin API requests on web; reserve the external API base and bearer-token getter for native
 - [Mobile build port collision](mobile-build-port-collision.md) — Expo static build assumes local 8081; stop/restart mockup preview around production builds.
+- [Expo SDK dependency updates](expo-sdk-updates.md) — update the mobile importer as a pair, validate with Expo’s compatibility check, and review workspace metadata changes.
