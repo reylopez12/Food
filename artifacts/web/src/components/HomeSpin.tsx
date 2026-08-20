@@ -90,10 +90,10 @@ function drawWheel(canvas: HTMLCanvasElement, items: SpinItem[], angle: number) 
     ctx.rotate(midAngle);
     ctx.textAlign = "right";
     ctx.fillStyle = "rgba(255,255,255,0.95)";
-    const fontSize = Math.min(14, Math.max(9, 200 / n));
-    ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+    const fontSize = Math.min(15, Math.max(10, 200 / n));
+    ctx.font = `600 ${fontSize}px "Plus Jakarta Sans", sans-serif`;
     const label = item.name.length > 14 ? item.name.slice(0, 13) + "…" : item.name;
-    ctx.fillText(label, r - 12, fontSize / 3);
+    ctx.fillText(label, r - 16, fontSize / 3);
     ctx.restore();
   });
 
@@ -310,27 +310,27 @@ export function HomeSpin() {
 
           {/* ── Left: copy ── */}
           <div className="flex-1 text-center lg:text-left">
-            <Badge className="mb-5 bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-sm px-4 py-1.5 text-sm font-semibold inline-flex items-center gap-2">
+            <Badge className="mb-6 bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md px-4 py-1.5 text-sm font-bold inline-flex items-center gap-2 shadow-sm">
               <Shuffle className="w-4 h-4" />
               Can't decide?
             </Badge>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight mb-5">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white tracking-tight leading-[1.05] mb-6 drop-shadow-sm">
               Let the wheel pick<br className="hidden md:block" />
-              <span className="text-accent"> your next meal.</span>
+              <span className="text-accent italic"> your next meal.</span>
             </h1>
 
-            <p className="text-primary-foreground/75 text-lg max-w-md mx-auto lg:mx-0 mb-8">
+            <p className="text-primary-foreground/80 text-lg md:text-xl max-w-md mx-auto lg:mx-0 mb-8 leading-relaxed">
               Nearby Bay Area spots, one spin. Choose your distance and let the wheel decide.
             </p>
 
-            <div className="max-w-md mx-auto lg:mx-0 mb-6 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-sm p-4 text-left">
+            <div className="max-w-md mx-auto lg:mx-0 mb-8 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-md p-5 text-left shadow-lg">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0 shadow-inner">
                   <Navigation className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-bold text-white mb-0.5">
                     {locationStatus === "granted" ? "Using your current location" : "Find a meal near you"}
                   </p>
                   <p className="text-xs text-white/65">
@@ -385,17 +385,17 @@ export function HomeSpin() {
                   </Button>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/10">
+              <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/10">
                 {RADIUS_OPTIONS.map((option) => (
                   <button
                     key={option}
                     type="button"
                     onClick={() => handleRadiusChange(option)}
                     disabled={spinning}
-                    className={`px-3 py-1 rounded-full border text-xs font-semibold transition-colors disabled:opacity-40 ${
+                    className={`px-3.5 py-1.5 rounded-full border text-xs font-bold transition-all disabled:opacity-40 ${
                       radius === option
-                        ? "bg-accent text-accent-foreground border-accent"
-                        : "border-white/20 text-white/75 hover:text-white hover:border-white/40"
+                        ? "bg-accent text-accent-foreground border-accent shadow-sm scale-105"
+                        : "border-white/20 text-white/80 hover:text-white hover:border-white/40 hover:bg-white/5"
                     }`}
                     data-testid={`home-spin-radius-${option}`}
                   >
@@ -474,18 +474,18 @@ export function HomeSpin() {
                               {winnerListing.initials}
                             </div>
                             <div>
-                              <h3 className="text-lg font-black tracking-tight leading-tight">{winnerListing.name}</h3>
-                              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                              <h3 className="text-2xl font-serif font-bold tracking-tight leading-tight">{winnerListing.name}</h3>
+                              <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground mt-1">
                                 <MapPin className="w-3 h-3 shrink-0" />
                                 {winnerListing.neighborhood}
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 mb-3">
-                            <Badge variant="outline" className="capitalize text-xs">
+                          <div className="flex items-center gap-3 mb-4 mt-2">
+                            <Badge variant="outline" className="capitalize text-xs font-semibold px-2">
                               {winnerListing.category.replace("-", " ")}
                             </Badge>
-                            <Badge variant="secondary" className="text-xs">{winnerListing.priceRange}</Badge>
+                            <Badge variant="secondary" className="text-xs font-bold px-2">{winnerListing.priceRange}</Badge>
                             {winner.distanceMi !== undefined && (
                               <Badge className="text-xs gap-1 bg-emerald-500/10 text-emerald-700 border-emerald-500/20 hover:bg-emerald-500/10">
                                 <Navigation className="w-3 h-3" />
@@ -497,9 +497,9 @@ export function HomeSpin() {
                               <span className="font-bold">{winnerListing.rating}</span>
                             </div>
                           </div>
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{winnerListing.description}</p>
+                          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-5">{winnerListing.description}</p>
                           <Button
-                            className="w-full gap-2 rounded-xl"
+                            className="w-full gap-2 rounded-xl font-bold h-11"
                             onClick={() => setLocation(`/listing/${winnerListing.id}`)}
                           >
                             <ExternalLink className="w-4 h-4" />
@@ -509,13 +509,13 @@ export function HomeSpin() {
                       ) : (
                         <div className="flex flex-col items-center gap-2 py-4">
                           <div
-                            className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-xl"
+                            className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-serif italic font-bold text-2xl shadow-inner"
                             style={{ backgroundColor: winner.color }}
                           >
                             {winner.name.slice(0, 2).toUpperCase()}
                           </div>
-                          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">The wheel chose</p>
-                          <h3 className="text-2xl font-black">{winner.name}</h3>
+                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">The wheel chose</p>
+                          <h3 className="text-3xl font-serif font-bold">{winner.name}</h3>
                         </div>
                       )}
                     </div>

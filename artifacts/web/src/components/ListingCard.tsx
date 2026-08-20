@@ -29,82 +29,89 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
       : null;
 
   return (
-    <Link href={`/listing/${listing.id}`} className="group block h-full outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg">
-      <Card className="h-full overflow-hidden transition-all hover:shadow-md dark:hover:border-primary/50 flex flex-col bg-card">
+    <Card className="group relative h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 dark:hover:border-primary/50 flex flex-col bg-card border-border/60">
+      <Link
+        href={`/listing/${listing.id}`}
+        className="absolute inset-0 z-10 block rounded-2xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        aria-label={`View ${listing.name}`}
+      >
+        <span className="sr-only">View {listing.name}</span>
+      </Link>
         {/* Top colored band */}
         <div
-          className="h-20 w-full relative flex items-center justify-center transition-colors"
+          className="h-28 w-full relative flex items-center justify-center transition-colors overflow-hidden"
           style={{ backgroundColor: listing.color }}
         >
-          <div className="text-white font-bold text-3xl opacity-80 tracking-widest">{listing.initials}</div>
+          <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105 bg-noise opacity-30 mix-blend-overlay"></div>
+          <div className="text-white font-serif italic font-bold text-4xl opacity-90 tracking-widest drop-shadow-md transition-transform duration-500 group-hover:scale-110">{listing.initials}</div>
 
           {listing.hasVideo && (
-            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm">
+            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md">
               <Play className="w-3 h-3 text-white fill-white" />
               <span className="text-[10px] font-bold text-white tracking-widest uppercase">Video</span>
             </div>
           )}
 
           <button
+            type="button"
             onClick={handleSave}
-            className="absolute top-3 right-3 p-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors text-white"
+            className="absolute top-3 right-3 z-20 p-2.5 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md transition-colors text-white"
             aria-label={saved ? "Remove from saved" : "Save listing"}
           >
             {saved ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
           </button>
         </div>
 
-        <CardContent className="p-5 flex-1 flex flex-col">
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors flex items-center gap-1.5">
-                {listing.name}
+        <CardContent className="p-6 flex-1 flex flex-col bg-card">
+          <div className="flex justify-between items-start mb-3">
+            <div className="w-full">
+              <h3 className="font-serif font-bold text-xl leading-tight group-hover:text-primary transition-colors flex items-center gap-2">
+                <span className="truncate">{listing.name}</span>
                 {listing.verified && (
                   <CheckCircle2 className="w-4 h-4 text-primary shrink-0" aria-label="Verified" />
                 )}
               </h3>
-              <p className="text-sm text-muted-foreground capitalize mt-1">
-                {listing.category}
+              <p className="text-sm text-muted-foreground capitalize mt-1.5 font-medium">
+                {listing.category.replace("-", " ")}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-4">
             <StarRating rating={listing.rating} />
-            <span className="text-xs font-medium">{listing.rating}</span>
-            <span className="text-xs text-muted-foreground">({listing.reviewCount})</span>
-            <span className="text-muted-foreground text-xs mx-1">•</span>
-            <span className="text-xs font-medium text-muted-foreground">{listing.priceRange}</span>
+            <span className="text-sm font-bold">{listing.rating}</span>
+            <span className="text-sm text-muted-foreground font-medium">({listing.reviewCount})</span>
+            <span className="text-muted-foreground text-sm mx-1.5">•</span>
+            <span className="text-sm font-bold text-muted-foreground">{listing.priceRange}</span>
           </div>
 
-          <div className="flex items-start gap-1.5 text-sm text-muted-foreground mt-auto pt-4 border-t border-border/50">
+          <div className="flex items-start gap-2 text-sm text-muted-foreground mt-auto pt-4 border-t border-border/50">
             <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
-            <span className="line-clamp-1 flex-1">
+            <span className="line-clamp-1 flex-1 leading-relaxed font-medium">
               {listing.neighborhood
                 ? `${listing.neighborhood} · ${listing.city}`
                 : `${listing.address}, ${listing.city}`}
             </span>
             {distanceLabel && (
-              <span className="ml-2 text-xs font-medium text-primary shrink-0">
+              <span className="ml-2 text-xs font-bold text-primary shrink-0 bg-primary/10 px-2 py-1 rounded-full">
                 {distanceLabel}
               </span>
             )}
           </div>
 
-          <div className="flex flex-wrap gap-1.5 mt-3">
+          <div className="flex flex-wrap gap-2 mt-4">
             {listing.tags.slice(0, 3).map(tag => (
-              <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
+              <Badge key={tag} variant="secondary" className="text-[11px] px-2 py-0.5 font-semibold bg-secondary/50 hover:bg-secondary/80 text-secondary-foreground/80">
                 {tag}
               </Badge>
             ))}
             {listing.tags.length > 3 && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+              <Badge variant="secondary" className="text-[11px] px-2 py-0.5 font-semibold bg-secondary/50 text-secondary-foreground/80">
                 +{listing.tags.length - 3}
               </Badge>
             )}
           </div>
         </CardContent>
-      </Card>
-    </Link>
+    </Card>
   );
 }

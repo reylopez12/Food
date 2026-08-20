@@ -42,7 +42,9 @@ export default function Explore() {
   const [selectedPrices, setSelectedPrices] = useState<string[]>([]);
   const [minRating, setMinRating] = useState<number[]>([0]);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [selectedNeighborhood, setSelectedNeighborhood] = useState<string | null>(null);
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState<string | null>(
+    searchParams.get("neighborhood") || null
+  );
 
   // Task #15: persist List/Map preference in localStorage
   const [viewMode, setViewMode] = useState<'list' | 'map'>(() => {
@@ -63,8 +65,10 @@ export default function Explore() {
     const params = new URLSearchParams(window.location.search);
     const q = params.get("q");
     const cat = params.get("category");
-    if (q) setSearchQuery(q);
-    if (cat && !selectedCategories.includes(cat)) setSelectedCategories([cat]);
+    const neighborhood = params.get("neighborhood");
+    setSearchQuery(q || "");
+    setSelectedCategories(cat ? [cat] : []);
+    setSelectedNeighborhood(neighborhood || null);
   }, [locationStr]);
 
   const distanceActive = status === 'granted' && userLat !== null && userLng !== null && radius !== null;
@@ -89,8 +93,11 @@ export default function Explore() {
 
       const matchesRating = listing.rating >= minRating[0];
       const matchesVerified = !verifiedOnly || listing.verified;
+      const normalizedNeighborhood = selectedNeighborhood?.trim().toLowerCase();
       const matchesNeighborhood =
-        !selectedNeighborhood || listing.neighborhood === selectedNeighborhood;
+        !normalizedNeighborhood ||
+        listing.neighborhood?.toLowerCase().includes(normalizedNeighborhood) ||
+        listing.city.toLowerCase().includes(normalizedNeighborhood);
 
       let matchesDistance = true;
       if (distanceActive) {

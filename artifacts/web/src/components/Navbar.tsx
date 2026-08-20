@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   UtensilsCrossed,
@@ -42,8 +43,8 @@ export function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
   const { unreadCount } = useNotifications(isAuthenticated);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Saved and Profile live in the dropdown — not in the top nav
   const navLinks: NavLink[] = [
     { href: "/", label: "Home" },
     { href: "/explore", label: "Explore" },
@@ -59,26 +60,26 @@ export function Navbar() {
     : "?";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/85 backdrop-blur-lg transition-colors duration-300">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="bg-primary p-1.5 rounded-md text-primary-foreground">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="bg-primary p-1.5 rounded-lg text-primary-foreground shadow-sm group-hover:scale-105 transition-transform duration-300">
             <UtensilsCrossed className="w-5 h-5" />
           </div>
-          <span className="font-bold text-lg tracking-tight hidden sm:inline-block">Bay Bites</span>
+          <span className="font-bold font-serif text-xl tracking-tight hidden sm:inline-block">Urban Directory</span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-7">
           {navLinks.map((link) => (
             link.highlight ? (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full transition-all border ${
+                className={`flex items-center gap-1.5 text-sm font-bold px-4 py-1.5 rounded-full transition-all border ${
                   location === link.href
-                    ? "bg-accent text-accent-foreground border-accent"
-                    : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                    ? "bg-accent text-accent-foreground border-accent shadow-sm"
+                    : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/30"
                 }`}
               >
                 {link.icon}
@@ -88,7 +89,7 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
+                className={`text-sm font-semibold transition-colors hover:text-primary ${
                   location === link.href ? "text-primary" : "text-muted-foreground"
                 }`}
               >
@@ -99,24 +100,24 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild className="hidden sm:flex">
+          <Button variant="ghost" size="icon" asChild className="hidden sm:flex hover:bg-muted/50 rounded-full transition-colors">
             <Link href="/explore">
               <Search className="w-4 h-4" />
               <span className="sr-only">Search</span>
             </Link>
           </Button>
 
-          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle dark mode">
+          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle dark mode" className="hover:bg-muted/50 rounded-full transition-colors">
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
 
-          {/* Notifications bell — only when authenticated */}
+          {/* Notifications bell */}
           {isAuthenticated && (
-            <Button variant="ghost" size="icon" asChild className="relative hidden md:flex" aria-label="Notifications">
+            <Button variant="ghost" size="icon" asChild className="relative hidden md:flex hover:bg-muted/50 rounded-full transition-colors" aria-label="Notifications">
               <Link href="/notifications">
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center leading-none shadow-sm">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
@@ -124,46 +125,42 @@ export function Navbar() {
             </Button>
           )}
 
-          {/* ── Desktop account menu ── */}
+          {/* Desktop account menu */}
           {!isLoading && (
             isAuthenticated ? (
-              /* Authenticated: avatar dropdown with Profile, Saved, Notifications, Log out */
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hidden md:flex rounded-full">
-                    <Avatar className="w-8 h-8">
+                  <Button variant="ghost" size="icon" className="hidden md:flex rounded-full hover:bg-muted/50 transition-colors">
+                    <Avatar className="w-8 h-8 ring-2 ring-transparent hover:ring-primary/20 transition-all">
                       <AvatarImage src={user?.profileImageUrl ?? undefined} alt={displayName} />
-                      <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                      <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bold">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  {/* Profile header */}
-                  <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">{displayName}</p>
+                <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-lg border-border/60">
+                  <div className="px-3 py-2.5">
+                    <p className="text-sm font-bold">{displayName}</p>
                     {user?.email && (
-                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium">{user.email}</p>
                     )}
                   </div>
                   <DropdownMenuSeparator />
 
-                  {/* Saved */}
-                  <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                  <DropdownMenuItem asChild className="gap-2.5 cursor-pointer py-2 focus:bg-muted">
                     <Link href="/saved">
                       <Bookmark className="w-4 h-4" />
-                      Saved
+                      <span className="font-medium">Saved</span>
                     </Link>
                   </DropdownMenuItem>
 
-                  {/* Notifications */}
-                  <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                  <DropdownMenuItem asChild className="gap-2.5 cursor-pointer py-2 focus:bg-muted">
                     <Link href="/notifications">
                       <Bell className="w-4 h-4" />
-                      Notifications
+                      <span className="font-medium">Notifications</span>
                       {unreadCount > 0 && (
-                        <span className="ml-auto bg-primary text-primary-foreground text-xs font-bold px-1.5 py-0.5 rounded-full">
+                        <span className="ml-auto bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
                           {unreadCount}
                         </span>
                       )}
@@ -171,30 +168,29 @@ export function Navbar() {
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="gap-2 cursor-pointer">
+                  <DropdownMenuItem onClick={logout} className="gap-2.5 cursor-pointer py-2 focus:bg-destructive/10 focus:text-destructive">
                     <LogOut className="w-4 h-4" />
-                    Log out
+                    <span className="font-medium">Log out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              /* Unauthenticated: dropdown with Saved + Log in */
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="hidden md:flex gap-1.5">
-                    <User className="w-3.5 h-3.5" />
+                  <Button variant="outline" size="sm" className="hidden md:flex gap-2 rounded-full font-semibold px-4 border-border hover:bg-muted/50 transition-colors">
+                    <User className="w-4 h-4" />
                     Menu
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-lg border-border/60">
+                  <DropdownMenuItem asChild className="gap-2.5 cursor-pointer py-2 focus:bg-muted">
                     <Link href="/saved">
                       <Bookmark className="w-4 h-4" />
-                      Saved
+                      <span className="font-medium">Saved</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={login} className="gap-2 cursor-pointer">
+                  <DropdownMenuItem onClick={login} className="gap-2.5 cursor-pointer py-2 focus:bg-primary focus:text-primary-foreground font-medium">
                     <LogIn className="w-4 h-4" />
                     Log in
                   </DropdownMenuItem>
@@ -203,23 +199,23 @@ export function Navbar() {
             )
           )}
 
-          {/* ── Mobile hamburger sheet ── */}
-          <Sheet>
+          {/* Mobile hamburger sheet */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              <Button variant="ghost" size="icon" className="md:hidden rounded-full hover:bg-muted/50 transition-colors">
                 <Menu className="w-5 h-5" />
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right">
+            <SheetContent side="right" className="border-l-border/60">
               <div className="flex flex-col gap-6 mt-8">
-                {/* Core nav links */}
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`flex items-center gap-2 text-lg font-medium transition-colors ${
-                      location === link.href ? "text-primary" : "text-muted-foreground"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 text-lg font-semibold transition-colors py-1 ${
+                      location === link.href ? "text-primary" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {link.icon}
@@ -227,60 +223,59 @@ export function Navbar() {
                   </Link>
                 ))}
 
-                {/* Saved — always accessible */}
                 <Link
                   href="/saved"
-                  className={`flex items-center gap-2 text-lg font-medium transition-colors ${
-                    location === "/saved" ? "text-primary" : "text-muted-foreground"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 text-lg font-semibold transition-colors py-1 ${
+                    location === "/saved" ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <Bookmark className="w-4 h-4" />
+                  <Bookmark className="w-5 h-5" />
                   Saved
                 </Link>
 
-                {/* Notifications — authenticated only */}
                 {isAuthenticated && (
                   <Link
                     href="/notifications"
-                    className={`flex items-center gap-2 text-lg font-medium transition-colors ${
-                      location === "/notifications" ? "text-primary" : "text-muted-foreground"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 text-lg font-semibold transition-colors py-1 ${
+                      location === "/notifications" ? "text-primary" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <Bell className="w-4 h-4" />
+                    <Bell className="w-5 h-5" />
                     Notifications
                     {unreadCount > 0 && (
-                      <span className="bg-primary text-primary-foreground text-xs font-bold px-1.5 py-0.5 rounded-full">
+                      <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full ml-auto">
                         {unreadCount}
                       </span>
                     )}
                   </Link>
                 )}
 
-                {/* Profile / auth section */}
-                <div className="pt-4 border-t">
+                <div className="pt-6 border-t mt-auto">
                   {!isLoading && (
                     isAuthenticated ? (
-                      <div className="flex flex-col gap-3">
+                      <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-3">
-                          <Avatar className="w-9 h-9">
+                          <Avatar className="w-10 h-10">
                             <AvatarImage src={user?.profileImageUrl ?? undefined} alt={displayName} />
-                            <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                            <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bold">
                               {initials}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-sm font-medium">{displayName}</p>
-                            {user?.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
+                            <p className="text-sm font-bold">{displayName}</p>
+                            {user?.email && <p className="text-xs text-muted-foreground font-medium">{user.email}</p>}
                           </div>
                         </div>
-                        <Button variant="outline" size="sm" onClick={logout} className="gap-2 w-full">
-                          <LogOut className="w-3.5 h-3.5" />
+                        <Button variant="outline" onClick={() => { setMobileMenuOpen(false); logout(); }} className="gap-2 w-full rounded-xl font-semibold border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all">
+                          <LogOut className="w-4 h-4" />
                           Log out
                         </Button>
                       </div>
                     ) : (
-                      <Button variant="default" size="sm" onClick={login} className="gap-2 w-full">
-                        <LogIn className="w-3.5 h-3.5" />
+                      <Button variant="default" onClick={() => { setMobileMenuOpen(false); login(); }} className="gap-2 w-full rounded-xl font-bold shadow-md">
+                        <LogIn className="w-4 h-4" />
                         Log in
                       </Button>
                     )

@@ -48,9 +48,9 @@ export function VideoShowcase() {
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
               <span className="text-xs font-bold text-red-400 tracking-widest uppercase">Now Playing</span>
             </div>
-            <h2 className="text-3xl font-bold tracking-tight text-white mb-2">Dish Showcases</h2>
-            <p className="text-white/50 text-sm max-w-md">
-              The signature dishes that put these Bay Area spots on the map — animated.
+            <h2 className="text-4xl md:text-5xl font-serif font-bold tracking-tight text-white mb-4">Dish Showcases</h2>
+            <p className="text-white/60 text-lg max-w-md leading-relaxed">
+              The signature dishes that put these Bay Area spots on the map — brought to life.
             </p>
           </div>
 
@@ -124,18 +124,18 @@ export function VideoShowcase() {
                 transition={{ duration: 0.35 }}
                 className="space-y-3"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-1">
                   <span
-                    className="text-xs font-semibold uppercase tracking-widest"
+                    className="text-xs font-bold uppercase tracking-widest"
                     style={{ color: activeListing.video!.accentColor }}
                   >
                     {activeListing.neighborhood}
                   </span>
                   <span className="text-white/20">·</span>
-                  <span className="text-white/40 text-xs capitalize">{activeListing.category.replace('-', ' ')}</span>
+                  <span className="text-white/50 text-xs font-medium capitalize">{activeListing.category.replace('-', ' ')}</span>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-white">{activeListing.name}</h3>
-                <p className="text-white/50 text-sm leading-relaxed line-clamp-3">{activeListing.description}</p>
+                <h3 className="text-3xl md:text-4xl font-serif font-bold text-white mb-2">{activeListing.name}</h3>
+                <p className="text-white/60 text-base leading-relaxed line-clamp-3 mb-2">{activeListing.description}</p>
                 <button
                   onClick={() => setLocation(`/listing/${activeListing.id}`)}
                   className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border border-white/20 hover:border-white/50 text-white/80 hover:text-white transition-all"
@@ -148,28 +148,30 @@ export function VideoShowcase() {
 
             {/* Up-next queue */}
             <div className="space-y-2">
-              <p className="text-xs font-semibold text-white/30 uppercase tracking-widest mb-3">Up Next</p>
+              <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Up Next</p>
               {videoListings.filter((_, i) => i !== activeIdx).slice(0, 3).map((listing) => {
                 const globalIdx = videoListings.indexOf(listing);
                 return (
                   <button
                     key={listing.id}
                     onClick={() => goTo(globalIdx, videoListings.length)}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-white/5 hover:border-white/15 hover:bg-white/5 transition-all text-left group"
+                    className="w-full flex items-center gap-4 p-3.5 rounded-2xl border border-white/5 hover:border-white/20 hover:bg-white/5 transition-all text-left group"
                   >
                     <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-xs shrink-0"
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-serif italic font-bold text-sm shrink-0 shadow-inner"
                       style={{ backgroundColor: listing.color }}
                     >
                       {listing.initials}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white/80 text-sm font-semibold truncate group-hover:text-white transition-colors">
+                      <p className="text-white/90 text-sm font-bold truncate group-hover:text-white transition-colors mb-0.5">
                         {listing.video!.dish}
                       </p>
-                      <p className="text-white/30 text-xs truncate">{listing.name}</p>
+                      <p className="text-white/40 text-xs font-medium truncate">{listing.name}</p>
                     </div>
-                    <Play className="w-3.5 h-3.5 text-white/20 group-hover:text-white/60 transition-colors shrink-0" />
+                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                      <Play className="w-3.5 h-3.5 text-white/40 group-hover:text-white transition-colors shrink-0 translate-x-[1px]" />
+                    </div>
                   </button>
                 );
               })}
