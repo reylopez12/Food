@@ -38,7 +38,7 @@ export function CategoryPillRow() {
           >
             <Feather
               name={cat.icon as any}
-              size={13}
+              size={16}
               color={active ? colors.primaryForeground : colors.mutedForeground}
             />
             <Text
@@ -58,22 +58,22 @@ export function CategoryPillRow() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    gap: 8,
+    paddingHorizontal: 20,
+    gap: 10,
     flexDirection: 'row',
     alignItems: 'center',
   },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 100,
     borderWidth: 1,
   },
   label: {
-    fontSize: 13,
-    fontFamily: 'Inter_500Medium',
+    fontSize: 14,
+    fontFamily: 'Inter_600SemiBold',
   },
 });

@@ -104,9 +104,8 @@ const CARD_GAP = 0;
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#080c14',
-    paddingTop: 20,
-    paddingBottom: 24,
-    marginTop: 16,
+    paddingTop: 24,
+    paddingBottom: 28,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255,255,255,0.07)',

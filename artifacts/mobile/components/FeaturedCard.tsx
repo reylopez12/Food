@@ -25,7 +25,10 @@ export function FeaturedCard({ listing }: FeaturedCardProps) {
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.card, { opacity: pressed ? 0.92 : 1 }]}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.95 : 1 }
+      ]}
       onPress={() => router.push(`/listing/${listing.id}`)}
     >
       {/* Image placeholder */}
@@ -33,24 +36,24 @@ export function FeaturedCard({ listing }: FeaturedCardProps) {
         <Text style={styles.initials}>{listing.initials}</Text>
         {listing.verified && (
           <View style={[styles.verifiedBadge, { backgroundColor: colors.primary }]}>
-            <Ionicons name="checkmark" size={10} color="#fff" />
+            <Ionicons name="checkmark" size={12} color="#fff" />
           </View>
         )}
         <Pressable
-          style={[styles.saveBtn, { backgroundColor: 'rgba(0,0,0,0.35)' }]}
+          style={[styles.saveBtn, { backgroundColor: 'rgba(0,0,0,0.3)' }]}
           onPress={handleSave}
           hitSlop={8}
         >
           <Ionicons
             name={saved ? 'bookmark' : 'bookmark-outline'}
-            size={18}
+            size={20}
             color={saved ? colors.accent : '#fff'}
           />
         </Pressable>
       </View>
 
       {/* Info block */}
-      <View style={[styles.info, { backgroundColor: colors.card }]}>
+      <View style={styles.info}>
         <View style={styles.tagRow}>
           <View style={[styles.categoryChip, { backgroundColor: colors.secondary }]}>
             <Text style={[styles.categoryText, { color: colors.primary }]}>
@@ -62,9 +65,9 @@ export function FeaturedCard({ listing }: FeaturedCardProps) {
         <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>
           {listing.name}
         </Text>
-        <RatingStars rating={listing.rating} reviewCount={listing.reviewCount} size={12} />
+        <RatingStars rating={listing.rating} reviewCount={listing.reviewCount} size={14} />
         <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={12} color={colors.mutedForeground} />
+          <Ionicons name="location-outline" size={14} color={colors.mutedForeground} />
           <Text style={[styles.city, { color: colors.mutedForeground }]} numberOfLines={1}>
             {listing.city}
           </Text>
@@ -76,50 +79,56 @@ export function FeaturedCard({ listing }: FeaturedCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    width: 220,
-    borderRadius: 16,
+    width: 260,
+    borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-    marginRight: 14,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 3,
+    marginRight: 16,
+    borderWidth: 1,
   },
   imageBlock: {
-    height: 140,
+    height: 150,
     alignItems: 'center',
     justifyContent: 'center',
   },
   initials: {
-    fontSize: 42,
+    fontSize: 48,
     fontFamily: 'Inter_700Bold',
     color: 'rgba(255,255,255,0.9)',
     letterSpacing: 2,
   },
   verifiedBadge: {
     position: 'absolute',
-    top: 10,
-    left: 10,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    top: 12,
+    left: 12,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   saveBtn: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    top: 12,
+    right: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
   info: {
-    padding: 12,
-    gap: 4,
+    padding: 16,
+    gap: 6,
   },
   tagRow: {
     flexDirection: 'row',
@@ -129,31 +138,31 @@ const styles = StyleSheet.create({
   },
   categoryChip: {
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 4,
     borderRadius: 6,
   },
   categoryText: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: 'Inter_600SemiBold',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   price: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Inter_600SemiBold',
   },
   name: {
-    fontSize: 15,
+    fontSize: 18,
     fontFamily: 'Inter_700Bold',
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 4,
     marginTop: 2,
   },
   city: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Inter_400Regular',
   },
 });

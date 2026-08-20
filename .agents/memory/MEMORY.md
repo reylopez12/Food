@@ -2,3 +2,4 @@
 - [DB schema build step](db-schema-build.md) — after editing lib/db schema, must run `tsc -b` in lib/db before api-server typecheck
 - [SSE in-process emitter scope](sse-in-process-emitter.md) — notifEmitter only works within a single Node process; Redis needed for multi-instance
 - [Expo Web API routing](expo-web-api-routing.md) — use same-origin API requests on web; reserve the external API base and bearer-token getter for native
+- [Mobile build port collision](mobile-build-port-collision.md) — Expo static build assumes local 8081; stop/restart mockup preview around production builds.

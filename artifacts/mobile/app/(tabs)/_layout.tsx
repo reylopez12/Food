@@ -118,7 +118,6 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarItemStyle: { flex: 1, margin: 0, padding: 0 },
         tabBarLabelStyle: { fontSize: 10 },
-        tabBarContentContainerStyle: { paddingHorizontal: 0 },
         tabBarStyle: {
           position: 'absolute',
           left: 0,

@@ -10,7 +10,6 @@ import * as Haptics from 'expo-haptics';
 
 interface ListingCardProps {
   listing: Listing;
-  /** Distance from the user's current location in miles, if available. */
   distanceMi?: number;
 }
 
@@ -36,23 +35,21 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
     <Pressable
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: colors.card, opacity: pressed ? 0.93 : 1 },
+        { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.93 : 1 },
       ]}
       onPress={() => router.push(`/listing/${listing.id}`)}
     >
-      {/* Color strip / avatar */}
       <View style={[styles.avatar, { backgroundColor: listing.color }]}>
         <Text style={styles.initials}>{listing.initials}</Text>
       </View>
 
-      {/* Content */}
       <View style={styles.content}>
         <View style={styles.nameRow}>
           <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>
             {listing.name}
           </Text>
           {listing.verified && (
-            <Ionicons name="checkmark-circle" size={15} color={colors.primary} />
+            <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
           )}
         </View>
         <View style={styles.metaRow}>
@@ -62,9 +59,9 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
           <Text style={[styles.dot, { color: colors.border }]}> · </Text>
           <Text style={[styles.price, { color: colors.mutedForeground }]}>{listing.priceRange}</Text>
         </View>
-        <RatingStars rating={listing.rating} reviewCount={listing.reviewCount} size={12} />
+        <RatingStars rating={listing.rating} reviewCount={listing.reviewCount} size={13} />
         <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={12} color={colors.mutedForeground} />
+          <Ionicons name="location-outline" size={13} color={colors.mutedForeground} />
           <Text style={[styles.city, { color: colors.mutedForeground }]} numberOfLines={1}>
             {listing.address}, {listing.city}
           </Text>
@@ -85,11 +82,10 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
         )}
       </View>
 
-      {/* Save button */}
       <Pressable onPress={handleSave} style={styles.saveBtn} hitSlop={8}>
         <Ionicons
           name={saved ? 'bookmark' : 'bookmark-outline'}
-          size={20}
+          size={22}
           color={saved ? colors.accent : colors.mutedForeground}
         />
       </Pressable>
@@ -100,38 +96,39 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: 10,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 2,
+    borderWidth: 1,
   },
   avatar: {
-    width: 72,
+    width: 88,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   initials: {
-    fontSize: 22,
+    fontSize: 26,
     fontFamily: 'Inter_700Bold',
     color: 'rgba(255,255,255,0.9)',
   },
   content: {
     flex: 1,
-    padding: 12,
-    gap: 3,
+    padding: 14,
+    gap: 4,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   name: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'Inter_600SemiBold',
     flex: 1,
   },
@@ -140,48 +137,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   category: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Inter_400Regular',
   },
   dot: {
-    fontSize: 12,
+    fontSize: 13,
   },
   price: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Inter_600SemiBold',
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 4,
   },
   city: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: 'Inter_400Regular',
     flex: 1,
   },
   distance: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: 'Inter_600SemiBold',
     marginLeft: 4,
   },
   tagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 4,
-    marginTop: 2,
+    gap: 6,
+    marginTop: 4,
   },
   tag: {
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 6,
   },
   tagText: {
     fontSize: 10,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Inter_500Medium',
   },
   saveBtn: {
-    padding: 12,
+    padding: 14,
     alignSelf: 'flex-start',
   },
 });

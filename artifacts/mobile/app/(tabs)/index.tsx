@@ -18,6 +18,7 @@ import { ListingCard } from '@/components/ListingCard';
 import { CategoryPillRow } from '@/components/CategoryPill';
 import { VideoShowcase } from '@/components/VideoShowcase';
 import { HomeSpinWidget } from '@/components/HomeSpinWidget';
+
 const LOCATION = 'San Francisco Bay Area';
 
 export default function HomeScreen() {
@@ -45,47 +46,67 @@ export default function HomeScreen() {
           </View>
           <TouchableOpacity
             style={[styles.notifBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => {}}
+            onPress={() => router.push('/(tabs)/notifications')}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="View alerts"
           >
             <Ionicons name="notifications-outline" size={20} color={colors.foreground} />
           </TouchableOpacity>
         </View>
 
-        {/* Hero heading */}
-        <View style={styles.heroSection}>
-          <Text style={[styles.heroTitle, { color: colors.foreground }]}>
-            The best food{'\n'}
-            <Text style={{ color: colors.primary }}>in the Bay Area</Text>
-          </Text>
+        {/* Spin wheel — Hero */}
+        <View style={styles.spinSection}>
+          <HomeSpinWidget />
         </View>
 
-        {/* Search bar (tap to go to explore) */}
-        <TouchableOpacity
-          style={[styles.searchTap, { backgroundColor: colors.card, borderColor: colors.border }]}
-          onPress={() => router.push('/(tabs)/explore')}
-          activeOpacity={0.8}
-        >
-          <Feather name="search" size={18} color={colors.mutedForeground} />
-          <Text style={[styles.searchPlaceholder, { color: colors.mutedForeground }]}>
-            Ramen, sourdough, cocktails...
-          </Text>
-          <View style={[styles.filterBtn, { backgroundColor: colors.primary }]}>
-            <Feather name="sliders" size={14} color="#fff" />
-          </View>
-        </TouchableOpacity>
-
-        {/* Spin wheel — first feature users see */}
-        <HomeSpinWidget />
+        {/* Search bar */}
+        <View style={styles.searchContainer}>
+          <TouchableOpacity
+            style={[styles.searchTap, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: colors.foreground }]}
+            onPress={() => router.push('/(tabs)/explore')}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Search places"
+          >
+            <Feather name="search" size={20} color={colors.mutedForeground} />
+            <Text style={[styles.searchPlaceholder, { color: colors.mutedForeground }]}>
+              Tacos, sourdough, bao, pasta...
+            </Text>
+            <View style={[styles.searchAction, { backgroundColor: colors.primary }]}>
+              <Text style={styles.searchActionText}>Search</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
         {/* Video Showcase */}
-        <VideoShowcase />
+        <View style={styles.videoSection}>
+          <VideoShowcase />
+        </View>
+
+        {/* Categories */}
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Browse by Category</Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.mutedForeground }]}>
+            Find exactly the kind of experience you're craving.
+          </Text>
+        </View>
+        <View style={styles.categoriesSection}>
+          <CategoryPillRow />
+        </View>
 
         {/* Featured listings */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Featured</Text>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/explore')}>
-            <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
-          </TouchableOpacity>
+          <View style={styles.sectionHeaderTop}>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Featured Places</Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/explore')} activeOpacity={0.6} style={styles.seeAllBtn}>
+              <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
+              <Feather name="arrow-right" size={14} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+          <Text style={[styles.sectionSubtitle, { color: colors.mutedForeground }]}>
+            Iconic spots that define Bay Area dining.
+          </Text>
         </View>
 
         <FlatList
@@ -98,24 +119,31 @@ export default function HomeScreen() {
           scrollEnabled={featuredListings.length > 1}
         />
 
-        {/* Categories */}
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Categories</Text>
-        </View>
-        <CategoryPillRow />
-
         {/* All listings */}
-        <View style={[styles.sectionHeader, { marginTop: 20 }]}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>All Places</Text>
-          <Text style={[styles.count, { color: colors.mutedForeground }]}>
-            {filteredListings.length} places
+        <View style={[styles.sectionHeader, { marginTop: 12 }]}>
+          <View style={styles.sectionHeaderTop}>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>More to Discover</Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/explore')} activeOpacity={0.6} style={styles.seeAllBtn}>
+              <Text style={[styles.seeAll, { color: colors.primary }]}>Explore</Text>
+              <Feather name="arrow-right" size={14} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+          <Text style={[styles.sectionSubtitle, { color: colors.mutedForeground }]}>
+            Hidden gems and neighborhood favorites.
           </Text>
         </View>
 
         <View style={styles.listSection}>
-          {filteredListings.map((item) => (
+          {filteredListings.slice(0, 5).map((item) => (
             <ListingCard key={item.id} listing={item} />
           ))}
+          <TouchableOpacity
+            style={[styles.viewAllBtn, { borderColor: colors.border }]}
+            onPress={() => router.push('/(tabs)/explore')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.viewAllText, { color: colors.foreground }]}>View all {filteredListings.length} places</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -132,89 +160,126 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 4,
+    paddingBottom: 12,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
   },
   locationLabel: {
     fontSize: 12,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Inter_600SemiBold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   locationCity: {
-    fontSize: 17,
+    fontSize: 20,
     fontFamily: 'Inter_700Bold',
-    marginTop: 1,
+    marginTop: 2,
+    letterSpacing: -0.5,
   },
   notifBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  heroSection: {
+  spinSection: {
+    marginBottom: 24,
+  },
+  searchContainer: {
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 14,
-  },
-  heroTitle: {
-    fontSize: 28,
-    fontFamily: 'Inter_700Bold',
-    lineHeight: 36,
+    marginBottom: 32,
   },
   searchTap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginHorizontal: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 14,
+    gap: 12,
+    paddingLeft: 18,
+    paddingRight: 8,
+    paddingVertical: 8,
+    borderRadius: 100,
     borderWidth: 1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
   },
   searchPlaceholder: {
     flex: 1,
     fontSize: 15,
     fontFamily: 'Inter_400Regular',
   },
-  filterBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
+  searchAction: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 100,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  searchActionText: {
+    color: '#fff',
+    fontSize: 14,
+    fontFamily: 'Inter_600SemiBold',
+  },
+  videoSection: {
+    marginBottom: 32,
+  },
   sectionHeader: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  sectionHeaderTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
+    alignItems: 'flex-end',
+    marginBottom: 4,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontFamily: 'Inter_700Bold',
+    letterSpacing: -0.5,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    lineHeight: 20,
+  },
+  seeAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingBottom: 4,
   },
   seeAll: {
     fontSize: 14,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Inter_600SemiBold',
   },
-  count: {
-    fontSize: 13,
-    fontFamily: 'Inter_400Regular',
+  categoriesSection: {
+    marginBottom: 36,
   },
   featuredList: {
     paddingHorizontal: 20,
-    paddingBottom: 4,
+    paddingBottom: 24,
   },
   listSection: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+  },
+  viewAllBtn: {
+    marginTop: 8,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  viewAllText: {
+    fontSize: 15,
+    fontFamily: 'Inter_600SemiBold',
   },
 });
