@@ -78,7 +78,7 @@ export function VideoShowcase() {
                     style={{
                       width: i === activeIdx ? 20 : 6,
                       height: 6,
-                      backgroundColor: i === activeIdx ? "#F59E0B" : "rgba(255,255,255,0.2)",
+                      backgroundColor: i === activeIdx ? "hsl(var(--accent))" : "rgba(255,255,255,0.2)",
                     }}
                   />
                 </button>

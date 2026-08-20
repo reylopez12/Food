@@ -32,11 +32,24 @@ import { useToast } from "@/hooks/use-toast";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+/**
+ * Resolve the theme's primary color to a concrete hex-like string for use as
+ * the default value of the native <input type="color"> (which cannot accept
+ * CSS custom properties). Falls back to the light-mode primary hex.
+ *
+ * Note: `getComputedStyle` returns raw HSL components ("224 78% 48%") that
+ * browsers accept inside hsl() but not as a standalone color string, so we
+ * keep the hardcoded light-mode hex as a safe concrete fallback here. The
+ * persisted listing colors entered by admins are always concrete hex values
+ * from the color picker and are never changed by this constant.
+ */
+const PRIMARY_DEFAULT = "#1B4FD8"; // light-mode --primary concrete value
+
 const BLANK: Partial<Listing> = {
   name: "", category: "restaurants", rating: 4.5, reviewCount: 0,
   address: "", city: "San Francisco", neighborhood: "", phone: "",
   website: "", hours: "", description: "", tags: [], featured: false,
-  verified: false, priceRange: "$$", color: "#3B82F6", initials: "",
+  verified: false, priceRange: "$$", color: PRIMARY_DEFAULT, initials: "",
   hasVideo: false, lat: 37.7749, lng: -122.4194,
 };
 
@@ -120,7 +133,7 @@ function ListingForm({
         <div>
           <Label>Color (hex)</Label>
           <div className="flex gap-2 items-center">
-            <input type="color" value={form.color ?? "#3B82F6"} onChange={(e) => set("color", e.target.value)} className="h-9 w-12 rounded border cursor-pointer" />
+            <input type="color" value={form.color ?? PRIMARY_DEFAULT} onChange={(e) => set("color", e.target.value)} className="h-9 w-12 rounded border cursor-pointer" />
             <Input value={form.color ?? ""} onChange={(e) => set("color", e.target.value)} className="flex-1" />
           </div>
         </div>

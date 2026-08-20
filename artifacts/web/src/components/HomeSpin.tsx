@@ -25,6 +25,17 @@ const SPIN_ROTATIONS = 8;
 const SPIN_DURATION  = 4200;
 const TWO_PI         = 2 * Math.PI;
 
+// ─── Theme helpers ─────────────────────────────────────────────────────────────
+
+/** Read a raw CSS custom property (e.g. "--primary") and wrap it in hsl(). */
+function resolveCssVar(property: string, fallback: string): string {
+  if (typeof document === "undefined") return fallback;
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue(property)
+    .trim();
+  return raw ? `hsl(${raw})` : fallback;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function shuffled<T>(arr: T[]): T[] {
@@ -42,7 +53,12 @@ function easeOut(t: number) {
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
 
-function drawWheel(canvas: HTMLCanvasElement, items: SpinItem[], angle: number) {
+function drawWheel(
+  canvas: HTMLCanvasElement,
+  items: SpinItem[],
+  angle: number,
+  primaryColor: string,
+) {
   const ctx = canvas.getContext("2d")!;
   const { width, height } = canvas;
   const cx = width / 2;
@@ -97,7 +113,7 @@ function drawWheel(canvas: HTMLCanvasElement, items: SpinItem[], angle: number) 
     ctx.restore();
   });
 
-  // Hub
+  // Hub — white outer ring with black shadow (intentional), primary-colored inner dot
   ctx.beginPath();
   ctx.arc(0, 0, 20, 0, TWO_PI);
   ctx.fillStyle = "#fff";
@@ -108,13 +124,13 @@ function drawWheel(canvas: HTMLCanvasElement, items: SpinItem[], angle: number) 
 
   ctx.beginPath();
   ctx.arc(0, 0, 7, 0, TWO_PI);
-  ctx.fillStyle = "#1B4FD8";
+  ctx.fillStyle = primaryColor;
   ctx.fill();
 
   ctx.restore();
 }
 
-function drawPointer(canvas: HTMLCanvasElement) {
+function drawPointer(canvas: HTMLCanvasElement, accentColor: string) {
   const ctx = canvas.getContext("2d")!;
   const cx  = canvas.width  / 2;
   const cy  = canvas.height / 2;
@@ -128,7 +144,8 @@ function drawPointer(canvas: HTMLCanvasElement) {
   ctx.lineTo(-10, tipY + 4);
   ctx.lineTo(10,  tipY + 4);
   ctx.closePath();
-  ctx.fillStyle  = "#F59E0B";
+  // Pointer uses accent color — intentional design element; shadow is black (intentional)
+  ctx.fillStyle  = accentColor;
   ctx.shadowColor = "rgba(0,0,0,0.3)";
   ctx.shadowBlur  = 6;
   ctx.fill();
@@ -159,6 +176,23 @@ export function HomeSpin() {
   const [displayAngle,  setDisplayAngle]  = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef    = useRef<number | null>(null);
+
+  // Resolve canvas colors from theme; re-resolve on dark/light toggle.
+  const [primaryColor, setPrimaryColor] = useState(
+    () => resolveCssVar("--primary", "#1B4FD8")
+  );
+  const [accentColor, setAccentColor] = useState(
+    () => resolveCssVar("--accent", "#F59E0B")
+  );
+  useEffect(() => {
+    const update = () => {
+      setPrimaryColor(resolveCssVar("--primary", "#1B4FD8"));
+      setAccentColor(resolveCssVar("--accent", "#F59E0B"));
+    };
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   const locationReady =
     locationStatus === "granted" &&
@@ -196,10 +230,10 @@ export function HomeSpin() {
     (angle: number, override?: SpinItem[]) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      drawWheel(canvas, override ?? spinItems, angle);
-      drawPointer(canvas);
+      drawWheel(canvas, override ?? spinItems, angle, primaryColor);
+      drawPointer(canvas, accentColor);
     },
-    [spinItems]
+    [spinItems, primaryColor, accentColor]
   );
 
   useEffect(() => {
@@ -237,6 +271,8 @@ export function HomeSpin() {
     const startAngle  = currentAngleRef.current;
     const startTime   = { v: -1 };
     const snapshot    = spinItems.slice();
+    const snapPrimary = primaryColor;
+    const snapAccent  = accentColor;
 
     const animate = (ts: number) => {
       if (startTime.v < 0) startTime.v = ts;
@@ -246,8 +282,8 @@ export function HomeSpin() {
 
       const canvas = canvasRef.current;
       if (canvas) {
-        drawWheel(canvas, snapshot, current);
-        drawPointer(canvas);
+        drawWheel(canvas, snapshot, current, snapPrimary);
+        drawPointer(canvas, snapAccent);
       }
 
       if (t < 1) {

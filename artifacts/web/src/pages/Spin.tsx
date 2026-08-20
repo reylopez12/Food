@@ -64,9 +64,25 @@ function shuffled<T>(arr: T[]): T[] {
   return a;
 }
 
+// ─── Theme helpers ─────────────────────────────────────────────────────────────
+
+/** Read a raw CSS custom property (e.g. "--primary") and wrap it in hsl(). */
+function resolveCssVar(property: string, fallback: string): string {
+  if (typeof document === "undefined") return fallback;
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue(property)
+    .trim();
+  return raw ? `hsl(${raw})` : fallback;
+}
+
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
 
-function drawWheel(canvas: HTMLCanvasElement, items: SpinItem[], angle: number) {
+function drawWheel(
+  canvas: HTMLCanvasElement,
+  items: SpinItem[],
+  angle: number,
+  primaryColor: string,
+) {
   const ctx = canvas.getContext("2d")!;
   const { width, height } = canvas;
   const cx = width / 2;
@@ -124,7 +140,7 @@ function drawWheel(canvas: HTMLCanvasElement, items: SpinItem[], angle: number) 
     ctx.restore();
   });
 
-  // Hub
+  // Hub — white outer ring with black shadow (intentional), primary-colored inner dot
   ctx.beginPath();
   ctx.arc(0, 0, 20, 0, TWO_PI);
   ctx.fillStyle = "#fff";
@@ -135,13 +151,13 @@ function drawWheel(canvas: HTMLCanvasElement, items: SpinItem[], angle: number) 
 
   ctx.beginPath();
   ctx.arc(0, 0, 7, 0, TWO_PI);
-  ctx.fillStyle = "#1B4FD8";
+  ctx.fillStyle = primaryColor;
   ctx.fill();
 
   ctx.restore();
 }
 
-function drawPointer(canvas: HTMLCanvasElement) {
+function drawPointer(canvas: HTMLCanvasElement, accentColor: string) {
   const ctx = canvas.getContext("2d")!;
   const cx = canvas.width  / 2;
   const cy = canvas.height / 2;
@@ -156,7 +172,8 @@ function drawPointer(canvas: HTMLCanvasElement) {
   ctx.lineTo(-10, tipY + 4);
   ctx.lineTo(10,  tipY + 4);
   ctx.closePath();
-  ctx.fillStyle = "#F59E0B";
+  // Pointer uses accent color — intentional design element; shadow is black (intentional)
+  ctx.fillStyle = accentColor;
   ctx.shadowColor = "rgba(0,0,0,0.3)";
   ctx.shadowBlur  = 6;
   ctx.fill();
@@ -189,6 +206,23 @@ export default function Spin() {
   const [displayAngle, setDisplayAngle] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef    = useRef<number | null>(null);
+
+  // Resolve theme colors for canvas; re-resolve on dark/light toggle
+  const [primaryColor, setPrimaryColor] = useState(
+    () => resolveCssVar("--primary", "#1B4FD8")
+  );
+  const [accentColor, setAccentColor] = useState(
+    () => resolveCssVar("--accent", "#F59E0B")
+  );
+  useEffect(() => {
+    const update = () => {
+      setPrimaryColor(resolveCssVar("--primary", "#1B4FD8"));
+      setAccentColor(resolveCssVar("--accent", "#F59E0B"));
+    };
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   const { data: allListings = [] } = useListings();
   const {
@@ -253,10 +287,10 @@ export default function Spin() {
     (angle: number, override?: SpinItem[]) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      drawWheel(canvas, override ?? spinItems, angle);
-      drawPointer(canvas);
+      drawWheel(canvas, override ?? spinItems, angle, primaryColor);
+      drawPointer(canvas, accentColor);
     },
-    [spinItems]
+    [spinItems, primaryColor, accentColor]
   );
 
   useEffect(() => {
@@ -294,10 +328,12 @@ export default function Spin() {
     let delta = targetNorm - currentNorm;
     if (delta < 0.01) delta += TWO_PI;
 
-    const totalTarget = currentAngleRef.current + delta + (SPIN_ROTATIONS - 1) * TWO_PI;
-    const startAngle  = currentAngleRef.current;
-    const startTime   = { v: -1 };
-    const snapshot    = spinItems.slice();
+    const totalTarget  = currentAngleRef.current + delta + (SPIN_ROTATIONS - 1) * TWO_PI;
+    const startAngle   = currentAngleRef.current;
+    const startTime    = { v: -1 };
+    const snapshot     = spinItems.slice();
+    const snapPrimary  = primaryColor;
+    const snapAccent   = accentColor;
 
     const animate = (ts: number) => {
       if (startTime.v < 0) startTime.v = ts;
@@ -307,8 +343,8 @@ export default function Spin() {
 
       const canvas = canvasRef.current;
       if (canvas) {
-        drawWheel(canvas, snapshot, current);
-        drawPointer(canvas);
+        drawWheel(canvas, snapshot, current, snapPrimary);
+        drawPointer(canvas, snapAccent);
       }
 
       if (t < 1) {
@@ -657,7 +693,7 @@ export default function Spin() {
             className="w-full h-auto rounded-full"
             style={{
               filter: spinning
-                ? "drop-shadow(0 0 24px rgba(27,79,216,0.35))"
+                ? `drop-shadow(0 0 24px color-mix(in srgb, ${primaryColor} 35%, transparent))`
                 : "drop-shadow(0 4px 16px rgba(0,0,0,0.12))",
               transition: "filter 0.3s",
             }}

@@ -35,10 +35,10 @@ interface NotificationItem {
   };
 }
 
-const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-  closed: { label: 'Closed today', color: '#ef4444' },
-  special: { label: 'Daily special', color: '#f59e0b' },
-  general: { label: 'Update', color: '#3b82f6' },
+const TYPE_LABELS: Record<string, string> = {
+  closed: 'Closed today',
+  special: 'Daily special',
+  general: 'Update',
 };
 
 function timeAgo(iso: string) {
@@ -55,6 +55,12 @@ export default function NotificationsScreen() {
   const colors = useColors();
   const router = useRouter();
   const { isAuthenticated, login } = useAuth();
+
+  const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
+    closed:  { label: TYPE_LABELS.closed,  color: colors.destructive },
+    special: { label: TYPE_LABELS.special, color: colors.accent },
+    general: { label: TYPE_LABELS.general, color: colors.primary },
+  };
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);

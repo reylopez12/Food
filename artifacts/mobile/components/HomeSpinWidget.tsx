@@ -318,7 +318,7 @@ export function HomeSpinWidget() {
       <View style={styles.wheelWrap}>
         {/* Pointer */}
         <View style={styles.pointerWrap} pointerEvents="none">
-          <View style={styles.pointerTriangle} />
+          <View style={[styles.pointerTriangle, { borderTopColor: colors.accent }]} />
         </View>
 
         <Animated.View style={[styles.wheelAnim, { transform: [{ rotate: rotateStr }] }]}>
@@ -434,7 +434,7 @@ export function HomeSpinWidget() {
                     </View>
                   </View>
                   <View style={styles.ratingRow}>
-                    <Feather name="star" size={12} color="#F59E0B" />
+                    <Feather name="star" size={12} color={colors.accent} />
                     <Text style={[styles.ratingText, { color: colors.foreground }]}>{winnerListing.rating}</Text>
                   </View>
                 </View>
@@ -628,7 +628,6 @@ const styles = StyleSheet.create({
     borderTopWidth:   20,
     borderLeftColor:  'transparent',
     borderRightColor: 'transparent',
-    borderTopColor:   '#F59E0B',
   },
   wheelAnim: {
     width:  WHEEL_SIZE,

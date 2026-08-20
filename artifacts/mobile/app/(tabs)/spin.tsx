@@ -620,7 +620,7 @@ export default function SpinScreen() {
         {/* ── Wheel + pointer ── */}
         <View style={styles.wheelWrap}>
           <View style={styles.pointerWrap} pointerEvents="none">
-            <View style={styles.pointerTriangle} />
+            <View style={[styles.pointerTriangle, { borderTopColor: colors.accent }]} />
           </View>
 
           <Animated.View style={[styles.wheelAnim, { transform: [{ rotate: rotateStr }] }]}>
@@ -791,7 +791,7 @@ export default function SpinScreen() {
                       </View>
                     )}
                     <View style={styles.ratingChip}>
-                      <Feather name="star" size={11} color="#F59E0B" />
+                      <Feather name="star" size={11} color={colors.accent} />
                       <Text style={[styles.chipText, { color: colors.foreground, marginLeft: 3 }]}>
                         {winnerListing.rating}
                       </Text>
@@ -1047,7 +1047,6 @@ const styles = StyleSheet.create({
     borderTopWidth:   22,
     borderLeftColor:  'transparent',
     borderRightColor: 'transparent',
-    borderTopColor:   '#F59E0B',
   },
   wheelAnim: {
     width:  WHEEL_SIZE,

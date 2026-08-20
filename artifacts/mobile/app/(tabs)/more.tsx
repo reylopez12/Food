@@ -76,8 +76,8 @@ function MenuRow({
       </View>
       <Text style={[styles.rowLabel, { color: colors.foreground }]}>{item.label}</Text>
       {!!item.badge && item.badge > 0 && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>
+        <View style={[styles.badge, { backgroundColor: colors.destructive }]}>
+          <Text style={[styles.badgeText, { color: colors.destructiveForeground }]}>
             {item.badge > 99 ? '99+' : String(item.badge)}
           </Text>
         </View>
@@ -201,8 +201,8 @@ export default function MoreScreen() {
               { borderColor: colors.border, opacity: pressed ? 0.65 : 1 },
             ]}
           >
-            <Feather name="log-out" size={16} color="#ef4444" />
-            <Text style={styles.signOutText}>Sign out</Text>
+            <Feather name="log-out" size={16} color={colors.destructive} />
+            <Text style={[styles.signOutText, { color: colors.destructive }]}>Sign out</Text>
           </Pressable>
         )}
 
@@ -288,13 +288,11 @@ const styles = StyleSheet.create({
     minWidth: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#ef4444',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 5,
   },
   badgeText: {
-    color: '#fff',
     fontSize: 11,
     fontFamily: 'Inter_700Bold',
   },
@@ -312,7 +310,6 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   signOutText: {
-    color: '#ef4444',
     fontSize: 15,
     fontFamily: 'Inter_600SemiBold',
   },

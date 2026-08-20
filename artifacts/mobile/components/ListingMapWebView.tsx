@@ -3,15 +3,15 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import WebView from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
+import { useColors } from '@/hooks/useColors';
 
 interface ListingMapWebViewProps {
   lat: number;
   lng: number;
   name: string;
-  accentColor?: string;
 }
 
-function buildMapHtml(lat: number, lng: number, name: string): string {
+function buildMapHtml(lat: number, lng: number, name: string, markerColor: string): string {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -29,7 +29,7 @@ function buildMapHtml(lat: number, lng: number, name: string): string {
     var map = L.map('map', { zoomControl: false, attributionControl: false }).setView([${lat}, ${lng}], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     var icon = L.divIcon({
-      html: '<svg xmlns="http://www.w3.org/2000/svg" width="25" height="41" viewBox="0 0 25 41"><path d="M12.5 0C5.596 0 0 5.596 0 12.5c0 9.375 12.5 28.5 12.5 28.5S25 21.875 25 12.5C25 5.596 19.404 0 12.5 0z" fill="#F59E0B"/><circle cx="12.5" cy="12.5" r="5" fill="white"/></svg>',
+      html: '<svg xmlns="http://www.w3.org/2000/svg" width="25" height="41" viewBox="0 0 25 41"><path d="M12.5 0C5.596 0 0 5.596 0 12.5c0 9.375 12.5 28.5 12.5 28.5S25 21.875 25 12.5C25 5.596 19.404 0 12.5 0z" fill="${markerColor}"/><circle cx="12.5" cy="12.5" r="5" fill="white"/></svg>',
       iconSize: [25, 41],
       iconAnchor: [12, 41],
       className: ''
@@ -40,8 +40,9 @@ function buildMapHtml(lat: number, lng: number, name: string): string {
 </html>`;
 }
 
-export function ListingMapWebView({ lat, lng, name, accentColor = '#F59E0B' }: ListingMapWebViewProps) {
-  const html = buildMapHtml(lat, lng, name);
+export function ListingMapWebView({ lat, lng, name }: ListingMapWebViewProps) {
+  const colors = useColors();
+  const html = buildMapHtml(lat, lng, name, colors.accent);
 
   const handleOpenMaps = () => {
     const url =
@@ -53,7 +54,7 @@ export function ListingMapWebView({ lat, lng, name, accentColor = '#F59E0B' }: L
 
   return (
     <View>
-      <View style={styles.mapContainer}>
+      <View style={[styles.mapContainer, { borderColor: colors.border }]}>
         <WebView
           source={{ html }}
           style={styles.map}
@@ -66,8 +67,8 @@ export function ListingMapWebView({ lat, lng, name, accentColor = '#F59E0B' }: L
         style={({ pressed }) => [styles.openMapsBtn, { opacity: pressed ? 0.75 : 1 }]}
         onPress={handleOpenMaps}
       >
-        <Ionicons name="navigate-outline" size={15} color="#6b7280" />
-        <Text style={styles.openMapsTxt}>Open in Maps</Text>
+        <Ionicons name="navigate-outline" size={15} color={colors.mutedForeground} />
+        <Text style={[styles.openMapsTxt, { color: colors.mutedForeground }]}>Open in Maps</Text>
       </Pressable>
     </View>
   );
@@ -79,7 +80,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e5e7eb',
   },
   map: {
     flex: 1,
@@ -94,6 +94,5 @@ const styles = StyleSheet.create({
   openMapsTxt: {
     fontSize: 13,
     fontFamily: 'Inter_500Medium',
-    color: '#6b7280',
   },
 });

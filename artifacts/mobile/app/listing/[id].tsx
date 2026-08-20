@@ -44,11 +44,6 @@ const TYPE_LABEL: Record<string, string> = {
   special: 'Daily special',
   general: 'Update',
 };
-const TYPE_COLOR: Record<string, string> = {
-  closed: '#ef4444',
-  special: '#f59e0b',
-  general: '#3b82f6',
-};
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -69,6 +64,12 @@ export default function ListingDetailScreen() {
   const router = useRouter();
   const { listings, isSaved, toggleSave } = useDirectory();
   const { isAuthenticated, login } = useAuth();
+
+  const TYPE_COLOR: Record<string, string> = {
+    closed:  colors.destructive,
+    special: colors.accent,
+    general: colors.primary,
+  };
 
   const listing = listings.find((l) => l.id === id);
   const saved = listing ? isSaved(listing.id) : false;

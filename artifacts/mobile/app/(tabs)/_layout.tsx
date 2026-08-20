@@ -43,6 +43,7 @@ function useUnreadCount() {
 }
 
 function NativeTabLayout({ unreadCount }: { unreadCount: number }) {
+  const colors = useColors();
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
@@ -65,8 +66,8 @@ function NativeTabLayout({ unreadCount }: { unreadCount: number }) {
         <View style={styles.nativeBellWrap}>
           <Icon sf={{ default: 'bell', selected: 'bell.fill' }} />
           {unreadCount > 0 && (
-            <View style={styles.nativeBadge}>
-              <Text style={styles.nativeBadgeText}>
+            <View style={[styles.nativeBadge, { backgroundColor: colors.destructive }]}>
+              <Text style={[styles.nativeBadgeText, { color: colors.destructiveForeground }]}>
                 {unreadCount > 99 ? '99+' : String(unreadCount)}
               </Text>
             </View>
@@ -263,7 +264,6 @@ const styles = StyleSheet.create({
     minWidth: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#ef4444',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
@@ -271,7 +271,6 @@ const styles = StyleSheet.create({
   nativeBadgeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#fff',
     lineHeight: 12,
   },
 });

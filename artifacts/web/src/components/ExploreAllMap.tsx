@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import type { Venue as Listing } from '@workspace/api-client-react';
@@ -12,16 +12,35 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Amber pin to match the app's accent color
-const amberIcon = new L.Icon({
-  iconUrl:
-    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='25' height='41' viewBox='0 0 25 41'%3E%3Cpath d='M12.5 0C5.596 0 0 5.596 0 12.5c0 9.375 12.5 28.5 12.5 28.5S25 21.875 25 12.5C25 5.596 19.404 0 12.5 0z' fill='%23F59E0B'/%3E%3Ccircle cx='12.5' cy='12.5' r='5' fill='white'/%3E%3C/svg%3E",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  shadowSize: [41, 41],
-});
+/**
+ * Resolve a CSS custom property to a usable hex/hsl string.
+ * Falls back to the provided fallback if the property is not available.
+ */
+function resolveCssVar(property: string, fallback: string): string {
+  if (typeof document === 'undefined') return fallback;
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue(property)
+    .trim();
+  if (!raw) return fallback;
+  // The theme stores raw HSL components like "38 92% 50%"
+  return `hsl(${raw})`;
+}
+
+/**
+ * Build a Leaflet pin icon using the resolved accent color.
+ * We encode the color into the SVG data URI.
+ */
+function buildAmberIcon(accentHex: string): L.Icon {
+  const encoded = encodeURIComponent(accentHex);
+  return new L.Icon({
+    iconUrl: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='25' height='41' viewBox='0 0 25 41'%3E%3Cpath d='M12.5 0C5.596 0 0 5.596 0 12.5c0 9.375 12.5 28.5 12.5 28.5S25 21.875 25 12.5C25 5.596 19.404 0 12.5 0z' fill='${encoded}'/%3E%3Ccircle cx='12.5' cy='12.5' r='5' fill='white'/%3E%3C/svg%3E`,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    shadowSize: [41, 41],
+  });
+}
 
 const CATEGORIES = [
   { id: 'restaurants', label: 'Restaurants' },
@@ -49,6 +68,10 @@ interface ExploreAllMapProps {
 // SF center
 const SF_CENTER: [number, number] = [37.7749, -122.4194];
 
+// Static fallbacks matching the light-mode theme defaults
+const ACCENT_FALLBACK        = '#F59E0B';
+const MUTED_FG_FALLBACK      = '#94a3b8';
+
 export function ExploreAllMap({
   listings,
   allListings,
@@ -57,6 +80,25 @@ export function ExploreAllMap({
   selectedNeighborhood,
   onNeighborhoodChange,
 }: ExploreAllMapProps) {
+  // Resolve theme colors for Leaflet (canvas context can't use CSS vars directly).
+  // Re-resolve whenever the color scheme changes (dark/light toggle).
+  const [accentColor,   setAccentColor]   = useState(() => resolveCssVar('--accent',           ACCENT_FALLBACK));
+  const [mutedFgColor,  setMutedFgColor]  = useState(() => resolveCssVar('--muted-foreground',  MUTED_FG_FALLBACK));
+
+  useEffect(() => {
+    const update = () => {
+      setAccentColor(resolveCssVar('--accent', ACCENT_FALLBACK));
+      setMutedFgColor(resolveCssVar('--muted-foreground', MUTED_FG_FALLBACK));
+    };
+    // Re-resolve when .dark is toggled on <html> / <body>
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  // Build Leaflet icon that uses the resolved accent color
+  const amberIcon = useMemo(() => buildAmberIcon(accentColor), [accentColor]);
+
   // Task #14: compute neighbourhood clusters from all listings
   const neighborhoodClusters = useMemo<NeighborhoodCluster[]>(() => {
     const groups: Record<string, { lats: number[]; lngs: number[]; count: number }> = {};
@@ -116,7 +158,7 @@ export function ExploreAllMap({
             onClick={() => onNeighborhoodChange(selectedNeighborhood === n ? null : n)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border shadow-sm transition-colors whitespace-nowrap ${
               selectedNeighborhood === n
-                ? 'bg-amber-500 text-white border-amber-500'
+                ? 'bg-accent text-accent-foreground border-accent'
                 : 'bg-background/90 backdrop-blur-sm text-foreground border-border hover:bg-accent'
             }`}
           >
@@ -147,11 +189,11 @@ export function ExploreAllMap({
               center={[lat, lng]}
               radius={radius}
               pathOptions={{
-                color: isSelected ? '#F59E0B' : '#94a3b8',
-                fillColor: isSelected ? '#F59E0B' : '#94a3b8',
-                fillOpacity: isSelected ? 0.22 : 0.12,
-                weight: isSelected ? 2 : 1,
-                opacity: isSelected ? 0.8 : 0.35,
+                color:       isSelected ? accentColor  : mutedFgColor,
+                fillColor:   isSelected ? accentColor  : mutedFgColor,
+                fillOpacity: isSelected ? 0.22         : 0.12,
+                weight:      isSelected ? 2            : 1,
+                opacity:     isSelected ? 0.8          : 0.35,
               }}
               eventHandlers={{
                 click: () => onNeighborhoodChange(isSelected ? null : name),
@@ -182,7 +224,7 @@ export function ExploreAllMap({
                   {listing.neighborhood} · {listing.priceRange}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 10 }}>
-                  <span style={{ color: '#F59E0B', fontSize: 13 }}>★</span>
+                  <span style={{ color: accentColor, fontSize: 13 }}>★</span>
                   <span style={{ fontWeight: 600, fontSize: 13, color: '#111' }}>{listing.rating}</span>
                   <span style={{ color: '#9ca3af', fontSize: 12 }}>({listing.reviewCount.toLocaleString()})</span>
                 </div>
@@ -190,7 +232,7 @@ export function ExploreAllMap({
                   href={`/listing/${listing.id}`}
                   style={{
                     display: 'inline-block',
-                    background: '#F59E0B',
+                    background: accentColor,
                     color: '#fff',
                     padding: '5px 12px',
                     borderRadius: 6,
