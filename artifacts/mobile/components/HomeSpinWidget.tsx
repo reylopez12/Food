@@ -97,9 +97,17 @@ export function HomeSpinWidget() {
     userLng !== null &&
     preferredRadius !== null;
 
-  // Distance is applied before random selection, so every wheel slot is nearby.
+  // Show random directory picks by default; opt-in location and radius narrow them to nearby spots.
   const spinItems = useMemo<SpinItem[]>(() => {
-    if (!locationReady) return [];
+    if (!locationReady) {
+      return shuffled(
+        allListings.map((listing) => ({
+          id: listing.id,
+          name: listing.name,
+          color: listing.color,
+        })),
+      ).slice(0, MAX_SLOTS);
+    }
     return shuffled(
       allListings.flatMap((listing) => {
         if (!hasValidCoordinates(listing.lat, listing.lng)) return [];
@@ -335,9 +343,9 @@ export function HomeSpinWidget() {
                   ? 'Location denied. Allow access and try again.'
                   : locationStatus === 'unavailable'
                     ? 'Location is unavailable on this device.'
-                    : locationStatus === 'granted'
-                      ? 'Every recommendation stays inside your distance.'
-                      : 'Location is required before spinning.'}
+                      : locationStatus === 'granted'
+                        ? 'Choose a distance to focus picks nearby.'
+                        : 'Spin random directory picks, or use location for nearby spots.'}
             </Text>
           </View>
         </View>

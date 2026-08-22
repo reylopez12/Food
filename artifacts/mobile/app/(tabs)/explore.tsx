@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect } from 'react';
 import {
   FlatList,
   Platform,
@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
 import {
   useDirectory,
@@ -28,6 +29,8 @@ export default function ExploreScreen() {
     filteredListings,
     searchQuery,
     setSearchQuery,
+    cityQuery,
+    setCityQuery,
     locationStatus,
     userLat,
     userLng,
@@ -36,7 +39,12 @@ export default function ExploreScreen() {
     clearLocation,
     setPreferredRadius,
   } = useDirectory();
+  const { city } = useLocalSearchParams<{ city?: string }>();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
+
+  useEffect(() => {
+    if (typeof city === 'string') setCityQuery(city);
+  }, [city, setCityQuery]);
 
   const locationGranted = locationStatus === 'granted' && userLat !== null && userLng !== null;
   const distanceActive = locationGranted && preferredRadius !== null;
@@ -75,6 +83,15 @@ export default function ExploreScreen() {
           <SearchBar
             value={searchQuery}
             onChangeText={setSearchQuery}
+            placeholder="Search food or neighborhood"
+            autoFocus={false}
+          />
+        </View>
+        <View style={styles.citySearchWrap}>
+          <SearchBar
+            value={cityQuery}
+            onChangeText={setCityQuery}
+            placeholder="Filter by city, e.g. Oakland"
             autoFocus={false}
           />
         </View>
@@ -261,6 +278,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_600SemiBold',
   },
   searchWrap: {
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+  citySearchWrap: {
     paddingHorizontal: 16,
     marginBottom: 10,
   },

@@ -1,6 +1,6 @@
 kind = "mobile"
 previewPath = "/"
-title = "Directory App"
+title = "Eat. Local. Food."
 version = "1.0.0"
 id = "artifacts/mobile"
 router = "expo-domain"

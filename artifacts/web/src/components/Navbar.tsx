@@ -68,7 +68,7 @@ export function Navbar() {
           <div className="bg-secondary p-1.5 rounded-lg text-secondary-foreground shadow-sm group-hover:scale-105 transition-transform duration-300">
             <UtensilsCrossed className="w-5 h-5" />
           </div>
-          <span className="font-bold font-serif text-xl tracking-tight hidden sm:inline-block">eat local.</span>
+          <span className="font-bold font-serif text-xl tracking-tight hidden sm:inline-block">Eat. Local. Food.</span>
         </Link>
 
         {/* Desktop Nav */}

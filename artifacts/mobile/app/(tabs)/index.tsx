@@ -59,7 +59,7 @@ export default function HomeScreen() {
           <View style={styles.heroCopy}>
             <View style={styles.tagLine}>
               <View style={[styles.tagDot, { backgroundColor: colors.primary }]} />
-              <Text style={[styles.tagText, { color: colors.primary }]}>INDEPENDENT FOOD, CLOSE BY</Text>
+              <Text style={[styles.tagText, { color: colors.primary }]}>EAT. LOCAL. FOOD.</Text>
             </View>
             <Text style={[styles.heroTitle, { color: colors.foreground }]}>
               good food,{'\n'}close to home.
@@ -78,7 +78,7 @@ export default function HomeScreen() {
             >
               <Feather name="search" size={18} color={colors.foreground} />
               <Text style={[styles.searchPlaceholder, { color: colors.foreground, opacity: 0.6 }]}>
-                Try "tacos", "Mission"...
+                Search food, a neighborhood, or city
               </Text>
               <View style={[styles.searchAction, { backgroundColor: colors.primary }]}>
                 <Text style={[styles.searchActionText, { color: colors.primaryForeground }]}>Find food</Text>
@@ -94,7 +94,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
               <Text style={[styles.searchMetaText, { color: colors.mutedForeground }]}>
-                Mission
+                San Francisco · Oakland
               </Text>
             </View>
           </View>

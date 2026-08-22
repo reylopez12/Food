@@ -19,6 +19,7 @@ export default function Home() {
   const [_, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [neighborhoodQuery, setNeighborhoodQuery] = useState("");
+  const [cityQuery, setCityQuery] = useState("");
   const { data: listings = [], isLoading } = useListings();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -26,6 +27,7 @@ export default function Home() {
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.append("q", searchQuery.trim());
     if (neighborhoodQuery.trim()) params.append("neighborhood", neighborhoodQuery.trim());
+    if (cityQuery.trim()) params.append("city", cityQuery.trim());
 
     if (params.toString()) {
       setLocation(`/explore?${params.toString()}`);
@@ -70,7 +72,7 @@ export default function Home() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <div className="w-full lg:w-[220px] flex items-center px-4 gap-3 border-b lg:border-b-0 lg:border-r border-[#1E232E]/10 pb-3 lg:pb-0 h-14">
+              <div className="w-full lg:w-[210px] flex items-center px-4 gap-3 border-b lg:border-b-0 lg:border-r border-[#1E232E]/10 pb-3 lg:pb-0 h-14">
                 <MapPin className="w-5 h-5 text-[#1E232E]/40 shrink-0" />
                 <Input
                   type="text"
@@ -78,6 +80,16 @@ export default function Home() {
                   className="border-0 focus-visible:ring-0 px-0 shadow-none h-full text-base bg-transparent font-medium text-[#1E232E] placeholder:text-[#1E232E]/40"
                   value={neighborhoodQuery}
                   onChange={(e) => setNeighborhoodQuery(e.target.value)}
+                />
+              </div>
+              <div className="w-full lg:w-[190px] flex items-center px-4 gap-3 border-b lg:border-b-0 lg:border-r border-[#1E232E]/10 pb-3 lg:pb-0 h-14">
+                <MapPin className="w-5 h-5 text-[#1E232E]/40 shrink-0" />
+                <Input
+                  type="text"
+                  placeholder="City"
+                  className="border-0 focus-visible:ring-0 px-0 shadow-none h-full text-base bg-transparent font-medium text-[#1E232E] placeholder:text-[#1E232E]/40"
+                  value={cityQuery}
+                  onChange={(e) => setCityQuery(e.target.value)}
                 />
               </div>
               <Button type="submit" size="lg" className="w-full md:w-auto rounded-xl h-14 px-10 bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 font-bold text-lg">
@@ -94,7 +106,9 @@ export default function Home() {
                 <button type="button" className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground font-bold text-xs" onClick={() => setNeighborhoodQuery("")}>Near you</button>
                 <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => setNeighborhoodQuery("Mission")}>Mission</button>
                 <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => setNeighborhoodQuery("Sunset")}>Sunset</button>
-                <button type="button" className="px-3 py-1 rounded-full text-secondary hover:text-secondary/80 flex items-center gap-1 transition-colors text-xs ml-2" onClick={() => setNeighborhoodQuery("")}>
+                <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => setCityQuery("San Francisco")}>San Francisco</button>
+                <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => setCityQuery("Oakland")}>Oakland</button>
+                <button type="button" className="px-3 py-1 rounded-full text-secondary hover:text-secondary/80 flex items-center gap-1 transition-colors text-xs ml-2" onClick={() => { setNeighborhoodQuery(""); setCityQuery(""); }}>
                   Change &rarr;
                 </button>
               </div>

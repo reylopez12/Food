@@ -59,8 +59,10 @@ interface DirectoryContextValue {
   savedIds: Set<string>;
   selectedCategory: string;
   searchQuery: string;
+  cityQuery: string;
   setSelectedCategory: (cat: string) => void;
   setSearchQuery: (q: string) => void;
+  setCityQuery: (city: string) => void;
   toggleSave: (id: string) => void;
   isSaved: (id: string) => boolean;
   filteredListings: Venue[];
@@ -87,6 +89,7 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [cityQuery, setCityQuery] = useState('');
 
   // Location state
   const [locationStatus, setLocationStatus] = useState<LocationStatus>('idle');
@@ -186,9 +189,15 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
           l.name.toLowerCase().includes(q) ||
           l.description.toLowerCase().includes(q) ||
           l.tags.some((t) => t.toLowerCase().includes(q)) ||
+          l.neighborhood.toLowerCase().includes(q) ||
           l.city.toLowerCase().includes(q) ||
           l.category.toLowerCase().includes(q),
       );
+    }
+
+    if (cityQuery.trim()) {
+      const city = cityQuery.toLowerCase().trim();
+      result = result.filter((l) => l.city.toLowerCase().includes(city));
     }
 
     if (distanceActive) {
@@ -199,7 +208,7 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
     }
 
     return result;
-  }, [allListings, selectedCategory, searchQuery, distanceActive, userLat, userLng, preferredRadius]);
+  }, [allListings, selectedCategory, searchQuery, cityQuery, distanceActive, userLat, userLng, preferredRadius]);
 
   const savedListings = useMemo(
     () => allListings.filter((l) => savedIds.has(l.id)),
@@ -217,8 +226,10 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
     savedIds,
     selectedCategory,
     searchQuery,
+    cityQuery,
     setSelectedCategory,
     setSearchQuery,
+    setCityQuery,
     toggleSave,
     isSaved,
     filteredListings,

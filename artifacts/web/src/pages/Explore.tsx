@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Search, Filter, X, List, Map as MapIcon, Navigation, Loader2 } from "lucide-react";
+import { Search, Filter, X, List, Map as MapIcon, MapPin, Navigation, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +45,7 @@ export default function Explore() {
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<string | null>(
     searchParams.get("neighborhood") || null
   );
+  const [selectedCity, setSelectedCity] = useState<string>(searchParams.get("city") || "");
 
   // Task #15: persist List/Map preference in localStorage
   const [viewMode, setViewMode] = useState<'list' | 'map'>(() => {
@@ -66,9 +67,11 @@ export default function Explore() {
     const q = params.get("q");
     const cat = params.get("category");
     const neighborhood = params.get("neighborhood");
+    const city = params.get("city");
     setSearchQuery(q || "");
     setSelectedCategories(cat ? [cat] : []);
     setSelectedNeighborhood(neighborhood || null);
+    setSelectedCity(city || "");
   }, [locationStr]);
 
   const distanceActive = status === 'granted' && userLat !== null && userLng !== null && radius !== null;
@@ -81,7 +84,8 @@ export default function Explore() {
         listing.name.toLowerCase().includes(q) ||
         listing.description.toLowerCase().includes(q) ||
         listing.tags.some(t => t.toLowerCase().includes(q)) ||
-        listing.neighborhood?.toLowerCase().includes(q);
+        listing.neighborhood?.toLowerCase().includes(q) ||
+        listing.city.toLowerCase().includes(q);
 
       const matchesCategory =
         selectedCategories.length === 0 ||
@@ -98,6 +102,8 @@ export default function Explore() {
         !normalizedNeighborhood ||
         listing.neighborhood?.toLowerCase().includes(normalizedNeighborhood) ||
         listing.city.toLowerCase().includes(normalizedNeighborhood);
+      const normalizedCity = selectedCity.trim().toLowerCase();
+      const matchesCity = !normalizedCity || listing.city.toLowerCase().includes(normalizedCity);
 
       let matchesDistance = true;
       if (distanceActive) {
@@ -110,10 +116,10 @@ export default function Explore() {
       }
 
       return matchesSearch && matchesCategory && matchesPrice && matchesRating &&
-        matchesVerified && matchesNeighborhood && matchesDistance;
+        matchesVerified && matchesNeighborhood && matchesCity && matchesDistance;
     });
   }, [allListings, searchQuery, selectedCategories, selectedPrices, minRating,
-    verifiedOnly, selectedNeighborhood, distanceActive, userLat, userLng, radius]);
+    verifiedOnly, selectedNeighborhood, selectedCity, distanceActive, userLat, userLng, radius]);
 
   /** Distance from user to each visible listing (only when location is active). */
   const distanceMap = useMemo(() => {
@@ -139,6 +145,15 @@ export default function Explore() {
     );
   };
 
+  const handleCityChange = (city: string) => {
+    setSelectedCity(city);
+    const params = new URLSearchParams(window.location.search);
+    if (city.trim()) params.set("city", city.trim());
+    else params.delete("city");
+    const query = params.toString();
+    window.history.replaceState({}, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+  };
+
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedCategories([]);
@@ -146,6 +161,7 @@ export default function Explore() {
     setMinRating([0]);
     setVerifiedOnly(false);
     setSelectedNeighborhood(null);
+    setSelectedCity("");
     clearLocation();
     setRadius(null);
     const url = new URL(window.location.href);
@@ -160,6 +176,7 @@ export default function Explore() {
     (minRating[0] > 0 ? 1 : 0) +
     (verifiedOnly ? 1 : 0) +
     (selectedNeighborhood ? 1 : 0) +
+    (selectedCity ? 1 : 0) +
     (distanceActive ? 1 : 0);
 
   const FilterContent = () => (
@@ -318,12 +335,12 @@ export default function Explore() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
           <div className="relative flex-1 md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search by name, neighborhood, or tag..."
+              placeholder="Search food, name, neighborhood, or city..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 bg-card"
@@ -332,6 +349,26 @@ export default function Explore() {
               <button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <div className="relative w-full sm:w-48">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Filter by city"
+              value={selectedCity}
+              onChange={(e) => handleCityChange(e.target.value)}
+              className="pl-9 pr-8 bg-card"
+              aria-label="Filter listings by city"
+            />
+            {selectedCity && (
+              <button
+                onClick={() => handleCityChange("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Clear city filter"
               >
                 <X className="w-4 h-4" />
               </button>
