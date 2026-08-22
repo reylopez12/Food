@@ -10,8 +10,13 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
-  useFonts,
+  useFonts as useInterFonts,
 } from '@expo-google-fonts/inter';
+import {
+  PlayfairDisplay_600SemiBold,
+  PlayfairDisplay_700Bold,
+  useFonts as usePlayfairFonts,
+} from '@expo-google-fonts/playfair-display';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SecureStore from 'expo-secure-store';
@@ -62,12 +67,20 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
+  const [interLoaded, interError] = useInterFonts({
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
   });
+
+  const [playfairLoaded, playfairError] = usePlayfairFonts({
+    PlayfairDisplay_600SemiBold,
+    PlayfairDisplay_700Bold,
+  });
+
+  const fontsLoaded = interLoaded && playfairLoaded;
+  const fontError = interError || playfairError;
 
   useEffect(() => {
     if (fontsLoaded || fontError) {

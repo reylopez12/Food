@@ -50,7 +50,7 @@ const PRICE_OPTIONS: { id: PriceId; label: string }[] = [
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const CUSTOM_COLORS = [
-  '#1B4FD8', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6', '#EC4899',
+  '#E07552', '#F3B944', '#10B981', '#EF4444', '#8B5CF6', '#EC4899',
 ];
 const MAX_CUSTOM = 6;
 
@@ -1132,19 +1132,19 @@ const styles = StyleSheet.create({
   },
   customResultDotText: {
     color: '#fff',
-    fontSize: 22,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 24,
+    fontFamily: 'PlayfairDisplay_700Bold',
   },
   customResultLabel: {
     fontSize: 12,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginTop: 2,
   },
   customResultName: {
-    fontSize: 26,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 28,
+    fontFamily: 'PlayfairDisplay_700Bold',
     textAlign: 'center',
   },
   // Directory result layout
@@ -1157,18 +1157,18 @@ const styles = StyleSheet.create({
   initials: {
     width: 52,
     height: 52,
-    borderRadius: 14,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   initialsText: {
     color: '#fff',
     fontSize: 18,
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'PlayfairDisplay_700Bold',
   },
   cardName: {
-    fontSize: 20,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 22,
+    fontFamily: 'PlayfairDisplay_700Bold',
     marginBottom: 4,
   },
   cardMeta: {

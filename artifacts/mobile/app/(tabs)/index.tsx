@@ -35,48 +35,76 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === 'web' ? 100 : 90 }]}
       >
-        {/* Header */}
-        <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: colors.background }]}>
-          <View>
-            <View style={styles.locationRow}>
-              <Ionicons name="location" size={14} color={colors.primary} />
-              <Text style={[styles.locationLabel, { color: colors.primary }]}>Current Location</Text>
+        {/* Header Area */}
+        <View style={[styles.heroBlock, { paddingTop: topPad, backgroundColor: colors.background }]}>
+          <View style={styles.header}>
+            <View>
+              <View style={styles.locationRow}>
+                <Ionicons name="location" size={12} color={colors.primary} />
+                <Text style={[styles.locationLabel, { color: colors.primary }]}>Current Location</Text>
+              </View>
+              <Text style={[styles.locationCity, { color: colors.foreground }]}>{LOCATION}</Text>
             </View>
-            <Text style={[styles.locationCity, { color: colors.foreground }]}>{LOCATION}</Text>
+            <TouchableOpacity
+              style={[styles.notifBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+              onPress={() => router.push('/(tabs)/notifications')}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="View alerts"
+            >
+              <Ionicons name="notifications-outline" size={20} color={colors.foreground} />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={[styles.notifBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => router.push('/(tabs)/notifications')}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="View alerts"
-          >
-            <Ionicons name="notifications-outline" size={20} color={colors.foreground} />
-          </TouchableOpacity>
+
+          <View style={styles.heroCopy}>
+            <View style={styles.tagLine}>
+              <View style={[styles.tagDot, { backgroundColor: colors.primary }]} />
+              <Text style={[styles.tagText, { color: colors.primary }]}>INDEPENDENT FOOD, CLOSE BY</Text>
+            </View>
+            <Text style={[styles.heroTitle, { color: colors.foreground }]}>
+              good food,{'\n'}close to home.
+            </Text>
+            <Text style={[styles.heroSubtitle, { color: colors.mutedForeground }]}>
+              Find the family-run counters, late-night windows, and neighborhood gems that make the city taste like itself.
+            </Text>
+          </View>
+
+          {/* Search bar */}
+          <View style={styles.searchContainer}>
+            <TouchableOpacity
+              style={[styles.searchTap, { backgroundColor: colors.card, borderColor: colors.border }]}
+              onPress={() => router.push('/(tabs)/explore')}
+              activeOpacity={0.8}
+            >
+              <Feather name="search" size={18} color={colors.foreground} />
+              <Text style={[styles.searchPlaceholder, { color: colors.foreground, opacity: 0.6 }]}>
+                Try "tacos", "Mission"...
+              </Text>
+              <View style={[styles.searchAction, { backgroundColor: colors.primary }]}>
+                <Text style={[styles.searchActionText, { color: colors.primaryForeground }]}>Find food</Text>
+              </View>
+            </TouchableOpacity>
+            <View style={styles.searchMeta}>
+              <Text style={[styles.searchMetaLabel, { color: colors.secondary }]}>
+                SEARCHING AROUND
+              </Text>
+              <View style={[styles.searchMetaPill, { backgroundColor: colors.secondary }]}>
+                <Text style={[styles.searchMetaPillText, { color: colors.secondaryForeground }]}>
+                  Near you
+                </Text>
+              </View>
+              <Text style={[styles.searchMetaText, { color: colors.mutedForeground }]}>
+                Mission
+              </Text>
+            </View>
+          </View>
         </View>
 
         {/* Spin wheel — Hero */}
-        <View style={styles.spinSection}>
-          <HomeSpinWidget />
-        </View>
-
-        {/* Search bar */}
-        <View style={styles.searchContainer}>
-          <TouchableOpacity
-            style={[styles.searchTap, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: colors.foreground }]}
-            onPress={() => router.push('/(tabs)/explore')}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="Search places"
-          >
-            <Feather name="search" size={20} color={colors.mutedForeground} />
-            <Text style={[styles.searchPlaceholder, { color: colors.mutedForeground }]}>
-              Tacos, sourdough, bao, pasta...
-            </Text>
-            <View style={[styles.searchAction, { backgroundColor: colors.primary }]}>
-              <Text style={styles.searchActionText}>Search</Text>
-            </View>
-          </TouchableOpacity>
+        <View style={[styles.spinSection, { backgroundColor: colors.primary }]}>
+          <View style={styles.spinSectionInner}>
+            <HomeSpinWidget />
+          </View>
         </View>
 
         {/* Video Showcase */}
@@ -157,12 +185,16 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
   },
+  heroBlock: {
+    paddingBottom: 24,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 12,
+    paddingBottom: 16,
+    paddingTop: 12,
   },
   locationRow: {
     flexDirection: 'row',
@@ -170,50 +202,76 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   locationLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Inter_600SemiBold',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   locationCity: {
-    fontSize: 20,
+    fontSize: 16,
     fontFamily: 'Inter_700Bold',
     marginTop: 2,
-    letterSpacing: -0.5,
   },
   notifBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
   },
-  spinSection: {
-    marginBottom: 24,
+  heroCopy: {
+    paddingHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 28,
+  },
+  tagLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 16,
+  },
+  tagDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  tagText: {
+    fontSize: 10,
+    fontFamily: 'Inter_700Bold',
+    letterSpacing: 1.5,
+  },
+  heroTitle: {
+    fontSize: 46,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    lineHeight: 52,
+    letterSpacing: -1,
+    marginBottom: 16,
+  },
+  heroSubtitle: {
+    fontSize: 15,
+    fontFamily: 'Inter_400Regular',
+    lineHeight: 24,
+    paddingRight: 20,
   },
   searchContainer: {
     paddingHorizontal: 20,
-    marginBottom: 32,
+    marginBottom: 16,
   },
   searchTap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingLeft: 18,
-    paddingRight: 8,
-    paddingVertical: 8,
+    paddingLeft: 16,
+    paddingRight: 6,
+    paddingVertical: 6,
     borderRadius: 100,
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 2,
   },
   searchPlaceholder: {
     flex: 1,
-    fontSize: 15,
-    fontFamily: 'Inter_400Regular',
+    fontSize: 14,
+    fontFamily: 'Inter_500Medium',
   },
   searchAction: {
     paddingHorizontal: 20,
@@ -224,8 +282,41 @@ const styles = StyleSheet.create({
   },
   searchActionText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: 'Inter_600SemiBold',
+  },
+  searchMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+    paddingHorizontal: 6,
+  },
+  searchMetaLabel: {
+    fontSize: 10,
+    fontFamily: 'Inter_700Bold',
+    letterSpacing: 0.5,
+  },
+  searchMetaPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 100,
+  },
+  searchMetaPillText: {
+    fontSize: 10,
+    fontFamily: 'Inter_600SemiBold',
+  },
+  searchMetaText: {
+    fontSize: 11,
+    fontFamily: 'Inter_500Medium',
+  },
+  spinSection: {
+    paddingTop: 32,
+    paddingBottom: 40,
+    marginBottom: 32,
+  },
+  spinSectionInner: {
+    // any internal padding if needed
   },
   videoSection: {
     marginBottom: 32,
@@ -241,8 +332,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionTitle: {
-    fontSize: 22,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 24,
+    fontFamily: 'PlayfairDisplay_700Bold',
     letterSpacing: -0.5,
   },
   sectionSubtitle: {

@@ -334,9 +334,9 @@ export default function ListingDetail() {
                   <div className="space-y-3">
                     {announcements.map((a) => {
                       const typeColors: Record<string, string> = {
-                        closed: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-                        special: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-                        general: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+                        closed: "bg-destructive/10 text-destructive",
+                        special: "bg-secondary/30 text-secondary-foreground",
+                        general: "bg-primary/15 text-accent-foreground",
                       };
                       const typeLabels: Record<string, string> = { closed: "Closed today", special: "Daily special", general: "Update" };
                       return (

@@ -201,30 +201,134 @@ export function HomeSpinWidget() {
     : undefined;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={[styles.container]}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={[styles.badge, { backgroundColor: colors.secondary }]}>
-          <Feather name="shuffle" size={12} color={colors.primary} />
-          <Text style={[styles.badgeText, { color: colors.primary }]}>Can't decide?</Text>
-        </View>
-        <Text style={[styles.title, { color: colors.foreground }]}>Spin for your next meal</Text>
-        <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          Nearby spots only — choose your preferred distance
+        <Text style={[styles.subtitle, { color: colors.foreground }]}>
+          NOT SURE WHAT YOU'RE CRAVING?
         </Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>Let the city pick.</Text>
       </View>
 
-      {/* Location + radius */}
-      <View style={[styles.locationPanel, { backgroundColor: colors.background, borderColor: colors.border }]}>
+      {/* Wheel */}
+      <View style={styles.wheelWrap}>
+        {/* Pointer */}
+        <View style={styles.pointerWrap} pointerEvents="none">
+          <View style={[styles.pointerTriangle, { borderTopColor: colors.foreground }]} />
+        </View>
+
+        <Animated.View style={[styles.wheelAnim, { transform: [{ rotate: rotateStr }] }]}>
+          <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
+            {/* Outer cream ring */}
+            <Circle cx={CX} cy={CY} r={R + 4} fill={colors.primaryForeground} />
+            {/* Inner dark ring */}
+            <Circle cx={CX} cy={CY} r={R} fill={colors.foreground} />
+
+            {spinItems.length === 0 ? (
+              <Circle cx={CX} cy={CY} r={R - 6} fill={colors.muted} />
+            ) : (
+              spinItems.map((item, i) => {
+                const startDeg = -90 + i * sliceDeg;
+                const endDeg   = startDeg + sliceDeg;
+                const midDeg   = startDeg + sliceDeg / 2;
+                const label    = item.name.length > 11
+                  ? item.name.slice(0, 10) + '…'
+                  : item.name;
+                return (
+                  <G key={item.id}>
+                    <Path
+                      d={slicePath(startDeg, endDeg)}
+                      fill={item.color}
+                      stroke={colors.foreground}
+                      strokeWidth={1}
+                    />
+                    <G transform={`rotate(${midDeg} ${CX} ${CY})`}>
+                      <SvgText
+                        x={CX + R * 0.72}
+                        y={CY}
+                        textAnchor="end"
+                        fill={colors.foreground}
+                        fontSize={fontSize}
+                        fontWeight="bold"
+                        dy="0.35em"
+                      >
+                        {label}
+                      </SvgText>
+                    </G>
+                  </G>
+                );
+              })
+            )}
+            {/* Center Rings */}
+            <Circle cx={CX} cy={CY} r={46} fill={colors.primaryForeground} />
+            <Circle cx={CX} cy={CY} r={40} fill={colors.foreground} />
+            <Circle cx={CX} cy={CY} r={12} fill={colors.primaryForeground} />
+          </Svg>
+        </Animated.View>
+      </View>
+
+      {/* Buttons */}
+      <View style={styles.btnRow}>
+        <Pressable
+          onPress={handleSpin}
+          disabled={spinning || spinItems.length === 0}
+          style={({ pressed }) => [
+            styles.spinBtn,
+            {
+              backgroundColor: colors.background,
+              opacity: pressed ? 0.82 : spinning || spinItems.length === 0 ? 0.5 : 1,
+            },
+          ]}
+        >
+          {spinning ? (
+            <Text style={[styles.spinBtnText, { color: colors.primary }]}>Spinning…</Text>
+          ) : (
+            <Text style={[styles.spinBtnText, { color: colors.primary }]}>SPIN FOR A SPOT</Text>
+          )}
+        </Pressable>
+        <Pressable
+          onPress={handleReshuffle}
+          disabled={spinning}
+          style={({ pressed }) => [
+            styles.utilityBtn,
+            {
+              borderColor: colors.background + '80',
+              opacity: pressed || spinning ? 0.55 : 1,
+            },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Choose a new selection"
+        >
+          <Feather name="refresh-cw" size={15} color={colors.foreground} />
+          <Text style={[styles.utilityBtnText, { color: colors.foreground }]}>New selection</Text>
+        </Pressable>
+        {winner && !spinning && (
+          <Pressable
+            onPress={handleReset}
+            style={({ pressed }) => [
+              styles.utilityBtn,
+              { borderColor: colors.background + '80', opacity: pressed ? 0.65 : 1 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Reset the meal picker"
+          >
+            <Feather name="rotate-ccw" size={15} color={colors.foreground} />
+            <Text style={[styles.utilityBtnText, { color: colors.foreground }]}>Reset</Text>
+          </Pressable>
+        )}
+      </View>
+
+      {/* Location + radius settings under the wheel, blended in */}
+      <View style={[styles.locationPanel]}>
         <View style={styles.locationTop}>
-          <View style={[styles.locationIcon, { backgroundColor: colors.primary + '15' }]}>
-            <Feather name="navigation" size={15} color={colors.primary} />
+          <View style={[styles.locationIcon, { backgroundColor: colors.background + '20' }]}>
+            <Feather name="navigation" size={15} color={colors.foreground} />
           </View>
           <View style={styles.locationCopy}>
             <Text style={[styles.locationTitle, { color: colors.foreground }]}>
               {locationStatus === 'granted' ? 'Using your current location' : 'Find a meal near you'}
             </Text>
-            <Text style={[styles.locationText, { color: colors.mutedForeground }]}>
+            <Text style={[styles.locationText, { color: colors.foreground, opacity: 0.8 }]}>
               {locationStatus === 'requesting'
                 ? 'Getting your location…'
                 : locationStatus === 'denied'
@@ -246,11 +350,11 @@ export function HomeSpinWidget() {
               disabled={spinning}
               style={({ pressed }) => [
                 styles.smallAction,
-                { borderColor: colors.border, opacity: pressed || spinning ? 0.55 : 1 },
+                { borderColor: colors.background + '40', opacity: pressed || spinning ? 0.55 : 1 },
               ]}
             >
-              <Feather name="refresh-cw" size={12} color={colors.primary} />
-              <Text style={[styles.smallActionText, { color: colors.primary }]}>Refresh</Text>
+              <Feather name="refresh-cw" size={12} color={colors.foreground} />
+              <Text style={[styles.smallActionText, { color: colors.foreground }]}>Refresh</Text>
             </Pressable>
             <Pressable
               testID="home-spin-clear-location"
@@ -258,10 +362,10 @@ export function HomeSpinWidget() {
               disabled={spinning}
               style={({ pressed }) => [
                 styles.smallAction,
-                { borderColor: colors.border, opacity: pressed || spinning ? 0.55 : 1 },
+                { borderColor: colors.background + '40', opacity: pressed || spinning ? 0.55 : 1 },
               ]}
             >
-              <Text style={[styles.smallActionText, { color: colors.mutedForeground }]}>Clear</Text>
+              <Text style={[styles.smallActionText, { color: colors.foreground, opacity: 0.8 }]}>Clear</Text>
             </Pressable>
           </View>
         ) : (
@@ -272,7 +376,7 @@ export function HomeSpinWidget() {
             style={({ pressed }) => [
               styles.useLocationBtn,
               {
-                backgroundColor: colors.primary,
+                backgroundColor: colors.background,
                 opacity:
                   pressed || spinning || locationStatus === 'requesting' || locationStatus === 'unavailable'
                     ? 0.55
@@ -280,8 +384,8 @@ export function HomeSpinWidget() {
               },
             ]}
           >
-            <Feather name="navigation" size={13} color="#fff" />
-            <Text style={styles.useLocationText}>
+            <Feather name="navigation" size={13} color={colors.primary} />
+            <Text style={[styles.useLocationText, { color: colors.primary }]}>
               {locationStatus === 'requesting' ? 'Locating…' : 'Use my location'}
             </Text>
           </Pressable>
@@ -299,116 +403,19 @@ export function HomeSpinWidget() {
                 style={({ pressed }) => [
                   styles.radiusPill,
                   {
-                    backgroundColor: active ? colors.primary : colors.card,
-                    borderColor: active ? colors.primary : colors.border,
+                    backgroundColor: active ? colors.foreground : 'transparent',
+                    borderColor: active ? colors.foreground : colors.background + '40',
                     opacity: pressed || spinning ? 0.6 : 1,
                   },
                 ]}
               >
-                <Text style={[styles.radiusText, { color: active ? '#fff' : colors.mutedForeground }]}>
+                <Text style={[styles.radiusText, { color: active ? colors.background : colors.foreground }]}>
                   {option} mi
                 </Text>
               </Pressable>
             );
           })}
         </View>
-      </View>
-
-      {/* Wheel */}
-      <View style={styles.wheelWrap}>
-        {/* Pointer */}
-        <View style={styles.pointerWrap} pointerEvents="none">
-          <View style={[styles.pointerTriangle, { borderTopColor: colors.accent }]} />
-        </View>
-
-        <Animated.View style={[styles.wheelAnim, { transform: [{ rotate: rotateStr }] }]}>
-          <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
-            {spinItems.length === 0 ? (
-              <Circle cx={CX} cy={CY} r={R} fill={colors.muted} />
-            ) : (
-              spinItems.map((item, i) => {
-                const startDeg = -90 + i * sliceDeg;
-                const endDeg   = startDeg + sliceDeg;
-                const midDeg   = startDeg + sliceDeg / 2;
-                const label    = item.name.length > 11
-                  ? item.name.slice(0, 10) + '…'
-                  : item.name;
-                return (
-                  <G key={item.id}>
-                    <Path
-                      d={slicePath(startDeg, endDeg)}
-                      fill={item.color}
-                      stroke="rgba(255,255,255,0.22)"
-                      strokeWidth={1.5}
-                    />
-                    <G transform={`rotate(${midDeg} ${CX} ${CY})`}>
-                      <SvgText
-                        x={CX + R * 0.72}
-                        y={CY}
-                        textAnchor="end"
-                        fill="rgba(255,255,255,0.95)"
-                        fontSize={fontSize}
-                        fontWeight="bold"
-                        dy="0.35em"
-                      >
-                        {label}
-                      </SvgText>
-                    </G>
-                  </G>
-                );
-              })
-            )}
-            <Circle cx={CX} cy={CY} r={18} fill="white" />
-            <Circle cx={CX} cy={CY} r={6}  fill={colors.primary} />
-          </Svg>
-        </Animated.View>
-      </View>
-
-      {/* Buttons */}
-      <View style={styles.btnRow}>
-        <Pressable
-          onPress={handleSpin}
-          disabled={spinning || spinItems.length === 0}
-          style={({ pressed }) => [
-            styles.spinBtn,
-            {
-              backgroundColor: colors.primary,
-              opacity: pressed ? 0.82 : spinning || spinItems.length === 0 ? 0.5 : 1,
-            },
-          ]}
-        >
-          {spinning ? (
-            <Text style={styles.spinBtnText}>Spinning…</Text>
-          ) : (
-            <>
-              <Feather name="shuffle" size={16} color="#fff" />
-              <Text style={styles.spinBtnText}>Spin!</Text>
-            </>
-          )}
-        </Pressable>
-
-        <Pressable
-          onPress={handleReshuffle}
-          disabled={spinning}
-          style={({ pressed }) => [
-            styles.iconBtn,
-            { borderColor: colors.border, opacity: pressed || spinning ? 0.5 : 1 },
-          ]}
-        >
-          <Feather name="refresh-cw" size={16} color={colors.mutedForeground} />
-        </Pressable>
-
-        {winner && !spinning && (
-          <Pressable
-            onPress={handleReset}
-            style={({ pressed }) => [
-              styles.iconBtn,
-              { borderColor: colors.border, opacity: pressed ? 0.5 : 1 },
-            ]}
-          >
-            <Feather name="rotate-ccw" size={16} color={colors.mutedForeground} />
-          </Pressable>
-        )}
       </View>
 
       {/* Result card */}
@@ -482,59 +489,47 @@ const WHEEL_PAD = 20;
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 20,
-    marginTop: 8,
-    borderRadius: 24,
-    borderWidth: 1,
-    overflow: 'hidden',
+    marginHorizontal: 0,
+    marginTop: 0,
+    borderRadius: 0,
+    borderWidth: 0,
+    overflow: 'visible',
     paddingBottom: 20,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.04,
-    shadowRadius: 16,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   header: {
     alignItems: 'center',
-    paddingTop: 24,
-    paddingBottom: 12,
+    paddingTop: 0,
+    paddingBottom: 24,
     paddingHorizontal: 20,
   },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 100,
-    marginBottom: 12,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontFamily: 'Inter_600SemiBold',
-  },
   title: {
-    fontSize: 24,
-    fontFamily: 'Inter_700Bold',
-    letterSpacing: -0.5,
+    fontSize: 26,
+    fontFamily: 'PlayfairDisplay_700Bold',
     textAlign: 'center',
-    marginBottom: 6,
   },
   subtitle: {
-    fontSize: 14,
-    fontFamily: 'Inter_400Regular',
+    fontSize: 10,
+    fontFamily: 'Inter_600SemiBold',
     textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: 1.5,
   },
   locationPanel: {
-    marginHorizontal: 16,
+    marginHorizontal: 20,
+    marginTop: 32,
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 14,
-    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    padding: 16,
   },
   locationTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   locationIcon: {
     width: 36,
@@ -549,7 +544,7 @@ const styles = StyleSheet.create({
   locationTitle: {
     fontSize: 13,
     fontFamily: 'Inter_600SemiBold',
-    marginBottom: 1,
+    marginBottom: 2,
   },
   locationText: {
     fontSize: 11,
@@ -559,17 +554,17 @@ const styles = StyleSheet.create({
   locationActions: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 10,
+    marginTop: 12,
   },
   smallAction: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
+    gap: 6,
     minHeight: 34,
     paddingHorizontal: 12,
     borderRadius: 10,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
   },
   smallActionText: {
     fontSize: 12,
@@ -582,21 +577,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    marginTop: 10,
+    marginTop: 12,
   },
   useLocationText: {
-    color: '#fff',
     fontSize: 13,
     fontFamily: 'Inter_600SemiBold',
   },
   radiusRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 7,
-    marginTop: 10,
+    gap: 8,
+    marginTop: 12,
   },
   radiusPill: {
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderRadius: 100,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -623,55 +617,58 @@ const styles = StyleSheet.create({
   pointerTriangle: {
     width: 0,
     height: 0,
-    borderLeftWidth:  10,
-    borderRightWidth: 10,
-    borderTopWidth:   20,
+    borderLeftWidth:  12,
+    borderRightWidth: 12,
+    borderTopWidth:   24,
     borderLeftColor:  'transparent',
     borderRightColor: 'transparent',
+    marginTop: -8,
   },
   wheelAnim: {
     width:  WHEEL_SIZE,
     height: WHEEL_SIZE,
     shadowColor:   '#000',
-    shadowOpacity: 0.14,
-    shadowRadius:  16,
-    shadowOffset:  { width: 0, height: 4 },
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius:  20,
+    shadowOffset:  { width: 0, height: 10 },
+    elevation: 8,
   },
   btnRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    marginTop: 4,
-    marginBottom: 4,
+    gap: 8,
+    marginTop: 16,
   },
   spinBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    paddingVertical: 13,
-    paddingHorizontal: 32,
+    paddingVertical: 14,
+    paddingHorizontal: 36,
     borderRadius: 100,
   },
   spinBtnText: {
-    color: '#fff',
-    fontSize: 15,
+    fontSize: 12,
+    fontFamily: 'Inter_700Bold',
+    letterSpacing: 1.2,
+  },
+  utilityBtn: {
+    minHeight: 42,
+    paddingHorizontal: 12,
+    borderRadius: 100,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  utilityBtnText: {
+    fontSize: 12,
     fontFamily: 'Inter_700Bold',
   },
-  iconBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   result: {
-    marginHorizontal: 16,
-    marginTop: 12,
+    marginHorizontal: 20,
+    marginTop: 16,
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     overflow: 'hidden',
   },
   resultAccent: { height: 4 },
@@ -685,19 +682,19 @@ const styles = StyleSheet.create({
   initials: {
     width: 46,
     height: 46,
-    borderRadius: 12,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   initialsText: {
     color: '#fff',
-    fontSize: 16,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 18,
+    fontFamily: 'PlayfairDisplay_700Bold',
   },
   resultName: {
-    fontSize: 17,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 20,
+    fontFamily: 'PlayfairDisplay_700Bold',
     marginBottom: 3,
   },
   resultMeta: {
@@ -707,7 +704,7 @@ const styles = StyleSheet.create({
   },
   resultMetaText: {
     fontSize: 12,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Inter_500Medium',
   },
   ratingRow: {
     flexDirection: 'row',
@@ -739,7 +736,8 @@ const styles = StyleSheet.create({
   },
   distanceText: {
     fontSize: 11,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: 'Inter_700Bold',
+    textTransform: 'uppercase',
   },
   ctaBtn: {
     flexDirection: 'row',
@@ -747,12 +745,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 7,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 8,
   },
   ctaText: {
     color: '#fff',
     fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: 'Inter_700Bold',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   simpleResult: {
     alignItems: 'center',
@@ -762,24 +762,24 @@ const styles = StyleSheet.create({
   simpleDot: {
     width: 56,
     height: 56,
-    borderRadius: 16,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   simpleDotText: {
     color: '#fff',
-    fontSize: 20,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 24,
+    fontFamily: 'PlayfairDisplay_700Bold',
   },
   simpleLabel: {
     fontSize: 11,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     textTransform: 'uppercase',
     letterSpacing: 1.1,
   },
   simpleName: {
-    fontSize: 22,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 24,
+    fontFamily: 'PlayfairDisplay_700Bold',
     textAlign: 'center',
   },
 });

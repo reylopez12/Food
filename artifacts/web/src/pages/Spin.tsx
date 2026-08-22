@@ -26,7 +26,7 @@ type Price  = "all" | "budget" | "mid" | "upscale";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const CUSTOM_COLORS = [
-  "#1B4FD8", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6", "#EC4899",
+  "#E07552", "#F3B944", "#10B981", "#EF4444", "#8B5CF6", "#EC4899",
 ];
 const MAX_CUSTOM = 6;
 
@@ -72,7 +72,12 @@ function resolveCssVar(property: string, fallback: string): string {
   const raw = getComputedStyle(document.documentElement)
     .getPropertyValue(property)
     .trim();
-  return raw ? `hsl(${raw})` : fallback;
+  if (!raw) return fallback;
+  const parts = raw.split(/\s+/);
+  if (parts.length >= 3) {
+    return `hsl(${parts[0]}, ${parts[1]}, ${parts[2]})`;
+  }
+  return `hsl(${raw})`;
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -209,15 +214,15 @@ export default function Spin() {
 
   // Resolve theme colors for canvas; re-resolve on dark/light toggle
   const [primaryColor, setPrimaryColor] = useState(
-    () => resolveCssVar("--primary", "#1B4FD8")
+    () => resolveCssVar("--primary", "#E07552")
   );
   const [accentColor, setAccentColor] = useState(
-    () => resolveCssVar("--accent", "#F59E0B")
+    () => resolveCssVar("--accent", "#F3B944")
   );
   useEffect(() => {
     const update = () => {
-      setPrimaryColor(resolveCssVar("--primary", "#1B4FD8"));
-      setAccentColor(resolveCssVar("--accent", "#F59E0B"));
+      setPrimaryColor(resolveCssVar("--primary", "#E07552"));
+      setAccentColor(resolveCssVar("--accent", "#F3B944"));
     };
     const observer = new MutationObserver(update);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
@@ -587,7 +592,7 @@ export default function Spin() {
                 ))}
               </div>
               {radius === null && (
-                <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                <p className="text-xs text-accent-foreground mt-2">
                   Choose a distance before spinning.
                 </p>
               )}
@@ -831,7 +836,7 @@ export default function Spin() {
                   </div>
 
                   <div className="flex items-center gap-2 mb-4">
-                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-secondary text-secondary" />
                     <span className="font-bold">{winnerListing.rating}</span>
                     <span className="text-muted-foreground text-sm">
                       ({winnerListing.reviewCount.toLocaleString()} reviews)

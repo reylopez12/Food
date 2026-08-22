@@ -260,8 +260,8 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   restaurantName: {
-    fontSize: 14,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 15,
+    fontFamily: 'PlayfairDisplay_700Bold',
     color: '#fff',
   },
   dishContainer: {
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   },
   dishText: {
     fontSize: 28,
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'PlayfairDisplay_700Bold',
     color: '#fff',
     textAlign: 'center',
     letterSpacing: -0.5,

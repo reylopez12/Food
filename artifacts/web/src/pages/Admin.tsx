@@ -37,13 +37,13 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
  * the default value of the native <input type="color"> (which cannot accept
  * CSS custom properties). Falls back to the light-mode primary hex.
  *
- * Note: `getComputedStyle` returns raw HSL components ("224 78% 48%") that
+ * Note: `getComputedStyle` returns raw HSL components ("15 70% 60%") that
  * browsers accept inside hsl() but not as a standalone color string, so we
  * keep the hardcoded light-mode hex as a safe concrete fallback here. The
  * persisted listing colors entered by admins are always concrete hex values
  * from the color picker and are never changed by this constant.
  */
-const PRIMARY_DEFAULT = "#1B4FD8"; // light-mode --primary concrete value
+const PRIMARY_DEFAULT = "#E07552"; // light-mode --primary (Coral) concrete value
 
 const BLANK: Partial<Listing> = {
   name: "", category: "restaurants", rating: 4.5, reviewCount: 0,

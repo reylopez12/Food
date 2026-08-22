@@ -245,8 +245,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    fontSize: 28,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 32,
+    fontFamily: 'PlayfairDisplay_700Bold',
   },
   distanceBadge: {
     flexDirection: 'row',

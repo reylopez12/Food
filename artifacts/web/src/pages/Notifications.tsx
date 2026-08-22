@@ -6,9 +6,9 @@ import { Bell, BellOff, LogIn, CheckCheck } from "lucide-react";
 import { Link } from "wouter";
 
 const TYPE_LABELS: Record<string, { label: string; class: string }> = {
-  closed: { label: "Closed today", class: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400" },
-  special: { label: "Daily special", class: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" },
-  general: { label: "Update", class: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" },
+  closed: { label: "Closed today", class: "bg-destructive/10 text-destructive" },
+  special: { label: "Daily special", class: "bg-secondary/30 text-secondary-foreground" },
+  general: { label: "Update", class: "bg-primary/15 text-accent-foreground" },
 };
 
 function timeAgo(iso: string) {

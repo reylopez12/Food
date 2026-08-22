@@ -69,11 +69,13 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 100,
+    borderRadius: 8,
     borderWidth: 1,
   },
   label: {
-    fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
+    fontSize: 13,
+    fontFamily: 'Inter_700Bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });

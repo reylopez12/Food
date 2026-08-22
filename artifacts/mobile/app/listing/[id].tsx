@@ -625,8 +625,8 @@ const styles = StyleSheet.create({
   verifiedText: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#fff' },
   heroInfo: { alignItems: 'center', gap: 6 },
   heroName: {
-    fontSize: 24,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 28,
+    fontFamily: 'PlayfairDisplay_700Bold',
     color: '#fff',
     textAlign: 'center',
   },

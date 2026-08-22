@@ -35,8 +35,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   title: {
-    fontSize: 24,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 28,
+    fontFamily: 'PlayfairDisplay_700Bold',
   },
   subtitle: {
     fontSize: 13,

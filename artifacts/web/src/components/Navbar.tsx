@@ -60,13 +60,15 @@ export function Navbar() {
     : "?";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/85 backdrop-blur-lg transition-colors duration-300">
+    <header className={`sticky top-0 z-50 w-full border-b transition-colors duration-300 ${
+      location === '/' ? 'bg-[#1E232E] text-[#F7F4F0] border-white/10' : 'bg-background/95 backdrop-blur-lg border-border'
+    }`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="bg-primary p-1.5 rounded-lg text-primary-foreground shadow-sm group-hover:scale-105 transition-transform duration-300">
+          <div className="bg-secondary p-1.5 rounded-lg text-secondary-foreground shadow-sm group-hover:scale-105 transition-transform duration-300">
             <UtensilsCrossed className="w-5 h-5" />
           </div>
-          <span className="font-bold font-serif text-xl tracking-tight hidden sm:inline-block">Urban Directory</span>
+          <span className="font-bold font-serif text-xl tracking-tight hidden sm:inline-block">eat local.</span>
         </Link>
 
         {/* Desktop Nav */}
@@ -78,8 +80,8 @@ export function Navbar() {
                 href={link.href}
                 className={`flex items-center gap-1.5 text-sm font-bold px-4 py-1.5 rounded-full transition-all border ${
                   location === link.href
-                    ? "bg-accent text-accent-foreground border-accent shadow-sm"
-                    : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/30"
+                    ? "bg-secondary text-secondary-foreground border-secondary shadow-sm"
+                    : location === '/' ? "border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-white/10" : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/30"
                 }`}
               >
                 {link.icon}
@@ -90,7 +92,7 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={`text-sm font-semibold transition-colors hover:text-primary ${
-                  location === link.href ? "text-primary" : "text-muted-foreground"
+                  location === link.href ? "text-primary" : location === '/' ? "text-white/70 hover:text-white" : "text-muted-foreground"
                 }`}
               >
                 {link.label}
@@ -100,20 +102,20 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild className="hidden sm:flex hover:bg-muted/50 rounded-full transition-colors">
+          <Button variant="ghost" size="icon" asChild className={`hidden sm:flex rounded-full transition-colors ${location === '/' ? 'text-white hover:bg-white/10' : 'hover:bg-muted/50'}`}>
             <Link href="/explore">
               <Search className="w-4 h-4" />
               <span className="sr-only">Search</span>
             </Link>
           </Button>
 
-          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle dark mode" className="hover:bg-muted/50 rounded-full transition-colors">
+          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle dark mode" className={`rounded-full transition-colors ${location === '/' ? 'text-white hover:bg-white/10' : 'hover:bg-muted/50'}`}>
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
 
           {/* Notifications bell */}
           {isAuthenticated && (
-            <Button variant="ghost" size="icon" asChild className="relative hidden md:flex hover:bg-muted/50 rounded-full transition-colors" aria-label="Notifications">
+            <Button variant="ghost" size="icon" asChild className={`relative hidden md:flex rounded-full transition-colors ${location === '/' ? 'text-white hover:bg-white/10' : 'hover:bg-muted/50'}`} aria-label="Notifications">
               <Link href="/notifications">
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
@@ -130,7 +132,7 @@ export function Navbar() {
             isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hidden md:flex rounded-full hover:bg-muted/50 transition-colors">
+                  <Button variant="ghost" size="icon" className={`hidden md:flex rounded-full transition-colors ${location === '/' ? 'hover:bg-white/10' : 'hover:bg-muted/50'}`}>
                     <Avatar className="w-8 h-8 ring-2 ring-transparent hover:ring-primary/20 transition-all">
                       <AvatarImage src={user?.profileImageUrl ?? undefined} alt={displayName} />
                       <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bold">
@@ -177,7 +179,7 @@ export function Navbar() {
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="hidden md:flex gap-2 rounded-full font-semibold px-4 border-border hover:bg-muted/50 transition-colors">
+                  <Button variant="outline" size="sm" className={`hidden md:flex gap-2 rounded-full font-semibold px-4 transition-colors ${location === '/' ? 'border-white/20 text-white hover:bg-white/10' : 'border-border hover:bg-muted/50'}`}>
                     <User className="w-4 h-4" />
                     Menu
                   </Button>

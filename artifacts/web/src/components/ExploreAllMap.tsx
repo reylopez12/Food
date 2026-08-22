@@ -23,6 +23,10 @@ function resolveCssVar(property: string, fallback: string): string {
     .trim();
   if (!raw) return fallback;
   // The theme stores raw HSL components like "38 92% 50%"
+  const parts = raw.split(/\s+/);
+  if (parts.length >= 3) {
+    return `hsl(${parts[0]}, ${parts[1]}, ${parts[2]})`;
+  }
   return `hsl(${raw})`;
 }
 
@@ -69,7 +73,7 @@ interface ExploreAllMapProps {
 const SF_CENTER: [number, number] = [37.7749, -122.4194];
 
 // Static fallbacks matching the light-mode theme defaults
-const ACCENT_FALLBACK        = '#F59E0B';
+const ACCENT_FALLBACK        = '#F3B944';
 const MUTED_FG_FALLBACK      = '#94a3b8';
 
 export function ExploreAllMap({

@@ -33,7 +33,12 @@ function resolveCssVar(property: string, fallback: string): string {
   const raw = getComputedStyle(document.documentElement)
     .getPropertyValue(property)
     .trim();
-  return raw ? `hsl(${raw})` : fallback;
+  if (!raw) return fallback;
+  const parts = raw.split(/\s+/);
+  if (parts.length >= 3) {
+    return `hsl(${parts[0]}, ${parts[1]}, ${parts[2]})`;
+  }
+  return `hsl(${raw})`;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -179,15 +184,15 @@ export function HomeSpin() {
 
   // Resolve canvas colors from theme; re-resolve on dark/light toggle.
   const [primaryColor, setPrimaryColor] = useState(
-    () => resolveCssVar("--primary", "#1B4FD8")
+    () => resolveCssVar("--primary", "#DE6B48")
   );
   const [accentColor, setAccentColor] = useState(
-    () => resolveCssVar("--accent", "#F59E0B")
+    () => resolveCssVar("--secondary", "#F4B952") // secondary is yellow now
   );
   useEffect(() => {
     const update = () => {
-      setPrimaryColor(resolveCssVar("--primary", "#1B4FD8"));
-      setAccentColor(resolveCssVar("--accent", "#F59E0B"));
+      setPrimaryColor(resolveCssVar("--primary", "#DE6B48"));
+      setAccentColor(resolveCssVar("--secondary", "#F4B952"));
     };
     const observer = new MutationObserver(update);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
@@ -336,154 +341,72 @@ export function HomeSpin() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <section className="relative bg-primary overflow-hidden">
+    <section className="relative bg-primary overflow-hidden border-t border-primary/20">
       {/* subtle dot-grid background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/80" />
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-60" />
+      <div className="absolute inset-0 bg-primary" />
+      <div className="absolute inset-0 opacity-10 mix-blend-overlay bg-noise pointer-events-none" />
 
-      <div className="container mx-auto px-4 py-14 md:py-20 relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+      <div className="container mx-auto px-4 py-20 md:py-32 relative z-10">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24">
 
           {/* ── Left: copy ── */}
-          <div className="flex-1 text-center lg:text-left">
-            <Badge className="mb-6 bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md px-4 py-1.5 text-sm font-bold inline-flex items-center gap-2 shadow-sm">
-              <Shuffle className="w-4 h-4" />
-              Can't decide?
-            </Badge>
-
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white tracking-tight leading-[1.05] mb-6 drop-shadow-sm">
-              Let the wheel pick<br className="hidden md:block" />
-              <span className="text-accent italic"> your next meal.</span>
-            </h1>
-
-            <p className="text-primary-foreground/80 text-lg md:text-xl max-w-md mx-auto lg:mx-0 mb-8 leading-relaxed">
-              Nearby Bay Area spots, one spin. Choose your distance and let the wheel decide.
+          <div className="flex-1 text-center lg:text-left max-w-lg">
+            <p className="text-xs font-mono font-bold tracking-widest uppercase text-primary-foreground/60 mb-4">
+              Not sure what you're craving?
             </p>
 
-            <div className="max-w-md mx-auto lg:mx-0 mb-8 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-md p-5 text-left shadow-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0 shadow-inner">
-                  <Navigation className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-white mb-0.5">
-                    {locationStatus === "granted" ? "Using your current location" : "Find a meal near you"}
-                  </p>
-                  <p className="text-xs text-white/65">
-                    {locationStatus === "requesting"
-                      ? "Getting your location…"
-                      : locationStatus === "denied"
-                        ? "Location was denied. Allow access and try again."
-                        : locationStatus === "unavailable"
-                          ? "Location is unavailable in this browser."
-                          : locationStatus === "granted"
-                            ? "Every recommendation stays inside your preferred distance."
-                            : "Location is required before spinning."}
-                  </p>
-                </div>
-                {locationStatus === "granted" ? (
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={handleLocationRequest}
-                      disabled={spinning}
-                      className="p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-40"
-                      aria-label="Refresh location"
-                      data-testid="home-spin-refresh-location"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleLocationClear}
-                      disabled={spinning}
-                      className="text-xs text-white/70 hover:text-white underline disabled:opacity-40"
-                      data-testid="home-spin-clear-location"
-                    >
-                      Clear
-                    </button>
-                  </div>
+            <h2 className="text-5xl md:text-6xl font-serif font-bold text-primary-foreground tracking-tight leading-[1.05] mb-6">
+              Let the city pick.
+            </h2>
+
+            <p className="text-primary-foreground/80 text-lg mb-8 leading-relaxed max-w-sm mx-auto lg:mx-0">
+              One tap. One local favorite. No scrolling required.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start mb-8">
+              <Button
+                size="lg"
+                onClick={handleSpin}
+                disabled={spinning || spinItems.length === 0}
+                className="rounded-full px-10 text-base font-bold gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 min-w-36 h-14"
+              >
+                {spinning ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-secondary-foreground/40 border-t-secondary-foreground rounded-full animate-spin" />
+                    Spinning…
+                  </>
                 ) : (
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleLocationRequest}
-                    disabled={spinning || locationStatus === "requesting" || locationStatus === "unavailable"}
-                    className="rounded-full bg-white text-primary hover:bg-white/90 shrink-0 gap-1.5"
-                    data-testid="home-spin-use-location"
-                  >
-                    {locationStatus === "requesting" ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Navigation className="w-3.5 h-3.5" />
-                    )}
-                    {locationStatus === "requesting" ? "Locating…" : "Use location"}
-                  </Button>
+                  "Spin for a spot"
+                )}
+              </Button>
+            </div>
+
+            <div className="max-w-sm mx-auto lg:mx-0 p-4 border border-white/20 rounded-2xl bg-white/5">
+              <div className="flex items-center justify-between gap-4 mb-3">
+                <span className="text-xs font-bold text-white/80 uppercase tracking-widest">Radius</span>
+                {locationStatus !== "granted" && (
+                  <button onClick={handleLocationRequest} className="text-xs font-bold text-white underline hover:text-secondary transition-colors">
+                    {locationStatus === "requesting" ? "Locating..." : "Enable Location"}
+                  </button>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/10">
+              <div className="flex gap-2">
                 {RADIUS_OPTIONS.map((option) => (
                   <button
                     key={option}
                     type="button"
                     onClick={() => handleRadiusChange(option)}
                     disabled={spinning}
-                    className={`px-3.5 py-1.5 rounded-full border text-xs font-bold transition-all disabled:opacity-40 ${
+                    className={`flex-1 py-1.5 rounded-full border text-xs font-bold transition-all disabled:opacity-40 ${
                       radius === option
-                        ? "bg-accent text-accent-foreground border-accent shadow-sm scale-105"
-                        : "border-white/20 text-white/80 hover:text-white hover:border-white/40 hover:bg-white/5"
+                        ? "bg-white text-primary border-white"
+                        : "border-white/20 text-white hover:border-white/40 hover:bg-white/10"
                     }`}
-                    data-testid={`home-spin-radius-${option}`}
                   >
                     {option} mi
                   </button>
                 ))}
               </div>
-            </div>
-
-            <div className="flex items-center gap-3 justify-center lg:justify-start flex-wrap">
-              <Button
-                size="lg"
-                onClick={handleSpin}
-                disabled={spinning || spinItems.length === 0}
-                className="rounded-full px-10 text-base font-bold gap-2 bg-accent text-accent-foreground hover:bg-accent/90 min-w-36 shadow-lg shadow-black/20"
-              >
-                {spinning ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-accent-foreground/40 border-t-accent-foreground rounded-full animate-spin" />
-                    Spinning…
-                  </>
-                ) : (
-                  <>
-                    <Shuffle className="w-4 h-4" />
-                    Spin!
-                  </>
-                )}
-              </Button>
-
-              {winner && !spinning && (
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={handleReset}
-                  className="rounded-full px-6 gap-2 border-white/20 text-white hover:bg-white/10 hover:text-white"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Reset
-                </Button>
-              )}
-
-              <Button
-                size="lg"
-                variant="ghost"
-                onClick={handleReshuffle}
-                disabled={spinning}
-                className="rounded-full px-5 gap-2 text-white/70 hover:text-white hover:bg-white/10"
-                title="Pick 10 different spots"
-              >
-                <RefreshCw className="w-4 h-4" />
-                New selection
-              </Button>
             </div>
 
             {/* Result card */}
@@ -529,7 +452,7 @@ export function HomeSpin() {
                               </Badge>
                             )}
                             <div className="flex items-center gap-1 text-sm ml-auto">
-                              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                              <Star className="w-3.5 h-3.5 fill-secondary text-secondary" />
                               <span className="font-bold">{winnerListing.rating}</span>
                             </div>
                           </div>
@@ -569,7 +492,7 @@ export function HomeSpin() {
                 className="w-full h-auto rounded-full"
                 style={{
                   filter: spinning
-                    ? "drop-shadow(0 0 28px rgba(245,158,11,0.5))"
+                    ? `drop-shadow(0 0 28px color-mix(in srgb, ${accentColor} 55%, transparent))`
                     : "drop-shadow(0 8px 24px rgba(0,0,0,0.3))",
                   transition: "filter 0.3s",
                 }}
@@ -584,7 +507,20 @@ export function HomeSpin() {
                     ? "Choose a distance and enable location"
                     : "Enable location to see nearby spots"}
               {spinItems.length > 0 && (
-                <> · <button onClick={handleReshuffle} disabled={spinning} className="underline hover:text-white/80 transition-colors disabled:opacity-40">Reshuffle</button></>
+                <>
+                  {" · "}
+                  <button onClick={handleReshuffle} disabled={spinning} className="underline hover:text-white/80 transition-colors disabled:opacity-40">
+                    Reshuffle
+                  </button>
+                </>
+              )}
+              {winner && !spinning && (
+                <>
+                  {" · "}
+                  <button onClick={handleReset} className="underline hover:text-white/80 transition-colors">
+                    Reset
+                  </button>
+                </>
               )}
             </p>
           </div>

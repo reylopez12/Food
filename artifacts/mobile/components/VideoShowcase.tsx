@@ -12,12 +12,14 @@ import {
   View,
 } from 'react-native';
 import { useDirectory } from '@/context/DirectoryContext';
+import { useColors } from '@/hooks/useColors';
 import { VideoCard } from '@/components/VideoCard';
 
 const AUTO_ADVANCE_MS = 14000;
 
 export function VideoShowcase() {
   const { listings } = useDirectory();
+  const colors = useColors();
   const videoListings = listings.filter(l => l.hasVideo && l.video);
 
   const [activeIdx, setActiveIdx] = useState(0);
@@ -39,15 +41,17 @@ export function VideoShowcase() {
   if (videoListings.length === 0) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background === '#F6F1E7' ? '#232733' : colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.nowPlayingRow}>
-          <View style={styles.liveDot} />
-          <Text style={styles.nowPlayingLabel}>NOW PLAYING</Text>
+          <View style={[styles.liveDot, { backgroundColor: colors.destructive }]} />
+          <Text style={[styles.nowPlayingLabel, { color: colors.primary }]}>NOW PLAYING</Text>
         </View>
-        <Text style={styles.title}>Dish Showcases</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.title, { color: colors.foreground === '#232733' ? '#F6F1E7' : colors.foreground }]}>
+          Dish Showcases
+        </Text>
+        <Text style={[styles.subtitle, { color: 'rgba(246,241,231,0.5)' }]}>
           The signature dishes that put these Bay Area spots on the map — animated.
         </Text>
       </View>
@@ -87,7 +91,7 @@ export function VideoShowcase() {
                 styles.dot,
                 {
                   width: i === activeIdx ? 20 : 6,
-                  backgroundColor: i === activeIdx ? '#F59E0B' : 'rgba(255,255,255,0.25)',
+                  backgroundColor: i === activeIdx ? colors.secondary : 'rgba(246,241,231,0.25)',
                 },
               ]}
             />
@@ -103,12 +107,11 @@ const CARD_GAP = 0;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#080c14',
     paddingTop: 24,
     paddingBottom: 28,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.07)',
+    borderColor: 'rgba(246,241,231,0.07)',
   },
   header: {
     paddingHorizontal: 20,
@@ -124,22 +127,18 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#ef4444',
   },
   nowPlayingLabel: {
-    color: '#f87171',
     fontSize: 10,
     fontFamily: 'Inter_700Bold',
     letterSpacing: 2,
   },
   title: {
-    color: '#ffffff',
-    fontSize: 20,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 22,
+    fontFamily: 'PlayfairDisplay_700Bold',
     marginBottom: 4,
   },
   subtitle: {
-    color: 'rgba(255,255,255,0.45)',
     fontSize: 12,
     fontFamily: 'Inter_400Regular',
     lineHeight: 18,

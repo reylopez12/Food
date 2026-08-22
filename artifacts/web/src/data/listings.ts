@@ -57,7 +57,7 @@ export const LISTINGS: Listing[] = [
       dish: 'Tacos Al Pastor',
       tagline: 'The taco that started it all.',
       descriptors: ['Slow-roasted pork', 'Pineapple kissed', 'Since 1973'],
-      accentColor: '#F59E0B',
+      accentColor: '#F3B944',
     },
     lat: 37.7484,
     lng: -122.4183,

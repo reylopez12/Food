@@ -39,51 +39,106 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Spin Hero — first thing users see */}
-      <HomeSpin />
+      {/* Hero Section */}
+      <section className="bg-[#1E232E] text-[#F7F4F0] pt-12 pb-24 md:pt-20 md:pb-32 relative overflow-hidden -mt-16">
+        <div className="container mx-auto px-4 relative z-10 pt-16">
+          <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
+            <div className="flex items-center gap-2 mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-[#F7F4F0]/70">
+                INDEPENDENT FOOD, CLOSE BY
+              </span>
+            </div>
 
-      {/* Search bar below the spin hero */}
-      <section className="bg-background border-b shadow-sm relative z-20 -mt-6">
-        <div className="container mx-auto px-4 py-6">
-          <form onSubmit={handleSearch} className="w-full max-w-4xl mx-auto bg-card border rounded-2xl p-2 flex flex-col sm:flex-row items-center shadow-lg shadow-black/5 gap-2">
-            <div className="flex-1 w-full flex items-center px-4 gap-3 border-b sm:border-b-0 sm:border-r border-border pb-2 sm:pb-0">
-              <Search className="w-5 h-5 text-muted-foreground shrink-0" />
-              <Input
-                type="text"
-                placeholder="Tacos, sourdough, bao, pasta..."
-                className="border-0 focus-visible:ring-0 px-0 shadow-none h-12 text-base bg-transparent font-medium"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <h1 className="text-6xl md:text-7xl lg:text-[110px] font-serif font-bold tracking-tight leading-[0.95] mb-8">
+              good food,<br />
+              <span className="text-primary">close to home.</span>
+            </h1>
+
+            <p className="text-lg md:text-xl text-[#F7F4F0]/80 mb-12 max-w-2xl font-medium">
+              Find the family-run counters, late-night windows, and neighborhood gems that make the city taste like itself.
+            </p>
+
+            <form onSubmit={handleSearch} className="w-full max-w-5xl bg-[#F7F4F0] rounded-2xl p-2.5 flex flex-col lg:flex-row items-center shadow-2xl shadow-black/20 gap-2 mb-6">
+              <div className="flex-1 w-full flex items-center px-4 gap-3 border-b lg:border-b-0 lg:border-r border-[#1E232E]/10 pb-3 lg:pb-0 h-14">
+                <Search className="w-5 h-5 text-[#1E232E]/40 shrink-0" />
+                <Input
+                  type="text"
+                  placeholder='Try "tacos", "Mission", or "open late"'
+                  className="border-0 focus-visible:ring-0 px-0 shadow-none h-full text-base bg-transparent font-medium text-[#1E232E] placeholder:text-[#1E232E]/40"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="w-full lg:w-[220px] flex items-center px-4 gap-3 border-b lg:border-b-0 lg:border-r border-[#1E232E]/10 pb-3 lg:pb-0 h-14">
+                <MapPin className="w-5 h-5 text-[#1E232E]/40 shrink-0" />
+                <Input
+                  type="text"
+                  placeholder="Neighborhood"
+                  className="border-0 focus-visible:ring-0 px-0 shadow-none h-full text-base bg-transparent font-medium text-[#1E232E] placeholder:text-[#1E232E]/40"
+                  value={neighborhoodQuery}
+                  onChange={(e) => setNeighborhoodQuery(e.target.value)}
+                />
+              </div>
+              <Button type="submit" size="lg" className="w-full md:w-auto rounded-xl h-14 px-10 bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 font-bold text-lg">
+                Find food
+              </Button>
+            </form>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 text-sm font-mono uppercase tracking-widest text-[#F7F4F0]/50 w-full">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                <span>Searching around</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button type="button" className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground font-bold text-xs" onClick={() => setNeighborhoodQuery("")}>Near you</button>
+                <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => setNeighborhoodQuery("Mission")}>Mission</button>
+                <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => setNeighborhoodQuery("Sunset")}>Sunset</button>
+                <button type="button" className="px-3 py-1 rounded-full text-secondary hover:text-secondary/80 flex items-center gap-1 transition-colors text-xs ml-2" onClick={() => setNeighborhoodQuery("")}>
+                  Change &rarr;
+                </button>
+              </div>
             </div>
-            <div className="flex-1 w-full flex items-center px-4 gap-3 border-b sm:border-b-0 sm:border-r border-border pb-2 sm:pb-0">
-              <MapPin className="w-5 h-5 text-muted-foreground shrink-0" />
-              <Input
-                type="text"
-                placeholder="Neighborhood (e.g. Mission)"
-                className="border-0 focus-visible:ring-0 px-0 shadow-none h-12 text-base bg-transparent font-medium"
-                value={neighborhoodQuery}
-                onChange={(e) => setNeighborhoodQuery(e.target.value)}
-              />
-            </div>
-            <Button type="submit" size="lg" className="w-full sm:w-auto rounded-xl h-12 px-8 bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 font-bold shadow-md">
-              Find Places
-            </Button>
-          </form>
+          </div>
+        </div>
+
+        {/* Decorative background elements */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[60%] border-[40px] border-white/5 rounded-full opacity-50" />
+          <div className="absolute bottom-[-20%] right-[-5%] w-[50%] h-[80%] border-[60px] border-white/5 rounded-full opacity-50" />
         </div>
       </section>
 
-      {/* Video Showcases */}
+      {/* Ticker Tape */}
+      <div className="w-full bg-[#1E232E] border-t border-white/10 overflow-hidden py-3">
+        <div className="flex whitespace-nowrap animate-[marquee_20s_linear_infinite]">
+          {Array(4).fill(0).map((_, i) => (
+            <div key={i} className="flex items-center gap-6 mx-6">
+              <span className="text-[#F7F4F0]/40 font-mono text-xs uppercase tracking-widest">BAY AREA / FOR THE CURIOUS</span>
+              <span className="w-1 h-1 rounded-full bg-primary" />
+              <span className="text-[#F7F4F0]/40 font-mono text-xs uppercase tracking-widest">NO CHAINS, NO GATEKEEPING.</span>
+              <span className="w-1 h-1 rounded-full bg-secondary" />
+              <span className="text-[#F7F4F0]/40 font-mono text-xs uppercase tracking-widest">GO WHERE THE GOOD STUFF IS</span>
+              <span className="w-1 h-1 rounded-full bg-primary" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Spin Hero — second section now */}
+      <HomeSpin />
+
+      {/* Local food video showcase */}
       <VideoShowcase />
 
       {/* Categories Grid */}
-      <section className="py-20 md:py-28 container mx-auto px-4">
+      <section className="py-20 md:py-28 container mx-auto px-4 border-t border-border/40">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div className="max-w-xl">
             <h2 className="text-4xl md:text-5xl font-serif font-bold tracking-tight mb-4 text-foreground">Curated Categories</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">Whether you are looking for a lively dinner spot or a quick bite from a beloved local truck, explore exactly what you are craving.</p>
+            <p className="text-lg text-muted-foreground leading-relaxed font-medium">Whether you are looking for a lively dinner spot or a quick bite from a beloved local truck, explore exactly what you are craving.</p>
           </div>
-          <Button variant="outline" className="hidden md:inline-flex rounded-full px-6 border-border hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all font-semibold" onClick={() => setLocation('/explore')}>
+          <Button variant="outline" className="hidden md:inline-flex rounded-full px-6 border-border hover:bg-muted hover:text-foreground hover:border-foreground/30 transition-all font-semibold" onClick={() => setLocation('/explore')}>
             View all categories <span className="ml-2">&rarr;</span>
           </Button>
         </div>
@@ -101,12 +156,12 @@ export default function Home() {
       </section>
 
       {/* Featured Listings */}
-      <section className="py-20 md:py-28 bg-muted/30 border-y border-border">
+      <section className="py-20 md:py-28 bg-[#1E232E] text-[#F7F4F0] border-y border-white/10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
             <div className="max-w-2xl">
               <h2 className="text-4xl md:text-5xl font-serif font-bold tracking-tight mb-4">The Essentials</h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">Iconic spots that define the Bay Area dining scene. From storied institutions to modern classics, these are the places you simply cannot miss.</p>
+              <p className="text-lg text-[#F7F4F0]/70 leading-relaxed font-medium">Iconic spots that define the Bay Area dining scene. From storied institutions to modern classics, these are the places you simply cannot miss.</p>
             </div>
           </div>
 
@@ -119,10 +174,10 @@ export default function Home() {
               ))}
             </div>
           ) : !isLoading ? (
-            <div className="rounded-2xl border border-dashed bg-card/60 px-6 py-12 text-center">
+            <div className="rounded-2xl border border-white/20 bg-white/5 px-6 py-12 text-center">
               <p className="font-serif text-2xl font-bold">New favorites are on their way.</p>
-              <p className="mt-2 text-muted-foreground">Browse the directory to find a place that feels essential to you.</p>
-              <Button variant="outline" className="mt-5 rounded-full" onClick={() => setLocation("/explore")}>
+              <p className="mt-2 text-[#F7F4F0]/60">Browse the directory to find a place that feels essential to you.</p>
+              <Button variant="outline" className="mt-5 rounded-full border-white/20 text-white hover:bg-white/10 hover:text-white" onClick={() => setLocation("/explore")}>
                 Browse the directory
               </Button>
             </div>
@@ -135,9 +190,9 @@ export default function Home() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div className="max-w-2xl">
             <h2 className="text-4xl md:text-5xl font-serif font-bold tracking-tight mb-4">Neighborhood Gems</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">Discover your next go-to spot. A hand-picked selection of fresh arrivals and local favorites waiting to be explored.</p>
+            <p className="text-lg text-muted-foreground leading-relaxed font-medium">Discover your next go-to spot. A hand-picked selection of fresh arrivals and local favorites waiting to be explored.</p>
           </div>
-          <Button variant="outline" className="rounded-full px-6 border-border hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all font-semibold" onClick={() => setLocation('/explore')}>
+          <Button variant="outline" className="rounded-full px-6 border-border hover:bg-muted hover:text-foreground hover:border-foreground/30 transition-all font-semibold" onClick={() => setLocation('/explore')}>
             Explore all listings <span className="ml-2">&rarr;</span>
           </Button>
         </div>

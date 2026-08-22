@@ -55,8 +55,8 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   title: {
-    fontSize: 28,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 32,
+    fontFamily: 'PlayfairDisplay_700Bold',
   },
   count: {
     fontSize: 14,

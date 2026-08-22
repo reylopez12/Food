@@ -39,14 +39,14 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
       </Link>
         {/* Top colored band */}
         <div
-          className="h-28 w-full relative flex items-center justify-center transition-colors overflow-hidden"
+          className="h-32 w-full relative flex items-center justify-center transition-colors overflow-hidden"
           style={{ backgroundColor: listing.color }}
         >
-          <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105 bg-noise opacity-30 mix-blend-overlay"></div>
-          <div className="text-white font-serif italic font-bold text-4xl opacity-90 tracking-widest drop-shadow-md transition-transform duration-500 group-hover:scale-110">{listing.initials}</div>
+          <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105 opacity-20 mix-blend-overlay bg-noise pointer-events-none"></div>
+          <div className="text-white font-serif italic font-bold text-5xl opacity-90 tracking-widest drop-shadow-sm transition-transform duration-500 group-hover:scale-110">{listing.initials}</div>
 
           {listing.hasVideo && (
-            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md">
+            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-black/50 backdrop-blur-md">
               <Play className="w-3 h-3 text-white fill-white" />
               <span className="text-[10px] font-bold text-white tracking-widest uppercase">Video</span>
             </div>
@@ -62,10 +62,10 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
           </button>
         </div>
 
-        <CardContent className="p-6 flex-1 flex flex-col bg-card">
+        <CardContent className="p-6 flex-1 flex flex-col bg-card relative z-20">
           <div className="flex justify-between items-start mb-3">
             <div className="w-full">
-              <h3 className="font-serif font-bold text-xl leading-tight group-hover:text-primary transition-colors flex items-center gap-2">
+              <h3 className="font-serif font-bold text-2xl leading-tight group-hover:text-primary transition-colors flex items-center gap-2 text-card-foreground">
                 <span className="truncate">{listing.name}</span>
                 {listing.verified && (
                   <CheckCircle2 className="w-4 h-4 text-primary shrink-0" aria-label="Verified" />
@@ -78,22 +78,22 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
           </div>
 
           <div className="flex items-center gap-2 mb-4">
-            <StarRating rating={listing.rating} />
-            <span className="text-sm font-bold">{listing.rating}</span>
+            <StarRating rating={listing.rating} className="scale-90 origin-left" />
+            <span className="text-sm font-bold text-card-foreground">{listing.rating}</span>
             <span className="text-sm text-muted-foreground font-medium">({listing.reviewCount})</span>
             <span className="text-muted-foreground text-sm mx-1.5">•</span>
             <span className="text-sm font-bold text-muted-foreground">{listing.priceRange}</span>
           </div>
 
-          <div className="flex items-start gap-2 text-sm text-muted-foreground mt-auto pt-4 border-t border-border/50">
+          <div className="flex items-start gap-2 text-sm text-muted-foreground mt-auto pt-4 border-t border-border/60 font-medium">
             <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
-            <span className="line-clamp-1 flex-1 leading-relaxed font-medium">
+            <span className="line-clamp-1 flex-1 leading-relaxed">
               {listing.neighborhood
                 ? `${listing.neighborhood} · ${listing.city}`
                 : `${listing.address}, ${listing.city}`}
             </span>
             {distanceLabel && (
-              <span className="ml-2 text-xs font-bold text-primary shrink-0 bg-primary/10 px-2 py-1 rounded-full">
+              <span className="ml-2 text-[10px] font-bold text-primary shrink-0 bg-primary/10 px-2 py-1 rounded-full uppercase tracking-widest">
                 {distanceLabel}
               </span>
             )}

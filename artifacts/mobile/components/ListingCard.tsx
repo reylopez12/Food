@@ -99,12 +99,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 12,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
-    borderWidth: 1,
   },
   avatar: {
     width: 88,
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   initials: {
     fontSize: 26,
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'PlayfairDisplay_700Bold',
     color: 'rgba(255,255,255,0.9)',
   },
   content: {
@@ -128,8 +128,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   name: {
-    fontSize: 16,
-    fontFamily: 'Inter_600SemiBold',
+    fontSize: 18,
+    fontFamily: 'PlayfairDisplay_600SemiBold',
     flex: 1,
   },
   metaRow: {
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   },
   category: {
     fontSize: 13,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Inter_500Medium',
   },
   dot: {
     fontSize: 13,
@@ -171,11 +171,12 @@ const styles = StyleSheet.create({
   tag: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 4,
   },
   tagText: {
     fontSize: 10,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Inter_600SemiBold',
+    textTransform: 'uppercase',
   },
   saveBtn: {
     padding: 14,

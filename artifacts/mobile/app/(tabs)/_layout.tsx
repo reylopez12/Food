@@ -118,13 +118,13 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarItemStyle: { flex: 1, margin: 0, padding: 0 },
-        tabBarLabelStyle: { fontSize: 10 },
+        tabBarLabelStyle: { fontSize: 10, fontFamily: 'Inter_600SemiBold', paddingBottom: 2 },
         tabBarStyle: {
           position: 'absolute',
           left: 0,
           right: 0,
-          backgroundColor: isIOS ? 'transparent' : colors.background,
-          borderTopWidth: isWeb ? 1 : 0,
+          backgroundColor: isIOS ? 'transparent' : colors.card,
+          borderTopWidth: 1,
           borderTopColor: colors.border,
           elevation: 0,
           paddingHorizontal: 0,
@@ -143,7 +143,7 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
             <View
               style={[
                 StyleSheet.absoluteFill,
-                { backgroundColor: colors.background },
+                { backgroundColor: colors.card },
               ]}
             />
           ) : null,

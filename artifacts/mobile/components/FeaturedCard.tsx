@@ -80,15 +80,15 @@ export function FeaturedCard({ listing }: FeaturedCardProps) {
 const styles = StyleSheet.create({
   card: {
     width: 260,
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 3,
     marginRight: 16,
     borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   imageBlock: {
     height: 150,
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   initials: {
     fontSize: 48,
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'PlayfairDisplay_700Bold',
     color: 'rgba(255,255,255,0.9)',
     letterSpacing: 2,
   },
@@ -134,16 +134,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   categoryChip: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 4,
   },
   categoryText: {
-    fontSize: 11,
-    fontFamily: 'Inter_600SemiBold',
+    fontSize: 10,
+    fontFamily: 'Inter_700Bold',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -152,8 +152,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_600SemiBold',
   },
   name: {
-    fontSize: 18,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 20,
+    fontFamily: 'PlayfairDisplay_700Bold',
   },
   locationRow: {
     flexDirection: 'row',
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   city: {
-    fontSize: 13,
-    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    fontFamily: 'Inter_500Medium',
   },
 });
