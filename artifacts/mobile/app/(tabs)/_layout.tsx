@@ -47,8 +47,8 @@ function NativeTabLayout({ unreadCount }: { unreadCount: number }) {
   return (
     <NativeTabs
       labelStyle={{
-        default: { fontSize: 13, fontWeight: '600' },
-        selected: { fontSize: 13, fontWeight: '700' },
+        default: { fontSize: 14, fontWeight: '700' },
+        selected: { fontSize: 14, fontWeight: '700' },
       }}
     >
       <NativeTabs.Trigger name="index">
@@ -124,19 +124,22 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarItemStyle: {
           flex: 1,
+          minWidth: 0,
           margin: 0,
-          paddingVertical: 6,
+          paddingVertical: 10,
+          paddingHorizontal: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontFamily: 'Inter_600SemiBold',
-          paddingBottom: 3,
+          fontSize: 13,
+          fontFamily: 'Inter_700Bold',
+          paddingBottom: 4,
+          letterSpacing: -0.4,
         },
         tabBarStyle: {
           position: 'absolute',
           left: 0,
           right: 0,
-          minHeight: isWeb ? 96 : 94,
+          minHeight: isWeb ? 112 : 108,
           backgroundColor: isIOS ? 'transparent' : colors.card,
           borderTopWidth: 1,
           borderTopColor: colors.border,
@@ -144,8 +147,8 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           paddingHorizontal: 0,
           paddingLeft: 0,
           paddingRight: 0,
-          paddingTop: 8,
-          ...(isWeb ? { height: 96 } : { height: 94 }),
+          paddingTop: 10,
+          ...(isWeb ? { height: 112 } : { height: 108 }),
         },
         tabBarBackground: () =>
           isIOS ? (
@@ -170,9 +173,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Home',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="house" tintColor={color} size={27} />
+              <SymbolView name="house" tintColor={color} size={32} />
             ) : (
-              <Feather name="home" size={25} color={color} />
+              <Feather name="home" size={30} color={color} />
             ),
         }}
       />
@@ -182,9 +185,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Explore',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="magnifyingglass" tintColor={color} size={27} />
+              <SymbolView name="magnifyingglass" tintColor={color} size={32} />
             ) : (
-              <Feather name="search" size={25} color={color} />
+              <Feather name="search" size={30} color={color} />
             ),
         }}
       />
@@ -194,9 +197,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Map',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="map" tintColor={color} size={27} />
+              <SymbolView name="map" tintColor={color} size={32} />
             ) : (
-              <Feather name="map" size={25} color={color} />
+              <Feather name="map" size={30} color={color} />
             ),
         }}
       />
@@ -206,9 +209,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Spin',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="shuffle" tintColor={color} size={27} />
+              <SymbolView name="shuffle" tintColor={color} size={32} />
             ) : (
-              <Feather name="shuffle" size={25} color={color} />
+              <Feather name="shuffle" size={30} color={color} />
             ),
         }}
       />
@@ -219,9 +222,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="bell" tintColor={color} size={27} />
+              <SymbolView name="bell" tintColor={color} size={32} />
             ) : (
-              <Feather name="bell" size={25} color={color} />
+              <Feather name="bell" size={30} color={color} />
             ),
         }}
       />
@@ -231,9 +234,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Saved',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="bookmark" tintColor={color} size={27} />
+              <SymbolView name="bookmark" tintColor={color} size={32} />
             ) : (
-              <Feather name="bookmark" size={25} color={color} />
+              <Feather name="bookmark" size={30} color={color} />
             ),
         }}
       />
@@ -243,9 +246,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Profile',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="person" tintColor={color} size={27} />
+              <SymbolView name="person" tintColor={color} size={32} />
             ) : (
-              <Feather name="user" size={25} color={color} />
+              <Feather name="user" size={30} color={color} />
             ),
         }}
       />
