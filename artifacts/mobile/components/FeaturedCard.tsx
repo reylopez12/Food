@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
@@ -15,6 +15,7 @@ interface FeaturedCardProps {
 export function FeaturedCard({ listing }: FeaturedCardProps) {
   const colors = useColors();
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const { isSaved, toggleSave } = useDirectory();
   const saved = isSaved(listing.id);
 
@@ -27,12 +28,22 @@ export function FeaturedCard({ listing }: FeaturedCardProps) {
     <Pressable
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.95 : 1 }
+        {
+          width: Math.min(260, Math.max(220, width - 40)),
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+          opacity: pressed ? 0.95 : 1,
+        }
       ]}
       onPress={() => router.push(`/listing/${listing.id}`)}
     >
       {/* Image placeholder */}
-      <View style={[styles.imageBlock, { backgroundColor: listing.color }]}>
+      <View
+        style={[
+          styles.imageBlock,
+          { height: Math.min(150, Math.max(128, (width - 40) * 0.58)), backgroundColor: listing.color },
+        ]}
+      >
         <Text style={styles.initials}>{listing.initials}</Text>
         {listing.verified && (
           <View style={[styles.verifiedBadge, { backgroundColor: colors.primary }]}>
@@ -79,7 +90,6 @@ export function FeaturedCard({ listing }: FeaturedCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    width: 260,
     borderRadius: 16,
     overflow: 'hidden',
     marginRight: 16,
@@ -129,17 +139,20 @@ const styles = StyleSheet.create({
   info: {
     padding: 16,
     gap: 6,
+    minWidth: 0,
   },
   tagRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
+    minWidth: 0,
   },
   categoryChip: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
+    flexShrink: 1,
   },
   categoryText: {
     fontSize: 10,
@@ -164,5 +177,6 @@ const styles = StyleSheet.create({
   city: {
     fontSize: 12,
     fontFamily: 'Inter_500Medium',
+    flexShrink: 1,
   },
 });

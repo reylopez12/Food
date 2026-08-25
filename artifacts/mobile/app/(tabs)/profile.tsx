@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   Alert,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,9 +8,9 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useDirectory } from '@/context/DirectoryContext';
 import { CATEGORIES } from '@/constants/data';
 import { useAuth } from '@/lib/auth';
@@ -41,7 +40,7 @@ function SettingRow({ icon, label, value, onPress, rightElement }: SettingRowPro
       <Text style={[styles.settingLabel, { color: colors.foreground }]}>{label}</Text>
       <View style={styles.settingRight}>
         {value ? (
-          <Text style={[styles.settingValue, { color: colors.mutedForeground }]}>{value}</Text>
+          <Text style={[styles.settingValue, { color: colors.mutedForeground }]} numberOfLines={1}>{value}</Text>
         ) : null}
         {rightElement ?? null}
         {onPress && !rightElement && (
@@ -54,12 +53,10 @@ function SettingRow({ icon, label, value, onPress, rightElement }: SettingRowPro
 
 export default function ProfileScreen() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
+  const { bottomTabPadding, horizontalPadding, topInset } = useResponsiveLayout();
   const { listings, savedListings } = useDirectory();
   const { user, isAuthenticated, isLoading, login, logout } = useAuth();
   const [notifications, setNotifications] = useState(true);
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
-
   const industry = 'General Business';
 
   const stats = [
@@ -77,16 +74,16 @@ export default function ProfileScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 100 : 90 }}
+        contentContainerStyle={{ paddingBottom: bottomTabPadding }}
       >
         {/* Header */}
-        <View style={[styles.header, { paddingTop: topPad + 12 }]}>
+        <View style={[styles.header, { paddingTop: topInset + 12, paddingHorizontal: horizontalPadding }]}>
           <Text style={[styles.title, { color: colors.foreground }]}>Profile</Text>
         </View>
 
         {/* Avatar + name */}
         {isAuthenticated ? (
-          <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
+          <View style={[styles.profileCard, { backgroundColor: colors.card, marginHorizontal: horizontalPadding - 4 }]}>
             <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
               <Ionicons name="person" size={32} color={colors.primaryForeground} />
             </View>
@@ -95,7 +92,7 @@ export default function ProfileScreen() {
                 {displayName}
               </Text>
               {displayEmail ? (
-                <Text style={[styles.profileEmail, { color: colors.mutedForeground }]}>
+                <Text style={[styles.profileEmail, { color: colors.mutedForeground }]} numberOfLines={1}>
                   {displayEmail}
                 </Text>
               ) : null}
@@ -114,7 +111,7 @@ export default function ProfileScreen() {
           </View>
         ) : (
           <Pressable
-            style={[styles.profileCard, { backgroundColor: colors.card }]}
+            style={[styles.profileCard, { backgroundColor: colors.card, marginHorizontal: horizontalPadding - 4 }]}
             onPress={login}
             disabled={isLoading}
           >
@@ -134,7 +131,7 @@ export default function ProfileScreen() {
         {/* Stats */}
         <View style={styles.statsRow}>
           {stats.map((stat) => (
-            <View key={stat.label} style={[styles.statCard, { backgroundColor: colors.card }]}>
+          <View key={stat.label} style={[styles.statCard, { backgroundColor: colors.card }]}>
               <Text style={[styles.statValue, { color: colors.primary }]}>{stat.value}</Text>
               <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{stat.label}</Text>
             </View>
@@ -142,7 +139,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Template info */}
-        <View style={[styles.templateBanner, { backgroundColor: colors.secondary, borderColor: colors.primary }]}>
+        <View style={[styles.templateBanner, { backgroundColor: colors.secondary, borderColor: colors.primary, marginHorizontal: horizontalPadding - 4 }]}>
           <Ionicons name="layers-outline" size={18} color={colors.primary} />
           <View style={styles.templateText}>
             <Text style={[styles.templateTitle, { color: colors.primary }]}>Directory Template</Text>
@@ -154,7 +151,7 @@ export default function ProfileScreen() {
 
         {/* Preferences */}
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>Preferences</Text>
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <View style={[styles.section, { backgroundColor: colors.card, marginHorizontal: horizontalPadding - 4 }]}>
           <SettingRow
             icon="bell"
             label="Notifications"
@@ -185,7 +182,7 @@ export default function ProfileScreen() {
 
         {/* Support */}
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>Support</Text>
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <View style={[styles.section, { backgroundColor: colors.card, marginHorizontal: horizontalPadding - 4 }]}>
           <SettingRow
             icon="star"
             label="Rate the App"
@@ -213,7 +210,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    paddingHorizontal: 20,
     paddingBottom: 16,
   },
   title: {
@@ -240,7 +236,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  profileInfo: { flex: 1 },
+  profileInfo: { flex: 1, minWidth: 0 },
   profileName: {
     fontSize: 17,
     fontFamily: 'Inter_700Bold',
@@ -343,10 +339,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexShrink: 1,
   },
   settingValue: {
     fontSize: 13,
     fontFamily: 'Inter_400Regular',
+    flexShrink: 1,
+    textAlign: 'right',
   },
   divider: {
     height: StyleSheet.hairlineWidth,

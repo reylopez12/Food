@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
@@ -16,6 +16,7 @@ interface ListingCardProps {
 export function ListingCard({ listing, distanceMi }: ListingCardProps) {
   const colors = useColors();
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const { isSaved, toggleSave } = useDirectory();
   const saved = isSaved(listing.id);
 
@@ -39,7 +40,12 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
       ]}
       onPress={() => router.push(`/listing/${listing.id}`)}
     >
-      <View style={[styles.avatar, { backgroundColor: listing.color }]}>
+      <View
+        style={[
+          styles.avatar,
+          { width: width <= 360 ? 72 : 88, backgroundColor: listing.color },
+        ]}
+      >
         <Text style={styles.initials}>{listing.initials}</Text>
       </View>
 
@@ -119,6 +125,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    minWidth: 0,
     padding: 14,
     gap: 4,
   },
@@ -126,6 +133,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    minWidth: 0,
   },
   name: {
     fontSize: 18,
@@ -151,6 +159,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    minWidth: 0,
   },
   city: {
     fontSize: 12,
@@ -167,11 +176,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 6,
     marginTop: 4,
+    minWidth: 0,
   },
   tag: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
+    maxWidth: '100%',
   },
   tagText: {
     fontSize: 10,

@@ -8,10 +8,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import {
   useDirectory,
   haversineDistanceMi,
@@ -24,7 +24,7 @@ import { SearchBar } from '@/components/SearchBar';
 
 export default function ExploreScreen() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
+  const { bottomTabPadding, horizontalPadding, isCompact, topInset } = useResponsiveLayout();
   const {
     filteredListings,
     searchQuery,
@@ -40,8 +40,6 @@ export default function ExploreScreen() {
     setPreferredRadius,
   } = useDirectory();
   const { city } = useLocalSearchParams<{ city?: string }>();
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
-
   useEffect(() => {
     if (typeof city === 'string') setCityQuery(city);
   }, [city, setCityQuery]);
@@ -61,14 +59,14 @@ export default function ExploreScreen() {
         style={[
           styles.header,
           {
-            paddingTop: topPad + 12,
+            paddingTop: topInset + 8,
             backgroundColor: colors.background,
             borderBottomColor: colors.border,
           },
         ]}
       >
-        <View style={styles.titleRow}>
-          <Text style={[styles.title, { color: colors.foreground }]}>Explore</Text>
+        <View style={[styles.titleRow, { paddingHorizontal: horizontalPadding }]}>
+          <Text style={[styles.title, { color: colors.foreground, fontSize: isCompact ? 30 : 32 }]}>Explore</Text>
           {distanceActive && (
             <View style={[styles.distanceBadge, { backgroundColor: colors.primary + '18' }]}>
               <Ionicons name="navigate" size={11} color={colors.primary} />
@@ -79,7 +77,7 @@ export default function ExploreScreen() {
           )}
         </View>
 
-        <View style={styles.searchWrap}>
+        <View style={[styles.searchWrap, { paddingHorizontal: horizontalPadding }]}>
           <SearchBar
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -87,7 +85,7 @@ export default function ExploreScreen() {
             autoFocus={false}
           />
         </View>
-        <View style={styles.citySearchWrap}>
+        <View style={[styles.citySearchWrap, { paddingHorizontal: horizontalPadding }]}>
           <SearchBar
             value={cityQuery}
             onChangeText={setCityQuery}
@@ -124,7 +122,7 @@ export default function ExploreScreen() {
         )}
         contentContainerStyle={[
           styles.list,
-          { paddingBottom: Platform.OS === 'web' ? 100 : 90 },
+          { paddingBottom: bottomTabPadding, paddingHorizontal: horizontalPadding },
         ]}
         scrollEnabled={!!filteredListings.length}
         ListEmptyComponent={
@@ -251,14 +249,13 @@ function NearMeBar({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    paddingBottom: 8,
+    paddingBottom: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 12,
+    marginBottom: 8,
     gap: 8,
   },
   title: {
@@ -278,22 +275,20 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_600SemiBold',
   },
   searchWrap: {
-    paddingHorizontal: 16,
-    marginBottom: 10,
+    marginBottom: 6,
   },
   citySearchWrap: {
-    paddingHorizontal: 16,
-    marginBottom: 10,
+    marginBottom: 6,
   },
   pillsWrap: {
-    paddingBottom: 4,
+    paddingBottom: 2,
   },
   nearMeRow: {
     flexDirection: 'row',
     gap: 8,
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-    paddingTop: 4,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    paddingTop: 2,
   },
   nearMeButton: {
     flexDirection: 'row',
@@ -319,7 +314,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_500Medium',
   },
   list: {
-    padding: 16,
+    paddingTop: 12,
     flexGrow: 1,
   },
   empty: {

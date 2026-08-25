@@ -4,7 +4,6 @@ import {
   Linking,
   Platform,
   Pressable,
-  ScrollView,
   Share,
   StyleSheet,
   Text,
@@ -16,8 +15,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { RatingStars } from '@/components/RatingStars';
 import { VideoCard } from '@/components/VideoCard';
+import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { useDirectory } from '@/context/DirectoryContext';
 import { ListingMapWebView } from '@/components/ListingMapWebView';
 import { useAuth } from '@/lib/auth';
@@ -62,6 +63,7 @@ export default function ListingDetailScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { horizontalPadding, topInset } = useResponsiveLayout();
   const { listings, isSaved, toggleSave } = useDirectory();
   const { isAuthenticated, login } = useAuth();
 
@@ -254,7 +256,6 @@ export default function ListingDetailScreen() {
     Alert.alert('Share', `Share ${listing.name} with friends!`);
   };
 
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
 
   // Show section if there are announcements to read OR the venue has a broadcaster
@@ -263,9 +264,23 @@ export default function ListingDetailScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: bottomPad + 24 }}>
+      <KeyboardAwareScrollViewCompat
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        contentContainerStyle={{ paddingBottom: bottomPad + 32 }}
+      >
         {/* Hero block */}
-        <View style={[styles.hero, { backgroundColor: listing.color, paddingTop: topPad + 16 }]}>
+        <View
+          style={[
+            styles.hero,
+            {
+              backgroundColor: listing.color,
+              paddingTop: topInset + 16,
+              paddingHorizontal: horizontalPadding,
+            },
+          ]}
+        >
           <View style={styles.topBar}>
             <Pressable
               style={[styles.circleBtn, { backgroundColor: 'rgba(0,0,0,0.3)' }]}
@@ -324,7 +339,12 @@ export default function ListingDetailScreen() {
         </View>
 
         {/* Rating card */}
-        <View style={[styles.ratingCard, { backgroundColor: colors.card, shadowColor: '#000' }]}>
+        <View
+          style={[
+            styles.ratingCard,
+            { backgroundColor: colors.card, shadowColor: '#000', marginHorizontal: horizontalPadding },
+          ]}
+        >
           <View style={styles.ratingLeft}>
             <Text style={[styles.ratingNum, { color: colors.foreground }]}>{listing.rating.toFixed(1)}</Text>
             <RatingStars rating={listing.rating} size={16} showCount={false} />
@@ -340,7 +360,7 @@ export default function ListingDetailScreen() {
         </View>
 
         {/* Action buttons */}
-        <View style={styles.actions}>
+        <View style={[styles.actions, { marginHorizontal: horizontalPadding }]}>
           {[
             { icon: 'call-outline', label: 'Call', onPress: handleCall },
             { icon: 'globe-outline', label: 'Website', onPress: handleWebsite },
@@ -355,7 +375,9 @@ export default function ListingDetailScreen() {
               onPress={action.onPress}
             >
               <Ionicons name={action.icon as any} size={22} color={colors.primary} />
-              <Text style={[styles.actionLabel, { color: colors.foreground }]}>{action.label}</Text>
+              <Text style={[styles.actionLabel, { color: colors.foreground }]} numberOfLines={1}>
+                {action.label}
+              </Text>
             </Pressable>
           ))}
         </View>
@@ -570,7 +592,7 @@ export default function ListingDetailScreen() {
             </Pressable>
           </View>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollViewCompat>
     </View>
   );
 }

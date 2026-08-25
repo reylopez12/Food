@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Platform, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { Platform, StyleSheet, Text, useColorScheme, useWindowDimensions, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -112,9 +112,11 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
   useTabBarEdgeFix();
   const colors = useColors();
   const colorScheme = useColorScheme();
+  const { width } = useWindowDimensions();
   const isDark = colorScheme === 'dark';
   const isIOS = Platform.OS === 'ios';
   const isWeb = Platform.OS === 'web';
+  const isCompact = width < 360;
 
   return (
     <Tabs
@@ -130,10 +132,10 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           paddingHorizontal: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 13,
+          fontSize: isCompact ? 10 : 13,
           fontFamily: 'Inter_700Bold',
           paddingBottom: 4,
-          letterSpacing: -0.4,
+          letterSpacing: isCompact ? -0.5 : -0.4,
         },
         tabBarStyle: {
           position: 'absolute',

@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useDirectory } from '@/context/DirectoryContext';
@@ -20,7 +21,9 @@ const AUTO_ADVANCE_MS = 14000;
 export function VideoShowcase() {
   const { listings } = useDirectory();
   const colors = useColors();
+  const { width } = useWindowDimensions();
   const videoListings = listings.filter(l => l.hasVideo && l.video);
+  const cardWidth = Math.max(1, width - HORIZONTAL_PADDING * 2);
 
   const [activeIdx, setActiveIdx] = useState(0);
   const flatListRef = useRef<FlatList>(null);
@@ -62,22 +65,26 @@ export function VideoShowcase() {
         data={videoListings}
         keyExtractor={item => item.id}
         horizontal
-        pagingEnabled
         showsHorizontalScrollIndicator={false}
         scrollEnabled={true}
         onMomentumScrollEnd={e => {
-          const idx = Math.round(e.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_GAP));
+          const idx = Math.round(e.nativeEvent.contentOffset.x / cardWidth);
           setActiveIdx(idx);
         }}
         contentContainerStyle={styles.carouselContent}
+        decelerationRate="fast"
+        disableIntervalMomentum
+        pagingEnabled={false}
+        snapToAlignment="start"
+        snapToInterval={cardWidth}
         renderItem={({ item }) => (
-          <View style={styles.cardWrapper}>
+          <View style={[styles.cardWrapper, { width: cardWidth }]}>
             <VideoCard listing={item} />
           </View>
         )}
         getItemLayout={(_, index) => ({
-          length: CARD_WIDTH + CARD_GAP,
-          offset: (CARD_WIDTH + CARD_GAP) * index,
+          length: cardWidth,
+          offset: cardWidth * index,
           index,
         })}
       />
@@ -102,8 +109,7 @@ export function VideoShowcase() {
   );
 }
 
-const CARD_WIDTH = 320;
-const CARD_GAP = 0;
+const HORIZONTAL_PADDING = 20;
 
 const styles = StyleSheet.create({
   container: {
@@ -144,12 +150,10 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   carouselContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: HORIZONTAL_PADDING,
     gap: 0,
   },
-  cardWrapper: {
-    width: CARD_WIDTH,
-  },
+  cardWrapper: {},
   dots: {
     flexDirection: 'row',
     alignItems: 'center',

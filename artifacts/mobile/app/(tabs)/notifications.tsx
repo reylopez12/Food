@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAuth } from '@/lib/auth';
 
 function getApiBase() {
@@ -55,6 +56,7 @@ export default function NotificationsScreen() {
   const colors = useColors();
   const router = useRouter();
   const { isAuthenticated, login } = useAuth();
+  const { bottomTabPadding, horizontalPadding, topInset } = useResponsiveLayout();
 
   const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
     closed:  { label: TYPE_LABELS.closed,  color: colors.destructive },
@@ -114,7 +116,7 @@ export default function NotificationsScreen() {
 
   if (!isAuthenticated) {
     return (
-      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+      <View style={[styles.centered, { backgroundColor: colors.background, paddingTop: topInset, paddingBottom: bottomTabPadding }]}>
         <Ionicons name="notifications-outline" size={48} color={colors.mutedForeground} />
         <Text style={[styles.emptyTitle, { color: colors.foreground }]}>Notifications</Text>
         <Text style={[styles.emptyBody, { color: colors.mutedForeground }]}>
@@ -135,7 +137,16 @@ export default function NotificationsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            borderBottomColor: colors.border,
+            paddingTop: topInset + 10,
+            paddingHorizontal: horizontalPadding,
+          },
+        ]}
+      >
         <Text style={[styles.headerTitle, { color: colors.foreground }]}>Notifications</Text>
         {unreadCount > 0 && (
           <Pressable onPress={() => markRead()}>
@@ -165,7 +176,7 @@ export default function NotificationsScreen() {
           </Pressable>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: bottomTabPadding }}>
           {notifications.map((n) => {
             const isUnread = !n.readAt;
             const typeConf = TYPE_CONFIG[n.announcement.type] ?? TYPE_CONFIG.general;
@@ -225,7 +236,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
   },

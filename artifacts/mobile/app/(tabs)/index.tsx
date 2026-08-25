@@ -8,10 +8,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useDirectory } from '@/context/DirectoryContext';
 import { FeaturedCard } from '@/components/FeaturedCard';
 import { ListingCard } from '@/components/ListingCard';
@@ -23,21 +23,19 @@ const LOCATION = 'San Francisco Bay Area';
 
 export default function HomeScreen() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { featuredListings, filteredListings } = useDirectory();
-
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const { bottomTabPadding, horizontalPadding, isCompact, topInset } = useResponsiveLayout();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === 'web' ? 100 : 90 }]}
+        contentContainerStyle={[styles.scroll, { paddingBottom: bottomTabPadding }]}
       >
         {/* Header Area */}
-        <View style={[styles.heroBlock, { paddingTop: topPad, backgroundColor: colors.background }]}>
-          <View style={styles.header}>
+        <View style={[styles.heroBlock, { paddingTop: topInset, backgroundColor: colors.background }]}>
+          <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
             <View>
               <View style={styles.locationRow}>
                 <Ionicons name="location" size={12} color={colors.primary} />
@@ -56,12 +54,21 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.heroCopy}>
+          <View style={[styles.heroCopy, { paddingHorizontal: horizontalPadding }]}>
             <View style={styles.tagLine}>
               <View style={[styles.tagDot, { backgroundColor: colors.primary }]} />
               <Text style={[styles.tagText, { color: colors.primary }]}>EAT. LOCAL. FOOD.</Text>
             </View>
-            <Text style={[styles.heroTitle, { color: colors.foreground }]}>
+            <Text
+              style={[
+                styles.heroTitle,
+                {
+                  color: colors.foreground,
+                  fontSize: isCompact ? 40 : 46,
+                  lineHeight: isCompact ? 46 : 52,
+                },
+              ]}
+            >
               good food,{'\n'}close to home.
             </Text>
             <Text style={[styles.heroSubtitle, { color: colors.mutedForeground }]}>
@@ -70,7 +77,7 @@ export default function HomeScreen() {
           </View>
 
           {/* Search bar */}
-          <View style={styles.searchContainer}>
+          <View style={[styles.searchContainer, { paddingHorizontal: horizontalPadding }]}>
             <TouchableOpacity
               style={[styles.searchTap, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => router.push('/(tabs)/explore')}
@@ -113,7 +120,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Categories */}
-        <View style={styles.sectionHeader}>
+        <View style={[styles.sectionHeader, { paddingHorizontal: horizontalPadding }]}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Browse by Category</Text>
           <Text style={[styles.sectionSubtitle, { color: colors.mutedForeground }]}>
             Find exactly the kind of experience you're craving.
@@ -124,7 +131,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Featured listings */}
-        <View style={styles.sectionHeader}>
+        <View style={[styles.sectionHeader, { paddingHorizontal: horizontalPadding }]}>
           <View style={styles.sectionHeaderTop}>
             <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Featured Places</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/explore')} activeOpacity={0.6} style={styles.seeAllBtn}>
@@ -148,7 +155,7 @@ export default function HomeScreen() {
         />
 
         {/* All listings */}
-        <View style={[styles.sectionHeader, { marginTop: 12 }]}>
+        <View style={[styles.sectionHeader, { marginTop: 12, paddingHorizontal: horizontalPadding }]}>
           <View style={styles.sectionHeaderTop}>
             <Text style={[styles.sectionTitle, { color: colors.foreground }]}>More to Discover</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/explore')} activeOpacity={0.6} style={styles.seeAllBtn}>
@@ -161,7 +168,7 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-        <View style={styles.listSection}>
+        <View style={[styles.listSection, { paddingHorizontal: horizontalPadding }]}>
           {filteredListings.slice(0, 5).map((item) => (
             <ListingCard key={item.id} listing={item} />
           ))}
@@ -288,6 +295,7 @@ const styles = StyleSheet.create({
   searchMeta: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
     marginTop: 12,
     paddingHorizontal: 6,
@@ -309,6 +317,7 @@ const styles = StyleSheet.create({
   searchMetaText: {
     fontSize: 11,
     fontFamily: 'Inter_500Medium',
+    flexShrink: 1,
   },
   spinSection: {
     paddingTop: 32,

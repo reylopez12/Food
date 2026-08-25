@@ -35,7 +35,13 @@ export function SearchBar({
         autoCapitalize="none"
       />
       {value.length > 0 && (
-        <Pressable onPress={onClear ?? (() => onChangeText(''))} hitSlop={8}>
+        <Pressable
+          onPress={onClear ?? (() => onChangeText(''))}
+          hitSlop={8}
+          style={styles.clearButton}
+          accessibilityRole="button"
+          accessibilityLabel="Clear search"
+        >
           <Feather name="x" size={16} color={colors.mutedForeground} />
         </Pressable>
       )}
@@ -55,8 +61,16 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    minWidth: 0,
     fontSize: 15,
     fontFamily: 'Inter_500Medium',
     padding: 0,
+  },
+  clearButton: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: -5,
   },
 });

@@ -163,10 +163,10 @@ export function VideoCard({ listing }: VideoCardProps) {
       <View style={styles.content}>
         {/* Top: intro */}
         <Animated.View style={{ opacity: introOpacity, transform: [{ translateY: introY }] }}>
-          <Text style={[styles.neighborhoodText, { color: accent }]}>
+          <Text style={[styles.neighborhoodText, { color: accent }]} numberOfLines={1}>
             {listing.neighborhood} · {listing.city}
           </Text>
-          <Text style={styles.restaurantName}>{listing.name}</Text>
+          <Text style={styles.restaurantName} numberOfLines={1}>{listing.name}</Text>
         </Animated.View>
 
         {/* Center: dish */}
@@ -176,7 +176,7 @@ export function VideoCard({ listing }: VideoCardProps) {
             { opacity: dishOpacity, transform: [{ scale: dishScale }] },
           ]}
         >
-          <Text style={styles.dishText}>{video.dish}</Text>
+          <Text style={styles.dishText} numberOfLines={2}>{video.dish}</Text>
         </Animated.View>
 
         {/* Bottom: descriptors + tagline */}
@@ -187,11 +187,14 @@ export function VideoCard({ listing }: VideoCardProps) {
                 key={i}
                 style={[styles.descriptorPill, { opacity: descOpacities[i] }]}
               >
-                <Text style={styles.descriptorText}>{d}</Text>
+                <Text style={styles.descriptorText} numberOfLines={1}>{d}</Text>
               </Animated.View>
             ))}
           </View>
-          <Animated.Text style={[styles.tagline, { opacity: taglineOpacity, color: accent }]}>
+          <Animated.Text
+            style={[styles.tagline, { opacity: taglineOpacity, color: accent }]}
+            numberOfLines={2}
+          >
             "{video.tagline}"
           </Animated.Text>
         </View>
@@ -289,11 +292,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
+    flexShrink: 1,
+    maxWidth: '100%',
   },
   descriptorText: {
     color: '#fff',
     fontSize: 11,
     fontFamily: 'Inter_600SemiBold',
+    flexShrink: 1,
   },
   tagline: {
     fontSize: 12,

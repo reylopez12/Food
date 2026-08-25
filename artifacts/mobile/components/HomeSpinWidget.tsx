@@ -5,6 +5,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Svg, { Path, G, Text as SvgText, Circle } from 'react-native-svg';
@@ -31,9 +32,7 @@ const MAX_SLOTS      = 10;
 const SPIN_ROTATIONS = 8;
 const SPIN_DURATION  = 4200;
 const WHEEL_SIZE     = 260;
-const CX             = WHEEL_SIZE / 2;
-const CY             = WHEEL_SIZE / 2;
-const R              = WHEEL_SIZE / 2 - 4;
+const WHEEL_PAD      = 20;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -51,14 +50,14 @@ function polarXY(cx: number, cy: number, r: number, angleDeg: number) {
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
-function slicePath(startDeg: number, endDeg: number): string {
-  const s = polarXY(CX, CY, R, startDeg);
-  const e = polarXY(CX, CY, R, endDeg);
+function slicePath(cx: number, cy: number, radius: number, startDeg: number, endDeg: number): string {
+  const s = polarXY(cx, cy, radius, startDeg);
+  const e = polarXY(cx, cy, radius, endDeg);
   const largeArc = endDeg - startDeg > 180 ? 1 : 0;
   return [
-    `M ${CX} ${CY}`,
+    `M ${cx} ${cy}`,
     `L ${s.x} ${s.y}`,
-    `A ${R} ${R} 0 ${largeArc} 1 ${e.x} ${e.y}`,
+    `A ${radius} ${radius} 0 ${largeArc} 1 ${e.x} ${e.y}`,
     'Z',
   ].join(' ');
 }
@@ -68,6 +67,7 @@ function slicePath(startDeg: number, endDeg: number): string {
 export function HomeSpinWidget() {
   const colors = useColors();
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const {
     listings: allListings,
     locationStatus,
@@ -129,8 +129,13 @@ export function HomeSpinWidget() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allListings, locationReady, preferredRadius, seed, userLat, userLng]);
 
+  const wheelSize = Math.min(WHEEL_SIZE, Math.max(200, width - WHEEL_PAD * 2 - 16));
+  const cx = wheelSize / 2;
+  const cy = wheelSize / 2;
+  const radius = wheelSize / 2 - 4;
+  const wheelScale = wheelSize / WHEEL_SIZE;
   const sliceDeg = spinItems.length > 0 ? 360 / spinItems.length : 360;
-  const fontSize = Math.min(11, Math.max(8, 140 / Math.max(spinItems.length, 1)));
+  const fontSize = Math.min(11, Math.max(8, (wheelSize * 0.54) / Math.max(spinItems.length, 1)));
 
   useEffect(() => () => { spinAnim.stopAnimation(); }, [spinAnim]);
 
@@ -219,21 +224,26 @@ export function HomeSpinWidget() {
       </View>
 
       {/* Wheel */}
-      <View style={styles.wheelWrap}>
+      <View style={[styles.wheelWrap, { width: wheelSize + WHEEL_PAD * 2, height: wheelSize + WHEEL_PAD * 2 }]}>
         {/* Pointer */}
         <View style={styles.pointerWrap} pointerEvents="none">
           <View style={[styles.pointerTriangle, { borderTopColor: colors.foreground }]} />
         </View>
 
-        <Animated.View style={[styles.wheelAnim, { transform: [{ rotate: rotateStr }] }]}>
-          <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
+        <Animated.View
+          style={[
+            styles.wheelAnim,
+            { width: wheelSize, height: wheelSize, transform: [{ rotate: rotateStr }] },
+          ]}
+        >
+          <Svg width={wheelSize} height={wheelSize}>
             {/* Outer cream ring */}
-            <Circle cx={CX} cy={CY} r={R + 4} fill={colors.primaryForeground} />
+            <Circle cx={cx} cy={cy} r={radius + 4} fill={colors.primaryForeground} />
             {/* Inner dark ring */}
-            <Circle cx={CX} cy={CY} r={R} fill={colors.foreground} />
+            <Circle cx={cx} cy={cy} r={radius} fill={colors.foreground} />
 
             {spinItems.length === 0 ? (
-              <Circle cx={CX} cy={CY} r={R - 6} fill={colors.muted} />
+              <Circle cx={cx} cy={cy} r={radius - 6} fill={colors.muted} />
             ) : (
               spinItems.map((item, i) => {
                 const startDeg = -90 + i * sliceDeg;
@@ -245,15 +255,15 @@ export function HomeSpinWidget() {
                 return (
                   <G key={item.id}>
                     <Path
-                      d={slicePath(startDeg, endDeg)}
+                      d={slicePath(cx, cy, radius, startDeg, endDeg)}
                       fill={item.color}
                       stroke={colors.foreground}
                       strokeWidth={1}
                     />
-                    <G transform={`rotate(${midDeg} ${CX} ${CY})`}>
+                    <G transform={`rotate(${midDeg} ${cx} ${cy})`}>
                       <SvgText
-                        x={CX + R * 0.72}
-                        y={CY}
+                        x={cx + radius * 0.72}
+                        y={cy}
                         textAnchor="end"
                         fill={colors.foreground}
                         fontSize={fontSize}
@@ -268,9 +278,9 @@ export function HomeSpinWidget() {
               })
             )}
             {/* Center Rings */}
-            <Circle cx={CX} cy={CY} r={46} fill={colors.primaryForeground} />
-            <Circle cx={CX} cy={CY} r={40} fill={colors.foreground} />
-            <Circle cx={CX} cy={CY} r={12} fill={colors.primaryForeground} />
+            <Circle cx={cx} cy={cy} r={46 * wheelScale} fill={colors.primaryForeground} />
+            <Circle cx={cx} cy={cy} r={40 * wheelScale} fill={colors.foreground} />
+            <Circle cx={cx} cy={cy} r={12 * wheelScale} fill={colors.primaryForeground} />
           </Svg>
         </Animated.View>
       </View>
@@ -443,7 +453,10 @@ export function HomeSpinWidget() {
                     </Text>
                     <View style={styles.resultMeta}>
                       <Feather name="map-pin" size={11} color={colors.mutedForeground} />
-                      <Text style={[styles.resultMetaText, { color: colors.mutedForeground }]}>
+                      <Text
+                        style={[styles.resultMetaText, { color: colors.mutedForeground }]}
+                        numberOfLines={1}
+                      >
                         {winnerListing.neighborhood} · {winnerListing.city}
                       </Text>
                     </View>
@@ -492,8 +505,6 @@ export function HomeSpinWidget() {
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
-
-const WHEEL_PAD = 20;
 
 const styles = StyleSheet.create({
   container: {
@@ -608,8 +619,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_600SemiBold',
   },
   wheelWrap: {
-    width:  WHEEL_SIZE + WHEEL_PAD * 2,
-    height: WHEEL_SIZE + WHEEL_PAD * 2,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
@@ -633,8 +642,6 @@ const styles = StyleSheet.create({
     marginTop: -8,
   },
   wheelAnim: {
-    width:  WHEEL_SIZE,
-    height: WHEEL_SIZE,
     shadowColor:   '#000',
     shadowOpacity: 0.2,
     shadowRadius:  20,
@@ -686,6 +693,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     marginBottom: 10,
+    minWidth: 0,
   },
   initials: {
     width: 46,
@@ -709,10 +717,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+    minWidth: 0,
   },
   resultMetaText: {
     fontSize: 12,
     fontFamily: 'Inter_500Medium',
+    flexShrink: 1,
   },
   ratingRow: {
     flexDirection: 'row',

@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAuth } from '@/lib/auth';
 
 // ─── Unread count (same pattern as _layout.tsx) ───────────────────────────────
@@ -96,13 +95,10 @@ function MenuRow({
 
 export default function MoreScreen() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
+  const { bottomTabPadding, horizontalPadding, topInset } = useResponsiveLayout();
   const router = useRouter();
   const { user, isAuthenticated, login, logout } = useAuth();
   const unreadCount = useUnreadCount(isAuthenticated);
-
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
-  const botPad = Platform.OS === 'web' ? 120 : insets.bottom + 100;
 
   const displayName = user
     ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || 'Account'
@@ -122,12 +118,12 @@ export default function MoreScreen() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
 
       {/* ── Header ── */}
-      <View style={[styles.header, { paddingTop: topPad + 14, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { paddingTop: topInset + 14, paddingHorizontal: horizontalPadding, borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.foreground }]}>More</Text>
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: botPad }]}
+        contentContainerStyle={[styles.scroll, { paddingBottom: bottomTabPadding, paddingHorizontal: horizontalPadding - 4 }]}
         showsVerticalScrollIndicator={false}
       >
 
@@ -216,7 +212,6 @@ export default function MoreScreen() {
 const styles = StyleSheet.create({
   root:  { flex: 1 },
   header: {
-    paddingHorizontal: 20,
     paddingBottom: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
@@ -227,7 +222,6 @@ const styles = StyleSheet.create({
   },
   scroll: {
     paddingTop: 24,
-    paddingHorizontal: 16,
     gap: 16,
   },
   profileCard: {

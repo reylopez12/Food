@@ -2,20 +2,19 @@ import React, { useRef, useState, useEffect, useMemo } from 'react';
 import {
   Animated,
   Easing,
-  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import Svg, { Path, G, Text as SvgText, Circle } from 'react-native-svg';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
+import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import {
   RADIUS_OPTIONS,
   hasValidCoordinates,
@@ -94,8 +93,8 @@ function slicePath(startDeg: number, endDeg: number): string {
 
 export default function SpinScreen() {
   const colors  = useColors();
-  const insets  = useSafeAreaInsets();
   const router  = useRouter();
+  const { bottomTabPadding, horizontalPadding, topInset, width } = useResponsiveLayout();
 
   const [mode,     setMode]     = useState<Mode>('directory');
   const [filter,   setFilter]   = useState<FilterId>('all');
@@ -177,10 +176,10 @@ export default function SpinScreen() {
 
   const spinItems = mode === 'directory' ? directoryItems : customItems;
 
-  const topPad   = Platform.OS === 'web' ? 67 : insets.top;
-  const botPad   = Platform.OS === 'web' ? 120 : insets.bottom + 100;
   const sliceDeg = spinItems.length > 0 ? 360 / spinItems.length : 360;
   const fontSize = Math.min(12, Math.max(8, 160 / Math.max(spinItems.length, 1)));
+  const wheelScale = Math.min(1, (width - 32) / (WHEEL_SIZE + WHEEL_PAD * 2));
+  const wheelFrameSize = (WHEEL_SIZE + WHEEL_PAD * 2) * wheelScale;
 
   useEffect(() => () => { spinAnim.stopAnimation(); }, [spinAnim]);
 
@@ -332,7 +331,7 @@ export default function SpinScreen() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
 
       {/* ── Header ── */}
-      <View style={[styles.header, { paddingTop: topPad + 14 }]}>
+      <View style={[styles.header, { paddingTop: topInset + 14, paddingHorizontal: horizontalPadding }]}>
         <View style={[styles.badge, { backgroundColor: colors.secondary }]}>
           <Feather name="shuffle" size={13} color={colors.primary} />
           <Text style={[styles.badgeText, { color: colors.primary }]}>Can't decide?</Text>
@@ -343,10 +342,11 @@ export default function SpinScreen() {
         </Text>
       </View>
 
-      <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: botPad }]}
+      <KeyboardAwareScrollViewCompat
+        contentContainerStyle={[styles.scroll, { paddingBottom: bottomTabPadding }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
       >
 
         {/* ── Mode toggle ── */}
@@ -618,12 +618,17 @@ export default function SpinScreen() {
         )}
 
         {/* ── Wheel + pointer ── */}
-        <View style={styles.wheelWrap}>
+        <View style={[styles.wheelWrap, { width: wheelFrameSize, height: wheelFrameSize }]}>
           <View style={styles.pointerWrap} pointerEvents="none">
             <View style={[styles.pointerTriangle, { borderTopColor: colors.accent }]} />
           </View>
 
-          <Animated.View style={[styles.wheelAnim, { transform: [{ rotate: rotateStr }] }]}>
+          <Animated.View
+            style={[
+              styles.wheelAnim,
+              { transform: [{ rotate: rotateStr }, { scale: wheelScale }] },
+            ]}
+          >
             <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
               {spinItems.length === 0 ? (
                 <Circle cx={CX} cy={CY} r={R} fill={colors.muted} />
@@ -822,7 +827,7 @@ export default function SpinScreen() {
             </View>
           </Animated.View>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollViewCompat>
     </View>
   );
 }
