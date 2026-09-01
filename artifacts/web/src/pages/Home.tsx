@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Search, MapPin, UtensilsCrossed, Truck } from "lucide-react";
+import { Search, UtensilsCrossed, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useListings } from "@workspace/api-client-react";
@@ -9,6 +9,7 @@ import { CategoryCard } from "../components/CategoryCard";
 import { ListingCard } from "../components/ListingCard";
 import { VideoShowcase } from "../components/VideoShowcase";
 import { HomeSpin } from "../components/HomeSpin";
+import { SearchModeChooser, type SearchMode } from "../components/SearchModeChooser";
 
 const CATEGORIES = [
   { id: 'restaurants', label: 'Restaurants', icon: <UtensilsCrossed className="w-6 h-6" /> },
@@ -18,16 +19,21 @@ const CATEGORIES = [
 export default function Home() {
   const [_, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [neighborhoodQuery, setNeighborhoodQuery] = useState("");
-  const [cityQuery, setCityQuery] = useState("");
+  const [searchMode, setSearchMode] = useState<SearchMode>("food");
   const { data: listings = [], isLoading } = useListings();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (searchQuery.trim()) params.append("q", searchQuery.trim());
-    if (neighborhoodQuery.trim()) params.append("neighborhood", neighborhoodQuery.trim());
-    if (cityQuery.trim()) params.append("city", cityQuery.trim());
+    if (searchMode === "near-me") {
+      params.set("mode", "near-me");
+    } else if (searchQuery.trim()) {
+      params.set("mode", searchMode);
+      params.set(
+        searchMode === "food" ? "q" : searchMode,
+        searchQuery.trim(),
+      );
+    }
 
     if (params.toString()) {
       setLocation(`/explore?${params.toString()}`);
@@ -62,34 +68,30 @@ export default function Home() {
             </p>
 
             <form onSubmit={handleSearch} className="w-full max-w-5xl bg-[#F7F4F0] rounded-2xl p-2.5 flex flex-col lg:flex-row items-center shadow-2xl shadow-black/20 gap-2 mb-6">
+              <div className="w-full lg:w-[190px] flex items-center px-4 border-b lg:border-b-0 lg:border-r border-[#1E232E]/10 pb-3 lg:pb-0 h-14">
+                <SearchModeChooser
+                  value={searchMode}
+                  onValueChange={setSearchMode}
+                  className="text-[#1E232E]"
+                />
+              </div>
               <div className="flex-1 w-full flex items-center px-4 gap-3 border-b lg:border-b-0 lg:border-r border-[#1E232E]/10 pb-3 lg:pb-0 h-14">
                 <Search className="w-5 h-5 text-[#1E232E]/40 shrink-0" />
                 <Input
                   type="text"
-                  placeholder='Try "tacos", "Mission", or "open late"'
+                  placeholder={
+                    searchMode === "food"
+                      ? 'Try "tacos" or "open late"'
+                      : searchMode === "city"
+                        ? "Try Oakland or San Francisco"
+                        : searchMode === "neighborhood"
+                          ? "Try Mission or Sunset"
+                          : "Choose Near me to browse nearby"
+                  }
+                  disabled={searchMode === "near-me"}
                   className="border-0 focus-visible:ring-0 px-0 shadow-none h-full text-base bg-transparent font-medium text-[#1E232E] placeholder:text-[#1E232E]/40"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="w-full lg:w-[210px] flex items-center px-4 gap-3 border-b lg:border-b-0 lg:border-r border-[#1E232E]/10 pb-3 lg:pb-0 h-14">
-                <MapPin className="w-5 h-5 text-[#1E232E]/40 shrink-0" />
-                <Input
-                  type="text"
-                  placeholder="Neighborhood"
-                  className="border-0 focus-visible:ring-0 px-0 shadow-none h-full text-base bg-transparent font-medium text-[#1E232E] placeholder:text-[#1E232E]/40"
-                  value={neighborhoodQuery}
-                  onChange={(e) => setNeighborhoodQuery(e.target.value)}
-                />
-              </div>
-              <div className="w-full lg:w-[190px] flex items-center px-4 gap-3 border-b lg:border-b-0 lg:border-r border-[#1E232E]/10 pb-3 lg:pb-0 h-14">
-                <MapPin className="w-5 h-5 text-[#1E232E]/40 shrink-0" />
-                <Input
-                  type="text"
-                  placeholder="City"
-                  className="border-0 focus-visible:ring-0 px-0 shadow-none h-full text-base bg-transparent font-medium text-[#1E232E] placeholder:text-[#1E232E]/40"
-                  value={cityQuery}
-                  onChange={(e) => setCityQuery(e.target.value)}
                 />
               </div>
               <Button type="submit" size="lg" className="w-full md:w-auto rounded-xl h-14 px-10 bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 font-bold text-lg">
@@ -103,13 +105,13 @@ export default function Home() {
                 <span>Searching around</span>
               </div>
               <div className="flex items-center gap-2">
-                <button type="button" className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground font-bold text-xs" onClick={() => setNeighborhoodQuery("")}>Near you</button>
-                <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => setNeighborhoodQuery("Mission")}>Mission</button>
-                <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => setNeighborhoodQuery("Sunset")}>Sunset</button>
-                <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => setCityQuery("San Francisco")}>San Francisco</button>
-                <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => setCityQuery("Oakland")}>Oakland</button>
-                <button type="button" className="px-3 py-1 rounded-full text-secondary hover:text-secondary/80 flex items-center gap-1 transition-colors text-xs ml-2" onClick={() => { setNeighborhoodQuery(""); setCityQuery(""); }}>
-                  Change &rarr;
+                <button type="button" className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground font-bold text-xs" onClick={() => { setSearchMode("near-me"); setSearchQuery(""); }}>Near you</button>
+                <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => { setSearchMode("neighborhood"); setSearchQuery("Mission"); }}>Mission</button>
+                <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => { setSearchMode("neighborhood"); setSearchQuery("Sunset"); }}>Sunset</button>
+                <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => { setSearchMode("city"); setSearchQuery("San Francisco"); }}>San Francisco</button>
+                <button type="button" className="px-3 py-1 rounded-full hover:bg-white/10 transition-colors text-xs" onClick={() => { setSearchMode("city"); setSearchQuery("Oakland"); }}>Oakland</button>
+                <button type="button" className="px-3 py-1 rounded-full text-secondary hover:text-secondary/80 flex items-center gap-1 transition-colors text-xs ml-2" onClick={() => { setSearchMode("food"); setSearchQuery(""); }}>
+                  Reset &rarr;
                 </button>
               </div>
             </div>

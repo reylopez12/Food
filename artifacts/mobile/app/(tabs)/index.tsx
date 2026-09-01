@@ -85,7 +85,7 @@ export default function HomeScreen() {
             >
               <Feather name="search" size={18} color={colors.foreground} />
               <Text style={[styles.searchPlaceholder, { color: colors.foreground, opacity: 0.6 }]}>
-                Search food, a neighborhood, or city
+                Search food, city, neighborhood, or nearby
               </Text>
               <View style={[styles.searchAction, { backgroundColor: colors.primary }]}>
                 <Text style={[styles.searchActionText, { color: colors.primaryForeground }]}>Find food</Text>

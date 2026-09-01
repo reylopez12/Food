@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Search, Filter, X, List, Map as MapIcon, MapPin, Navigation, Loader2 } from "lucide-react";
+import { Search, Filter, X, List, Map as MapIcon, Navigation, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import { useListings } from "@workspace/api-client-react";
 import { ListingCard } from "../components/ListingCard";
 import { ExploreAllMap } from "../components/ExploreAllMap";
 import { useNearMe, haversineDistanceMi, RADIUS_OPTIONS } from "../hooks/useNearMe";
+import { SearchModeChooser, type SearchMode } from "../components/SearchModeChooser";
 
 const CATEGORIES = [
   { id: 'restaurants', label: 'Restaurants' },
@@ -22,6 +23,14 @@ const CATEGORIES = [
 const PRICE_RANGES = ['$', '$$', '$$$', '$$$$'];
 
 const VIEW_MODE_KEY = 'bay-bites-explore-view';
+
+function getSearchMode(params: URLSearchParams): SearchMode {
+  const mode = params.get("mode");
+  if (mode === "city" || mode === "neighborhood" || mode === "near-me") return mode;
+  if (params.has("city")) return "city";
+  if (params.has("neighborhood")) return "neighborhood";
+  return "food";
+}
 
 /** Venues seeded without coordinates default to 0,0 — treat as no-data. */
 function hasValidCoords(lat: number, lng: number): boolean {
@@ -35,7 +44,17 @@ export default function Explore() {
 
   const { status, userLat, userLng, radius, requestLocation, clearLocation, setRadius } = useNearMe();
 
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [searchMode, setSearchMode] = useState<SearchMode>(() => getSearchMode(searchParams));
+  const [searchQuery, setSearchQuery] = useState(() => {
+    const mode = getSearchMode(searchParams);
+    return mode === "city"
+      ? searchParams.get("city") || ""
+      : mode === "neighborhood"
+        ? searchParams.get("neighborhood") || ""
+        : mode === "food"
+          ? searchParams.get("q") || ""
+          : "";
+  });
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     searchParams.get("category") ? [searchParams.get("category")!] : []
   );
@@ -64,14 +83,20 @@ export default function Explore() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const mode = getSearchMode(params);
     const q = params.get("q");
     const cat = params.get("category");
     const neighborhood = params.get("neighborhood");
     const city = params.get("city");
-    setSearchQuery(q || "");
+    setSearchMode(mode);
+    setSearchQuery(
+      mode === "city" ? city || "" :
+      mode === "neighborhood" ? neighborhood || "" :
+      mode === "food" ? q || "" : ""
+    );
     setSelectedCategories(cat ? [cat] : []);
-    setSelectedNeighborhood(neighborhood || null);
-    setSelectedCity(city || "");
+    setSelectedNeighborhood(mode === "neighborhood" ? neighborhood || null : null);
+    setSelectedCity(mode === "city" ? city || "" : "");
   }, [locationStr]);
 
   const distanceActive = status === 'granted' && userLat !== null && userLng !== null && radius !== null;
@@ -80,12 +105,12 @@ export default function Explore() {
     return allListings.filter(listing => {
       const q = searchQuery.toLowerCase();
       const matchesSearch =
+        searchMode !== "food" ||
         searchQuery === "" ||
         listing.name.toLowerCase().includes(q) ||
         listing.description.toLowerCase().includes(q) ||
         listing.tags.some(t => t.toLowerCase().includes(q)) ||
-        listing.neighborhood?.toLowerCase().includes(q) ||
-        listing.city.toLowerCase().includes(q);
+        listing.category.toLowerCase().includes(q);
 
       const matchesCategory =
         selectedCategories.length === 0 ||
@@ -103,7 +128,10 @@ export default function Explore() {
         listing.neighborhood?.toLowerCase().includes(normalizedNeighborhood) ||
         listing.city.toLowerCase().includes(normalizedNeighborhood);
       const normalizedCity = selectedCity.trim().toLowerCase();
-      const matchesCity = !normalizedCity || listing.city.toLowerCase().includes(normalizedCity);
+      const matchesCity =
+        searchMode !== "city" ||
+        !normalizedCity ||
+        listing.city.toLowerCase().includes(normalizedCity);
 
       let matchesDistance = true;
       if (distanceActive) {
@@ -118,7 +146,7 @@ export default function Explore() {
       return matchesSearch && matchesCategory && matchesPrice && matchesRating &&
         matchesVerified && matchesNeighborhood && matchesCity && matchesDistance;
     });
-  }, [allListings, searchQuery, selectedCategories, selectedPrices, minRating,
+  }, [allListings, searchMode, searchQuery, selectedCategories, selectedPrices, minRating,
     verifiedOnly, selectedNeighborhood, selectedCity, distanceActive, userLat, userLng, radius]);
 
   /** Distance from user to each visible listing (only when location is active). */
@@ -145,17 +173,48 @@ export default function Explore() {
     );
   };
 
-  const handleCityChange = (city: string) => {
-    setSelectedCity(city);
+  const updateSearchUrl = (mode: SearchMode, query: string) => {
     const params = new URLSearchParams(window.location.search);
-    if (city.trim()) params.set("city", city.trim());
-    else params.delete("city");
-    const query = params.toString();
-    window.history.replaceState({}, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+    params.delete("q");
+    params.delete("city");
+    params.delete("neighborhood");
+    params.delete("mode");
+    if (mode !== "food" || query.trim()) params.set("mode", mode);
+    if (query.trim()) {
+      params.set(mode === "food" ? "q" : mode, query.trim());
+    }
+    const serialized = params.toString();
+    window.history.replaceState({}, "", `${window.location.pathname}${serialized ? `?${serialized}` : ""}`);
+  };
+
+  const handleSearchModeChange = (mode: SearchMode) => {
+    const nextQuery = mode === "near-me" ? "" : searchQuery;
+    setSearchMode(mode);
+    setSearchQuery(nextQuery);
+    setSelectedCity(mode === "city" ? nextQuery : "");
+    setSelectedNeighborhood(mode === "neighborhood" ? nextQuery : null);
+    updateSearchUrl(mode, nextQuery);
+  };
+
+  const handleSearchQueryChange = (value: string) => {
+    setSearchQuery(value);
+    setSelectedCity(searchMode === "city" ? value : "");
+    setSelectedNeighborhood(searchMode === "neighborhood" ? value : null);
+    updateSearchUrl(searchMode, value);
+  };
+
+  const handleMapNeighborhoodChange = (neighborhood: string | null) => {
+    const mode: SearchMode = neighborhood ? "neighborhood" : "food";
+    setSearchMode(mode);
+    setSearchQuery(neighborhood || "");
+    setSelectedNeighborhood(neighborhood);
+    setSelectedCity("");
+    updateSearchUrl(mode, neighborhood || "");
   };
 
   const clearFilters = () => {
     setSearchQuery("");
+    setSearchMode("food");
     setSelectedCategories([]);
     setSelectedPrices([]);
     setMinRating([0]);
@@ -340,40 +399,94 @@ export default function Explore() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search food, name, neighborhood, or city..."
+              placeholder={
+                searchMode === "food"
+                  ? "Search food, name, or tags..."
+                  : searchMode === "city"
+                    ? "Search by city..."
+                    : searchMode === "neighborhood"
+                      ? "Search by neighborhood..."
+                      : "Use the button below to find nearby places"
+              }
+              disabled={searchMode === "near-me"}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchQueryChange(e.target.value)}
               className="pl-9 bg-card"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery("")}
+                onClick={() => handleSearchQueryChange("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
           </div>
-          <div className="relative w-full sm:w-48">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Filter by city"
-              value={selectedCity}
-              onChange={(e) => handleCityChange(e.target.value)}
-              className="pl-9 pr-8 bg-card"
-              aria-label="Filter listings by city"
-            />
-            {selectedCity && (
-              <button
-                onClick={() => handleCityChange("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                aria-label="Clear city filter"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+          <div className="w-full sm:w-40">
+            <SearchModeChooser value={searchMode} onValueChange={handleSearchModeChange} />
           </div>
+
+          {searchMode === "near-me" && (
+            <div className="flex w-full flex-wrap items-center gap-2 rounded-lg border bg-card px-3 py-2 sm:w-auto">
+              {status === "granted" ? (
+                <>
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400">
+                    <Navigation className="h-3.5 w-3.5" /> Location active
+                  </span>
+                  {RADIUS_OPTIONS.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setRadius(radius === option ? null : option)}
+                      className={`rounded-full border px-2 py-1 text-xs font-medium ${
+                        radius === option
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {option} mi
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={clearLocation}
+                    className="text-xs text-muted-foreground underline hover:text-foreground"
+                  >
+                    Clear
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={requestLocation}
+                    disabled={status === "requesting" || status === "unavailable"}
+                    className="gap-2"
+                  >
+                    {status === "requesting" ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Navigation className="h-3.5 w-3.5" />
+                    )}
+                    {status === "requesting"
+                      ? "Getting location…"
+                      : status === "denied"
+                        ? "Try location again"
+                        : status === "unavailable"
+                          ? "Geolocation unavailable"
+                          : "Use my location"}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    {status === "denied"
+                      ? "Enable location in browser settings to continue."
+                      : "Your browser will ask before sharing your location."}
+                  </span>
+                </>
+              )}
+            </div>
+          )}
 
           {/* List / Map toggle */}
           <div className="flex items-center border rounded-lg overflow-hidden shrink-0 bg-card">
@@ -432,7 +545,7 @@ export default function Explore() {
           selectedCategories={selectedCategories}
           onCategoryToggle={toggleCategory}
           selectedNeighborhood={selectedNeighborhood}
-          onNeighborhoodChange={setSelectedNeighborhood}
+          onNeighborhoodChange={handleMapNeighborhoodChange}
         />
       ) : (
         <div className="flex flex-col md:flex-row gap-8">

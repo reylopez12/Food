@@ -24,6 +24,7 @@ const RADIUS_KEY   = '@directory_preferred_radius';
 export const RADIUS_OPTIONS = [1, 5, 10, 25] as const;
 export type RadiusMiles = typeof RADIUS_OPTIONS[number];
 export type LocationStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable';
+export type SearchMode = 'food' | 'city' | 'neighborhood' | 'near-me';
 
 /** Haversine great-circle distance in miles between two lat/lng points. */
 export function haversineDistanceMi(
@@ -58,11 +59,16 @@ interface DirectoryContextValue {
   isLoading: boolean;
   savedIds: Set<string>;
   selectedCategory: string;
+  searchMode: SearchMode;
   searchQuery: string;
   cityQuery: string;
+  neighborhoodQuery: string;
   setSelectedCategory: (cat: string) => void;
+  setSearchMode: (mode: SearchMode) => void;
   setSearchQuery: (q: string) => void;
   setCityQuery: (city: string) => void;
+  setNeighborhoodQuery: (neighborhood: string) => void;
+  clearSearch: () => void;
   toggleSave: (id: string) => void;
   isSaved: (id: string) => boolean;
   filteredListings: Venue[];
@@ -88,8 +94,10 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
 
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchMode, setSearchMode] = useState<SearchMode>('food');
   const [searchQuery, setSearchQuery] = useState('');
   const [cityQuery, setCityQuery] = useState('');
+  const [neighborhoodQuery, setNeighborhoodQuery] = useState('');
 
   // Location state
   const [locationStatus, setLocationStatus] = useState<LocationStatus>('idle');
@@ -169,6 +177,13 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
     else AsyncStorage.setItem(RADIUS_KEY, String(r));
   }, []);
 
+  const clearSearch = useCallback(() => {
+    setSearchMode('food');
+    setSearchQuery('');
+    setCityQuery('');
+    setNeighborhoodQuery('');
+  }, []);
+
   const distanceActive =
     locationStatus === 'granted' &&
     userLat !== null &&
@@ -182,22 +197,29 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
       result = result.filter((l) => l.category === selectedCategory);
     }
 
-    if (searchQuery.trim()) {
+    if (searchMode === 'food' && searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
         (l) =>
           l.name.toLowerCase().includes(q) ||
           l.description.toLowerCase().includes(q) ||
           l.tags.some((t) => t.toLowerCase().includes(q)) ||
-          l.neighborhood.toLowerCase().includes(q) ||
-          l.city.toLowerCase().includes(q) ||
           l.category.toLowerCase().includes(q),
       );
     }
 
-    if (cityQuery.trim()) {
+    if (searchMode === 'city' && cityQuery.trim()) {
       const city = cityQuery.toLowerCase().trim();
       result = result.filter((l) => l.city.toLowerCase().includes(city));
+    }
+
+    if (searchMode === 'neighborhood' && neighborhoodQuery.trim()) {
+      const neighborhood = neighborhoodQuery.toLowerCase().trim();
+      result = result.filter(
+        (l) =>
+          l.neighborhood.toLowerCase().includes(neighborhood) ||
+          l.city.toLowerCase().includes(neighborhood),
+      );
     }
 
     if (distanceActive) {
@@ -208,7 +230,18 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
     }
 
     return result;
-  }, [allListings, selectedCategory, searchQuery, cityQuery, distanceActive, userLat, userLng, preferredRadius]);
+  }, [
+    allListings,
+    selectedCategory,
+    searchMode,
+    searchQuery,
+    cityQuery,
+    neighborhoodQuery,
+    distanceActive,
+    userLat,
+    userLng,
+    preferredRadius,
+  ]);
 
   const savedListings = useMemo(
     () => allListings.filter((l) => savedIds.has(l.id)),
@@ -225,11 +258,16 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     savedIds,
     selectedCategory,
+    searchMode,
     searchQuery,
     cityQuery,
+    neighborhoodQuery,
     setSelectedCategory,
+    setSearchMode,
     setSearchQuery,
     setCityQuery,
+    setNeighborhoodQuery,
+    clearSearch,
     toggleSave,
     isSaved,
     filteredListings,

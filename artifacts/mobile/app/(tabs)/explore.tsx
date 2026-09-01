@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import {
@@ -17,6 +17,7 @@ import {
   haversineDistanceMi,
   RADIUS_OPTIONS,
   type RadiusMiles,
+  type SearchMode,
 } from '@/context/DirectoryContext';
 import { ListingCard } from '@/components/ListingCard';
 import { CategoryPillRow } from '@/components/CategoryPill';
@@ -24,13 +25,18 @@ import { SearchBar } from '@/components/SearchBar';
 
 export default function ExploreScreen() {
   const colors = useColors();
+  const router = useRouter();
   const { bottomTabPadding, horizontalPadding, isCompact, topInset } = useResponsiveLayout();
   const {
     filteredListings,
+    searchMode,
     searchQuery,
     setSearchQuery,
-    cityQuery,
+    setSearchMode,
     setCityQuery,
+    setNeighborhoodQuery,
+    clearSearch,
+    setSelectedCategory,
     locationStatus,
     userLat,
     userLng,
@@ -39,13 +45,59 @@ export default function ExploreScreen() {
     clearLocation,
     setPreferredRadius,
   } = useDirectory();
-  const { city } = useLocalSearchParams<{ city?: string }>();
+  const { city, mode, q, neighborhood } = useLocalSearchParams<{
+    city?: string;
+    mode?: string;
+    q?: string;
+    neighborhood?: string;
+  }>();
   useEffect(() => {
-    if (typeof city === 'string') setCityQuery(city);
-  }, [city, setCityQuery]);
+    const routeMode: SearchMode =
+      mode === 'city' || mode === 'neighborhood' || mode === 'near-me'
+        ? mode
+        : typeof city === 'string'
+          ? 'city'
+          : 'food';
+    const routeQuery =
+      routeMode === 'city'
+        ? (typeof city === 'string' ? city : '')
+        : routeMode === 'neighborhood'
+          ? (typeof neighborhood === 'string' ? neighborhood : '')
+          : routeMode === 'food'
+            ? (typeof q === 'string' ? q : '')
+            : '';
+    setSearchMode(routeMode);
+    setSearchQuery(routeQuery);
+    setCityQuery(routeMode === 'city' ? routeQuery : '');
+    setNeighborhoodQuery(routeMode === 'neighborhood' ? routeQuery : '');
+  }, [city, mode, q, neighborhood, setSearchMode, setSearchQuery, setCityQuery, setNeighborhoodQuery]);
+
+  const handleModeChange = (nextMode: SearchMode) => {
+    const nextQuery = nextMode === 'near-me' ? '' : searchQuery;
+    setSearchMode(nextMode);
+    setSearchQuery(nextQuery);
+    setCityQuery(nextMode === 'city' ? nextQuery : '');
+    setNeighborhoodQuery(nextMode === 'neighborhood' ? nextQuery : '');
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCityQuery(searchMode === 'city' ? value : '');
+    setNeighborhoodQuery(searchMode === 'neighborhood' ? value : '');
+  };
+
+  const handleReset = () => {
+    clearSearch();
+    setSelectedCategory('all');
+    clearLocation();
+    setPreferredRadius(null);
+    router.replace('/(tabs)/explore');
+  };
 
   const locationGranted = locationStatus === 'granted' && userLat !== null && userLng !== null;
   const distanceActive = locationGranted && preferredRadius !== null;
+  const hasSearchState =
+    searchMode !== 'food' || searchQuery.length > 0 || locationGranted || preferredRadius !== null;
 
   function getDistanceMi(lat: number, lng: number): number | undefined {
     if (!locationGranted || (lat === 0 && lng === 0)) return undefined;
@@ -80,16 +132,19 @@ export default function ExploreScreen() {
         <View style={[styles.searchWrap, { paddingHorizontal: horizontalPadding }]}>
           <SearchBar
             value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search food or neighborhood"
-            autoFocus={false}
-          />
-        </View>
-        <View style={[styles.citySearchWrap, { paddingHorizontal: horizontalPadding }]}>
-          <SearchBar
-            value={cityQuery}
-            onChangeText={setCityQuery}
-            placeholder="Filter by city, e.g. Oakland"
+            onChangeText={handleSearchChange}
+            mode={searchMode}
+            onModeChange={handleModeChange}
+            editable={searchMode !== 'near-me'}
+            placeholder={
+              searchMode === 'food'
+                ? 'Search food, name, or tags'
+                : searchMode === 'city'
+                  ? 'Search by city, e.g. Oakland'
+                  : searchMode === 'neighborhood'
+                    ? 'Search by neighborhood, e.g. Mission'
+                    : 'Use the button below to find nearby places'
+            }
             autoFocus={false}
           />
         </View>
@@ -108,6 +163,19 @@ export default function ExploreScreen() {
           clearLocation={clearLocation}
           setPreferredRadius={setPreferredRadius}
         />
+        {hasSearchState && (
+          <View style={[styles.resetWrap, { paddingHorizontal: horizontalPadding }]}>
+            <Pressable
+              onPress={handleReset}
+              style={({ pressed }) => [styles.resetButton, { opacity: pressed ? 0.6 : 1 }]}
+              accessibilityRole="button"
+              accessibilityLabel="Reset search and filters"
+            >
+              <Feather name="x-circle" size={14} color={colors.mutedForeground} />
+              <Text style={[styles.resetText, { color: colors.mutedForeground }]}>Reset search</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
 
       {/* Results */}
@@ -277,9 +345,6 @@ const styles = StyleSheet.create({
   searchWrap: {
     marginBottom: 6,
   },
-  citySearchWrap: {
-    marginBottom: 6,
-  },
   pillsWrap: {
     paddingBottom: 2,
   },
@@ -289,6 +354,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 8,
     paddingTop: 2,
+  },
+  resetWrap: {
+    alignItems: 'flex-end',
+    paddingBottom: 8,
+  },
+  resetButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 3,
+  },
+  resetText: {
+    fontSize: 12,
+    fontFamily: 'Inter_500Medium',
   },
   nearMeButton: {
     flexDirection: 'row',
