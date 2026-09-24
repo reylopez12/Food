@@ -2,8 +2,8 @@ import { Platform, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WEB_STATUS_INSET = 67;
-const WEB_TAB_BAR_HEIGHT = 112;
-const NATIVE_TAB_BAR_HEIGHT = 108;
+const WEB_TAB_BAR_HEIGHT = 124;
+const NATIVE_TAB_BAR_HEIGHT = 120;
 
 export function useResponsiveLayout() {
   const insets = useSafeAreaInsets();

@@ -41,20 +41,25 @@ function ClassicTabLayout() {
           flex: 1,
           minWidth: 0,
           margin: 0,
-          paddingVertical: 12,
+          paddingVertical: 14,
           paddingHorizontal: 0,
         },
+        tabBarIconStyle: {
+          width: 42,
+          height: 42,
+          marginBottom: 4,
+        },
         tabBarLabelStyle: {
-          fontSize: isCompact ? 13 : 15,
+          fontSize: isCompact ? 15 : 17,
           fontFamily: 'Inter_700Bold',
-          paddingBottom: 4,
-          letterSpacing: isCompact ? -0.4 : 0,
+          paddingBottom: 6,
+          letterSpacing: isCompact ? -0.3 : 0,
         },
         tabBarStyle: {
           position: 'absolute',
           left: 0,
           right: 0,
-          minHeight: isWeb ? 112 : 108,
+          minHeight: isWeb ? 124 : 120,
           backgroundColor: isIOS ? 'transparent' : colors.card,
           borderTopWidth: 1,
           borderTopColor: colors.border,
@@ -63,7 +68,7 @@ function ClassicTabLayout() {
           paddingLeft: 0,
           paddingRight: 0,
           paddingTop: 10,
-          ...(isWeb ? { height: 112 } : { height: 108 }),
+          ...(isWeb ? { height: 124 } : { height: 120 }),
         },
         tabBarBackground: () =>
           isIOS ? (
@@ -88,9 +93,9 @@ function ClassicTabLayout() {
           title: 'Home',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="house" tintColor={color} size={36} />
+              <SymbolView name="house" tintColor={color} size={42} />
             ) : (
-              <Feather name="home" size={34} color={color} />
+              <Feather name="home" size={40} color={color} />
             ),
         }}
       />
@@ -100,9 +105,9 @@ function ClassicTabLayout() {
           title: 'Explore',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="magnifyingglass" tintColor={color} size={36} />
+              <SymbolView name="magnifyingglass" tintColor={color} size={42} />
             ) : (
-              <Feather name="search" size={34} color={color} />
+              <Feather name="search" size={40} color={color} />
             ),
         }}
       />
@@ -112,9 +117,9 @@ function ClassicTabLayout() {
           title: 'Spin',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="shuffle" tintColor={color} size={36} />
+              <SymbolView name="shuffle" tintColor={color} size={42} />
             ) : (
-              <Feather name="shuffle" size={34} color={color} />
+              <Feather name="shuffle" size={40} color={color} />
             ),
         }}
       />
@@ -124,9 +129,9 @@ function ClassicTabLayout() {
           title: 'Saved',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="bookmark" tintColor={color} size={36} />
+              <SymbolView name="bookmark" tintColor={color} size={42} />
             ) : (
-              <Feather name="bookmark" size={34} color={color} />
+              <Feather name="bookmark" size={40} color={color} />
             ),
         }}
       />
@@ -136,9 +141,9 @@ function ClassicTabLayout() {
           title: 'Profile',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="person" tintColor={color} size={36} />
+              <SymbolView name="person" tintColor={color} size={42} />
             ) : (
-              <Feather name="user" size={34} color={color} />
+              <Feather name="user" size={40} color={color} />
             ),
         }}
       />
