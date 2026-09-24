@@ -795,12 +795,14 @@ export default function SpinScreen() {
                         </Text>
                       </View>
                     )}
-                    <View style={styles.ratingChip}>
-                      <Feather name="star" size={11} color={colors.accent} />
-                      <Text style={[styles.chipText, { color: colors.foreground, marginLeft: 3 }]}>
-                        {winnerListing.rating}
-                      </Text>
-                    </View>
+                    {winnerListing.reviewCount > 0 && (
+                      <View style={styles.ratingChip}>
+                        <Feather name="star" size={11} color={colors.accent} />
+                        <Text style={[styles.chipText, { color: colors.foreground, marginLeft: 3 }]}>
+                          {winnerListing.rating}
+                        </Text>
+                      </View>
+                    )}
                     {winnerListing.hasVideo && (
                       <View style={[styles.chip, { backgroundColor: colors.secondary }]}>
                         <Text style={[styles.chipText, { color: colors.primary }]}>▶ Video</Text>

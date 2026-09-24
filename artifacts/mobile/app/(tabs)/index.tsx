@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
+  AccessibilityInfo,
   FlatList,
   Platform,
   ScrollView,
@@ -13,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useDirectory } from '@/context/DirectoryContext';
+import type { Listing } from '@/context/DirectoryContext';
 import { FeaturedCard } from '@/components/FeaturedCard';
 import { ListingCard } from '@/components/ListingCard';
 import { CategoryPillRow } from '@/components/CategoryPill';
@@ -25,7 +27,46 @@ export default function HomeScreen() {
   const colors = useColors();
   const router = useRouter();
   const { featuredListings, filteredListings } = useDirectory();
-  const { bottomTabPadding, horizontalPadding, isCompact, topInset } = useResponsiveLayout();
+  const { bottomTabPadding, horizontalPadding, isCompact, topInset, width } = useResponsiveLayout();
+  const carousel = useRef<FlatList<Listing>>(null);
+  const carouselIndex = useRef(0);
+  const slideWidth = Math.min(260, Math.max(220, width - 40)) + 16;
+  const slides = useMemo(
+    () => featuredListings.length > 1 ? [...featuredListings, featuredListings[0]] : featuredListings,
+    [featuredListings],
+  );
+
+  useEffect(() => {
+    carouselIndex.current = 0;
+    carousel.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [featuredListings, slideWidth]);
+
+  useEffect(() => {
+    if (featuredListings.length < 2) return;
+    let cancelled = false;
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const timeouts = new Set<ReturnType<typeof setTimeout>>();
+    AccessibilityInfo.isReduceMotionEnabled().then((reduceMotion) => {
+      if (cancelled || reduceMotion) return;
+      interval = setInterval(() => {
+        carouselIndex.current += 1;
+        carousel.current?.scrollToOffset({ offset: carouselIndex.current * slideWidth, animated: true });
+        if (carouselIndex.current === featuredListings.length) {
+          const timeout = setTimeout(() => {
+            carousel.current?.scrollToOffset({ offset: 0, animated: false });
+            carouselIndex.current = 0;
+            timeouts.delete(timeout);
+          }, 800);
+          timeouts.add(timeout);
+        }
+      }, 4200);
+    });
+    return () => {
+      cancelled = true;
+      if (interval) clearInterval(interval);
+      timeouts.forEach(clearTimeout);
+    };
+  }, [featuredListings.length, slideWidth]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -130,28 +171,28 @@ export default function HomeScreen() {
           <CategoryPillRow />
         </View>
 
-        {/* Featured listings */}
-        <View style={[styles.sectionHeader, { paddingHorizontal: horizontalPadding }]}>
-          <View style={styles.sectionHeaderTop}>
-            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Featured Places</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/explore')} activeOpacity={0.6} style={styles.seeAllBtn}>
-              <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
-              <Feather name="arrow-right" size={14} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
-          <Text style={[styles.sectionSubtitle, { color: colors.mutedForeground }]}>
-            Iconic spots that define Bay Area dining.
-          </Text>
-        </View>
-
+        {/* Local places carousel */}
         <FlatList
-          data={featuredListings}
-          keyExtractor={(item) => item.id}
+          ref={carousel}
+          data={slides}
+          keyExtractor={(item, index) => `${item.id}-${index}`}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.featuredList}
+          style={{ width: slideWidth, alignSelf: 'center', marginBottom: 24 }}
+          snapToInterval={slideWidth}
+          decelerationRate="fast"
+          accessibilityLabel="Local places carousel"
+          onMomentumScrollEnd={(event) => {
+            const next = Math.round(event.nativeEvent.contentOffset.x / slideWidth);
+            if (next === featuredListings.length) {
+              carousel.current?.scrollToOffset({ offset: 0, animated: false });
+              carouselIndex.current = 0;
+            } else {
+              carouselIndex.current = next;
+            }
+          }}
           renderItem={({ item }) => <FeaturedCard listing={item} />}
-          scrollEnabled={featuredListings.length > 1}
+          scrollEnabled={slides.length > 1}
         />
 
         {/* All listings */}
@@ -362,10 +403,6 @@ const styles = StyleSheet.create({
   },
   categoriesSection: {
     marginBottom: 36,
-  },
-  featuredList: {
-    paddingHorizontal: 20,
-    paddingBottom: 24,
   },
   listSection: {
     paddingHorizontal: 20,

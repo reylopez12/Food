@@ -30,9 +30,13 @@ export function FeaturedCard({ listing }: FeaturedCardProps) {
           </h3>
           
           <div className="flex items-center gap-2">
-            <StarRating rating={listing.rating} className="scale-90 origin-left" />
-            <span className="text-sm font-bold text-card-foreground">{listing.rating}</span>
-            <span className="text-sm font-medium text-muted-foreground">({listing.reviewCount})</span>
+            {listing.reviewCount > 0 ? (
+              <>
+                <StarRating rating={listing.rating} className="scale-90 origin-left" />
+                <span className="text-sm font-bold text-card-foreground">{listing.rating}</span>
+                <span className="text-sm font-medium text-muted-foreground">({listing.reviewCount})</span>
+              </>
+            ) : <span className="text-sm text-muted-foreground">No ratings yet</span>}
           </div>
 
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-2 border-t border-border/60 pt-4 font-medium">

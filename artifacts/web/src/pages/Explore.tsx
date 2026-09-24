@@ -203,15 +203,6 @@ export default function Explore() {
     updateSearchUrl(searchMode, value);
   };
 
-  const handleMapNeighborhoodChange = (neighborhood: string | null) => {
-    const mode: SearchMode = neighborhood ? "neighborhood" : "food";
-    setSearchMode(mode);
-    setSearchQuery(neighborhood || "");
-    setSelectedNeighborhood(neighborhood);
-    setSelectedCity("");
-    updateSearchUrl(mode, neighborhood || "");
-  };
-
   const clearFilters = () => {
     setSearchQuery("");
     setSearchMode("food");
@@ -541,11 +532,8 @@ export default function Explore() {
       {viewMode === 'map' ? (
         <ExploreAllMap
           listings={filteredListings}
-          allListings={allListings}
           selectedCategories={selectedCategories}
           onCategoryToggle={toggleCategory}
-          selectedNeighborhood={selectedNeighborhood}
-          onNeighborhoodChange={handleMapNeighborhoodChange}
         />
       ) : (
         <div className="flex flex-col md:flex-row gap-8">

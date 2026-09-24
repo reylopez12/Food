@@ -10,7 +10,7 @@
   "scripts": {
     "push": "drizzle-kit push --config ./drizzle.config.ts",
     "push-force": "drizzle-kit push --force --config ./drizzle.config.ts",
-    "seed": "tsx src/seed.ts"
+    "seed": "../../artifacts/web/node_modules/.bin/tsx src/import-directory-csv.ts --seed"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

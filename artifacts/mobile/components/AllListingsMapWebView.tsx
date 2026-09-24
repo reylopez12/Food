@@ -1,8 +1,9 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import WebView from 'react-native-webview';
 import { useRouter } from 'expo-router';
-import { SAMPLE_LISTINGS } from '@/constants/data';
+import { hasValidCoordinates, useDirectory } from '@/context/DirectoryContext';
+import type { Listing } from '@/context/DirectoryContext';
 import { useColors } from '@/hooks/useColors';
 
 interface MapColors {
@@ -16,10 +17,10 @@ interface MapColors {
   mapBg: string;
 }
 
-function buildAllListingsHtml(listings: typeof SAMPLE_LISTINGS, c: MapColors): string {
+function buildAllListingsHtml(listings: Listing[], c: MapColors): string {
   const markersJs = listings
     .map((l) => {
-      const safe = JSON.stringify({ id: l.id, name: l.name, rating: l.rating, neighborhood: l.neighborhood, priceRange: l.priceRange });
+      const safe = JSON.stringify({ id: l.id, name: l.name, rating: l.rating, reviewCount: l.reviewCount, city: l.city }).replace(/</g, '\\u003c');
       return `addMarker(${l.lat}, ${l.lng}, ${safe});`;
     })
     .join('\n    ');
@@ -64,14 +65,16 @@ function buildAllListingsHtml(listings: typeof SAMPLE_LISTINGS, c: MapColors): s
     });
 
     function addMarker(lat, lng, info) {
+      function escapeHtml(text) {
+        return String(text).replace(/[&<>"']/g, function(char) {
+          return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[char];
+        });
+      }
       var popupHtml =
         '<div class="popup-card">' +
-          '<div class="popup-name">' + info.name + '</div>' +
-          '<div class="popup-meta">' + info.neighborhood + ' &middot; ' + info.priceRange + '</div>' +
-          '<div class="popup-rating">' +
-            '<span class="popup-star">&#9733;</span>' +
-            '<span class="popup-score">' + info.rating + '</span>' +
-          '</div>' +
+          '<div class="popup-name">' + escapeHtml(info.name) + '</div>' +
+          '<div class="popup-meta">' + escapeHtml(info.city) + '</div>' +
+          (info.reviewCount > 0 ? '<div class="popup-rating"><span class="popup-star">&#9733;</span><span class="popup-score">' + info.rating + '</span></div>' : '') +
           '<button class="popup-btn" onclick="openListing(' + JSON.stringify(info.id) + ')">View details &rarr;</button>' +
         '</div>';
       L.marker([lat, lng], { icon: markerIcon })
@@ -92,6 +95,8 @@ function buildAllListingsHtml(listings: typeof SAMPLE_LISTINGS, c: MapColors): s
 export function AllListingsMapWebView() {
   const router = useRouter();
   const colors = useColors();
+  const { listings, isLoading } = useDirectory();
+  const mappedListings = listings.filter((l) => hasValidCoordinates(l.lat, l.lng));
 
   const mapColors: MapColors = {
     markerColor:      colors.accent,
@@ -104,7 +109,7 @@ export function AllListingsMapWebView() {
     mapBg:            colors.background,
   };
 
-  const html = buildAllListingsHtml(SAMPLE_LISTINGS, mapColors);
+  const html = mappedListings.length ? buildAllListingsHtml(mappedListings, mapColors) : '';
 
   const handleMessage = (event: { nativeEvent: { data: string } }) => {
     try {
@@ -117,14 +122,21 @@ export function AllListingsMapWebView() {
 
   return (
     <View style={styles.container}>
-      <WebView
+      {mappedListings.length ? <WebView
         source={{ html }}
         style={styles.webview}
         scrollEnabled={false}
         originWhitelist={['*']}
         javaScriptEnabled
         onMessage={handleMessage}
-      />
+      /> : (
+        <View style={styles.empty}>
+          <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
+            {isLoading ? 'Loading places…' : 'Map locations not yet available'}
+          </Text>
+          {!isLoading && <Text style={[styles.emptyBody, { color: colors.mutedForeground }]}>Browse Explore for addresses and details.</Text>}
+        </View>
+      )}
     </View>
   );
 }
@@ -136,4 +148,12 @@ const styles = StyleSheet.create({
   webview: {
     flex: 1,
   },
+  empty: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  emptyTitle: { fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  emptyBody: { fontSize: 14, textAlign: 'center', marginTop: 8 },
 });

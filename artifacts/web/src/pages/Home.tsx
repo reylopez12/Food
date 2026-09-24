@@ -4,7 +4,7 @@ import { Search, UtensilsCrossed, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useListings } from "@workspace/api-client-react";
-import { FeaturedCard } from "../components/FeaturedCard";
+import { FeaturedSlides } from "../components/FeaturedSlides";
 import { CategoryCard } from "../components/CategoryCard";
 import { ListingCard } from "../components/ListingCard";
 import { VideoShowcase } from "../components/VideoShowcase";
@@ -42,7 +42,8 @@ export default function Home() {
     }
   };
 
-  const featuredListings = listings.filter(l => l.featured);
+  const featured = listings.filter(l => l.featured);
+  const featuredListings = featured.length ? featured : listings.slice(0, 6);
   const recentListings = [...listings].sort((a, b) => Number(b.id) - Number(a.id)).slice(0, 3);
 
   return (
@@ -171,24 +172,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Listings */}
-      <section className="py-20 md:py-28 bg-[#1E232E] text-[#F7F4F0] border-y border-white/10">
+      {/* Local places carousel */}
+      <section className="py-10 md:py-14 bg-[#1E232E] text-[#F7F4F0] border-y border-white/10">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-            <div className="max-w-2xl">
-              <h2 className="text-4xl md:text-5xl font-serif font-bold tracking-tight mb-4">The Essentials</h2>
-              <p className="text-lg text-[#F7F4F0]/70 leading-relaxed font-medium">Iconic spots that define the Bay Area dining scene. From storied institutions to modern classics, these are the places you simply cannot miss.</p>
-            </div>
-          </div>
-
           {featuredListings.length > 0 ? (
-            <div className="flex overflow-x-auto pb-10 -mx-4 px-4 gap-6 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {featuredListings.map(listing => (
-                <div key={listing.id} className="snap-start shrink-0">
-                  <FeaturedCard listing={listing} />
-                </div>
-              ))}
-            </div>
+            <FeaturedSlides listings={featuredListings} />
           ) : !isLoading ? (
             <div className="rounded-2xl border border-white/20 bg-white/5 px-6 py-12 text-center">
               <p className="font-serif text-2xl font-bold">New favorites are on their way.</p>

@@ -292,7 +292,7 @@ export default function Admin() {
                   <td className="px-4 py-3 text-muted-foreground capitalize hidden md:table-cell">{listing.category}</td>
                   <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{listing.neighborhood}</td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className="font-medium">★ {listing.rating.toFixed(1)}</span>
+                    <span className="font-medium">{listing.reviewCount > 0 ? `★ ${listing.rating.toFixed(1)}` : "No ratings yet"}</span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">{listing.priceRange}</td>
                   <td className="px-4 py-3">

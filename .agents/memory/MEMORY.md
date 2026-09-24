@@ -1,7 +1,7 @@
-- [DB schema + seed pattern](db-seed-pattern.md) — how to run the seed script and the venues table shape
 - [DB schema build step](db-schema-build.md) — after editing lib/db schema, must run `tsc -b` in lib/db before api-server typecheck
 - [SSE in-process emitter scope](sse-in-process-emitter.md) — notifEmitter only works within a single Node process; Redis needed for multi-instance
 - [Expo Web API routing](expo-web-api-routing.md) — use same-origin API requests on web; reserve the external API base and bearer-token getter for native
 - [Mobile build port collision](mobile-build-port-collision.md) — Expo static build assumes local 8081; stop/restart mockup preview around production builds.
 - [Expo SDK dependency updates](expo-sdk-updates.md) — update the mobile importer as a pair, validate with Expo’s compatibility check, and review workspace metadata changes.
 - [Hidden native tabs](hidden-native-tabs.md) — hidden NativeTabs routes cannot serve as secondary screens in this Expo Router version; use routable classic tabs or a separate stack.
+- [Imported venue provenance](imported-venue-provenance.md) — never infer ratings, verification, or pin locations from a restaurant CSV that omits them.

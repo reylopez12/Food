@@ -836,11 +836,15 @@ export default function Spin() {
                   </div>
 
                   <div className="flex items-center gap-2 mb-4">
-                    <Star className="w-4 h-4 fill-secondary text-secondary" />
-                    <span className="font-bold">{winnerListing.rating}</span>
-                    <span className="text-muted-foreground text-sm">
-                      ({winnerListing.reviewCount.toLocaleString()} reviews)
-                    </span>
+                    {winnerListing.reviewCount > 0 ? (
+                      <>
+                        <Star className="w-4 h-4 fill-secondary text-secondary" />
+                        <span className="font-bold">{winnerListing.rating}</span>
+                        <span className="text-muted-foreground text-sm">
+                          ({winnerListing.reviewCount.toLocaleString()} reviews)
+                        </span>
+                      </>
+                    ) : <span className="text-muted-foreground text-sm">No ratings yet</span>}
                   </div>
 
                   <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-5">

@@ -461,10 +461,12 @@ export function HomeSpinWidget() {
                       </Text>
                     </View>
                   </View>
-                  <View style={styles.ratingRow}>
-                    <Feather name="star" size={12} color={colors.accent} />
-                    <Text style={[styles.ratingText, { color: colors.foreground }]}>{winnerListing.rating}</Text>
-                  </View>
+                  {winnerListing.reviewCount > 0 && (
+                    <View style={styles.ratingRow}>
+                      <Feather name="star" size={12} color={colors.accent} />
+                      <Text style={[styles.ratingText, { color: colors.foreground }]}>{winnerListing.rating}</Text>
+                    </View>
+                  )}
                 </View>
                 {winner.distanceMi !== undefined && (
                   <View style={[styles.distanceRow, { backgroundColor: colors.primary + '12' }]}>

@@ -12,6 +12,9 @@ interface RatingStarsProps {
 
 export function RatingStars({ rating, reviewCount, size = 14, showCount = true }: RatingStarsProps) {
   const colors = useColors();
+  if (rating <= 0 || reviewCount === 0) {
+    return <Text style={[styles.count, { color: colors.mutedForeground, fontSize: size }]}>No ratings yet</Text>;
+  }
   const fullStars = Math.floor(rating);
   const hasHalf = rating - fullStars >= 0.3;
   const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);

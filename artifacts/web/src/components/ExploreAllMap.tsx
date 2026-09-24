@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { Venue as Listing } from '@workspace/api-client-react';
 import 'leaflet/dist/leaflet.css';
@@ -51,48 +51,28 @@ const CATEGORIES = [
   { id: 'food-trucks', label: 'Food Trucks' },
 ];
 
-interface NeighborhoodCluster {
-  name: string;
-  count: number;
-  lat: number;
-  lng: number;
-}
-
 interface ExploreAllMapProps {
   /** Filtered listings — these determine which pins are visible */
   listings: Listing[];
-  /** All listings — used to compute neighbourhood clusters and filter chips */
-  allListings: Listing[];
   selectedCategories: string[];
   onCategoryToggle: (id: string) => void;
-  selectedNeighborhood: string | null;
-  onNeighborhoodChange: (n: string | null) => void;
 }
 
-// SF center
-const SF_CENTER: [number, number] = [37.7749, -122.4194];
+const BAY_CENTER: [number, number] = [37.83, -122.27];
 
 // Static fallbacks matching the light-mode theme defaults
 const ACCENT_FALLBACK        = '#F3B944';
-const MUTED_FG_FALLBACK      = '#94a3b8';
-
 export function ExploreAllMap({
   listings,
-  allListings,
   selectedCategories,
   onCategoryToggle,
-  selectedNeighborhood,
-  onNeighborhoodChange,
 }: ExploreAllMapProps) {
   // Resolve theme colors for Leaflet (canvas context can't use CSS vars directly).
   // Re-resolve whenever the color scheme changes (dark/light toggle).
   const [accentColor,   setAccentColor]   = useState(() => resolveCssVar('--accent',           ACCENT_FALLBACK));
-  const [mutedFgColor,  setMutedFgColor]  = useState(() => resolveCssVar('--muted-foreground',  MUTED_FG_FALLBACK));
-
   useEffect(() => {
     const update = () => {
       setAccentColor(resolveCssVar('--accent', ACCENT_FALLBACK));
-      setMutedFgColor(resolveCssVar('--muted-foreground', MUTED_FG_FALLBACK));
     };
     // Re-resolve when .dark is toggled on <html> / <body>
     const observer = new MutationObserver(update);
@@ -103,30 +83,9 @@ export function ExploreAllMap({
   // Build Leaflet icon that uses the resolved accent color
   const amberIcon = useMemo(() => buildAmberIcon(accentColor), [accentColor]);
 
-  // Task #14: compute neighbourhood clusters from all listings
-  const neighborhoodClusters = useMemo<NeighborhoodCluster[]>(() => {
-    const groups: Record<string, { lats: number[]; lngs: number[]; count: number }> = {};
-    for (const l of allListings) {
-      const n = l.neighborhood;
-      if (!n) continue;
-      if (!groups[n]) groups[n] = { lats: [], lngs: [], count: 0 };
-      groups[n].lats.push(l.lat);
-      groups[n].lngs.push(l.lng);
-      groups[n].count++;
-    }
-    return Object.entries(groups)
-      .map(([name, g]) => ({
-        name,
-        count: g.count,
-        lat: g.lats.reduce((a, b) => a + b, 0) / g.count,
-        lng: g.lngs.reduce((a, b) => a + b, 0) / g.count,
-      }))
-      .sort((a, b) => b.count - a.count);
-  }, [allListings]);
-
-  const uniqueNeighborhoods = useMemo(
-    () => [...new Set(allListings.map(l => l.neighborhood).filter(Boolean))].sort() as string[],
-    [allListings],
+  const mappedListings = useMemo(
+    () => listings.filter(l => Number.isFinite(l.lat) && Number.isFinite(l.lng) && (l.lat !== 0 || l.lng !== 0)),
+    [listings],
   );
 
   return (
@@ -151,29 +110,11 @@ export function ExploreAllMap({
           </button>
         ))}
 
-        {uniqueNeighborhoods.length > 0 && (
-          <span className="w-px h-4 bg-border mx-1 hidden sm:block" />
-        )}
-
-        {/* Neighbourhood chips */}
-        {uniqueNeighborhoods.map(n => (
-          <button
-            key={n}
-            onClick={() => onNeighborhoodChange(selectedNeighborhood === n ? null : n)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border shadow-sm transition-colors whitespace-nowrap ${
-              selectedNeighborhood === n
-                ? 'bg-accent text-accent-foreground border-accent'
-                : 'bg-background/90 backdrop-blur-sm text-foreground border-border hover:bg-accent'
-            }`}
-          >
-            {n}
-          </button>
-        ))}
       </div>
 
       <MapContainer
-        center={SF_CENTER}
-        zoom={13}
+        center={BAY_CENTER}
+        zoom={11}
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
         attributionControl={true}
@@ -183,37 +124,8 @@ export function ExploreAllMap({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
 
-        {/* Task #14: Neighbourhood cluster circles with hover tooltip */}
-        {neighborhoodClusters.map(({ name, count, lat, lng }) => {
-          const isSelected = selectedNeighborhood === name;
-          const radius = 12 + count * 8; // scale with venue density
-          return (
-            <CircleMarker
-              key={`cluster-${name}`}
-              center={[lat, lng]}
-              radius={radius}
-              pathOptions={{
-                color:       isSelected ? accentColor  : mutedFgColor,
-                fillColor:   isSelected ? accentColor  : mutedFgColor,
-                fillOpacity: isSelected ? 0.22         : 0.12,
-                weight:      isSelected ? 2            : 1,
-                opacity:     isSelected ? 0.8          : 0.35,
-              }}
-              eventHandlers={{
-                click: () => onNeighborhoodChange(isSelected ? null : name),
-              }}
-            >
-              <Tooltip direction="top" offset={[0, -radius / 2]}>
-                <span style={{ fontWeight: 600 }}>{name}</span>
-                {' · '}
-                {count} {count === 1 ? 'place' : 'places'}
-              </Tooltip>
-            </CircleMarker>
-          );
-        })}
-
         {/* Individual venue pins */}
-        {listings.map((listing) => (
+        {mappedListings.map((listing) => (
           <Marker
             key={listing.id}
             position={[listing.lat, listing.lng]}
@@ -228,9 +140,13 @@ export function ExploreAllMap({
                   {listing.neighborhood} · {listing.priceRange}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 10 }}>
-                  <span style={{ color: accentColor, fontSize: 13 }}>★</span>
-                  <span style={{ fontWeight: 600, fontSize: 13, color: '#111' }}>{listing.rating}</span>
-                  <span style={{ color: '#9ca3af', fontSize: 12 }}>({listing.reviewCount.toLocaleString()})</span>
+                  {listing.reviewCount > 0 ? (
+                    <>
+                      <span style={{ color: accentColor, fontSize: 13 }}>★</span>
+                      <span style={{ fontWeight: 600, fontSize: 13, color: '#111' }}>{listing.rating}</span>
+                      <span style={{ color: '#9ca3af', fontSize: 12 }}>({listing.reviewCount.toLocaleString()})</span>
+                    </>
+                  ) : <span style={{ color: '#6b7280', fontSize: 12 }}>No ratings yet</span>}
                 </div>
                 <a
                   href={`/listing/${listing.id}`}
@@ -253,17 +169,17 @@ export function ExploreAllMap({
         ))}
       </MapContainer>
 
-      {listings.length === 0 && (
+      {mappedListings.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-[1000] pointer-events-none">
           <div className="text-center">
-            <p className="text-lg font-semibold mb-1">No places match your filters</p>
-            <p className="text-sm text-muted-foreground">Try clearing some filters to see pins on the map.</p>
+            <p className="text-lg font-semibold mb-1">{listings.length ? 'Map locations not yet available' : 'No places match your filters'}</p>
+            <p className="text-sm text-muted-foreground">{listings.length ? 'Browse the list for addresses and details.' : 'Try clearing some filters to see pins on the map.'}</p>
           </div>
         </div>
       )}
 
       <div className="absolute bottom-3 left-3 z-[1000] bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-1.5 text-xs font-medium text-foreground shadow">
-        {listings.length} {listings.length === 1 ? 'place' : 'places'} shown
+        {mappedListings.length} {mappedListings.length === 1 ? 'place' : 'places'} on map
       </div>
     </div>
   );

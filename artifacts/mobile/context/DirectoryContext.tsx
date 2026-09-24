@@ -249,7 +249,10 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
   );
 
   const featuredListings = useMemo(
-    () => allListings.filter((l) => l.featured),
+    () => {
+      const featured = allListings.filter((l) => l.featured);
+      return featured.length ? featured : allListings.slice(0, 6);
+    },
     [allListings],
   );
 

@@ -346,16 +346,22 @@ export default function ListingDetailScreen() {
           ]}
         >
           <View style={styles.ratingLeft}>
-            <Text style={[styles.ratingNum, { color: colors.foreground }]}>{listing.rating.toFixed(1)}</Text>
-            <RatingStars rating={listing.rating} size={16} showCount={false} />
-            <Text style={[styles.ratingCount, { color: colors.mutedForeground }]}>
-              {listing.reviewCount.toLocaleString()} reviews
-            </Text>
+            {listing.reviewCount > 0 ? (
+              <>
+                <Text style={[styles.ratingNum, { color: colors.foreground }]}>{listing.rating.toFixed(1)}</Text>
+                <RatingStars rating={listing.rating} size={16} showCount={false} />
+                <Text style={[styles.ratingCount, { color: colors.mutedForeground }]}>
+                  {listing.reviewCount.toLocaleString()} reviews
+                </Text>
+              </>
+            ) : (
+              <Text style={[styles.ratingCount, { color: colors.mutedForeground }]}>No ratings yet</Text>
+            )}
           </View>
           <View style={[styles.dividerV, { backgroundColor: colors.border }]} />
           <View style={styles.ratingRight}>
             <Text style={[styles.ratingLabel, { color: colors.mutedForeground }]}>Price</Text>
-            <Text style={[styles.ratingPrice, { color: colors.foreground }]}>{listing.priceRange}</Text>
+            <Text style={[styles.ratingPrice, { color: colors.foreground }]}>{listing.priceRange || 'Not listed'}</Text>
           </View>
         </View>
 

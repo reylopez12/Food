@@ -14,7 +14,7 @@ export default function MapScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.foreground }]}>Map</Text>
-        <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Browse by neighborhood</Text>
+        <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Browse places on the map</Text>
       </View>
 
       {/* Map takes the rest of the screen */}
