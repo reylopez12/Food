@@ -119,7 +119,7 @@ export default function ExploreScreen() {
       >
         <View style={[styles.titleRow, { paddingHorizontal: horizontalPadding }]}>
           <Text style={[styles.title, { color: colors.foreground, fontSize: isCompact ? 30 : 32 }]}>Explore</Text>
-          {distanceActive && (
+          {distanceActive && !isCompact && (
             <View style={[styles.distanceBadge, { backgroundColor: colors.primary + '18' }]}>
               <Ionicons name="navigate" size={11} color={colors.primary} />
               <Text style={[styles.distanceBadgeText, { color: colors.primary }]}>
@@ -127,6 +127,19 @@ export default function ExploreScreen() {
               </Text>
             </View>
           )}
+          <Pressable
+            onPress={() => router.push('/(tabs)/map')}
+            style={({ pressed }) => [
+              styles.mapButton,
+              { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="View map"
+            testID="explore-map-button"
+          >
+            <Feather name="map" size={19} color={colors.primary} />
+            <Text style={[styles.mapButtonText, { color: colors.primary }]}>Map</Text>
+          </Pressable>
         </View>
 
         <View style={[styles.searchWrap, { paddingHorizontal: horizontalPadding }]}>
@@ -329,6 +342,20 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontFamily: 'PlayfairDisplay_700Bold',
+  },
+  mapButton: {
+    marginLeft: 'auto',
+    minHeight: 44,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  mapButtonText: {
+    fontSize: 14,
+    fontFamily: 'Inter_700Bold',
   },
   distanceBadge: {
     flexDirection: 'row',

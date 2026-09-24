@@ -1,97 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Platform, StyleSheet, Text, useColorScheme, useWindowDimensions, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { Platform, StyleSheet, useColorScheme, useWindowDimensions, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Tabs } from 'expo-router';
-import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 import { SymbolView } from 'expo-symbols';
-import * as SecureStore from 'expo-secure-store';
-import { useAuth } from '@/lib/auth';
-
-function getApiBase() {
-  return process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : '';
-}
-
-function useUnreadCount() {
-  const { isAuthenticated } = useAuth();
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!isAuthenticated) { setCount(0); return; }
-    let cancelled = false;
-    const fetch_ = async () => {
-      try {
-        const token = await SecureStore.getItemAsync('auth_session_token');
-        if (!token || cancelled) return;
-        const res = await fetch(`${getApiBase()}/api/notifications/unread-count`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok && !cancelled) {
-          const data = await res.json();
-          setCount(data.count ?? 0);
-        }
-      } catch {}
-    };
-    fetch_();
-    const interval = setInterval(fetch_, 30_000);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, [isAuthenticated]);
-
-  return count;
-}
-
-function NativeTabLayout({ unreadCount }: { unreadCount: number }) {
-  const colors = useColors();
-  return (
-    <NativeTabs
-      labelStyle={{
-        default: { fontSize: 14, fontWeight: '700' },
-        selected: { fontSize: 14, fontWeight: '700' },
-      }}
-    >
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: 'house', selected: 'house.fill' }} />
-        <Label>Home</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="explore" role="search">
-        <Icon sf={{ default: 'magnifyingglass', selected: 'magnifyingglass.circle.fill' }} />
-        <Label>Explore</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="map">
-        <Icon sf={{ default: 'map', selected: 'map.fill' }} />
-        <Label>Map</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="spin">
-        <Icon sf={{ default: 'shuffle', selected: 'shuffle' }} />
-        <Label>Spin</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="notifications">
-        <View style={styles.nativeBellWrap}>
-          <Icon sf={{ default: 'bell', selected: 'bell.fill' }} />
-          {unreadCount > 0 && (
-            <View style={[styles.nativeBadge, { backgroundColor: colors.destructive }]}>
-              <Text style={[styles.nativeBadgeText, { color: colors.destructiveForeground }]}>
-                {unreadCount > 99 ? '99+' : String(unreadCount)}
-              </Text>
-            </View>
-          )}
-        </View>
-        <Label>Alerts</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="saved">
-        <Icon sf={{ default: 'bookmark', selected: 'bookmark.fill' }} />
-        <Label>Saved</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
-        <Icon sf={{ default: 'person', selected: 'person.fill' }} />
-        <Label>Profile</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
-
 function useTabBarEdgeFix() {
   useEffect(() => {
     if (Platform.OS !== 'web') return;
@@ -108,7 +21,7 @@ function useTabBarEdgeFix() {
   }, []);
 }
 
-function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
+function ClassicTabLayout() {
   useTabBarEdgeFix();
   const colors = useColors();
   const colorScheme = useColorScheme();
@@ -128,14 +41,14 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           flex: 1,
           minWidth: 0,
           margin: 0,
-          paddingVertical: 10,
+          paddingVertical: 12,
           paddingHorizontal: 0,
         },
         tabBarLabelStyle: {
-          fontSize: isCompact ? 10 : 13,
+          fontSize: isCompact ? 13 : 15,
           fontFamily: 'Inter_700Bold',
           paddingBottom: 4,
-          letterSpacing: isCompact ? -0.5 : -0.4,
+          letterSpacing: isCompact ? -0.4 : 0,
         },
         tabBarStyle: {
           position: 'absolute',
@@ -175,9 +88,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Home',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="house" tintColor={color} size={32} />
+              <SymbolView name="house" tintColor={color} size={36} />
             ) : (
-              <Feather name="home" size={30} color={color} />
+              <Feather name="home" size={34} color={color} />
             ),
         }}
       />
@@ -187,21 +100,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Explore',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="magnifyingglass" tintColor={color} size={32} />
+              <SymbolView name="magnifyingglass" tintColor={color} size={36} />
             ) : (
-              <Feather name="search" size={30} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="map"
-        options={{
-          title: 'Map',
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="map" tintColor={color} size={32} />
-            ) : (
-              <Feather name="map" size={30} color={color} />
+              <Feather name="search" size={34} color={color} />
             ),
         }}
       />
@@ -211,22 +112,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Spin',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="shuffle" tintColor={color} size={32} />
+              <SymbolView name="shuffle" tintColor={color} size={36} />
             ) : (
-              <Feather name="shuffle" size={30} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: 'Alerts',
-          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="bell" tintColor={color} size={32} />
-            ) : (
-              <Feather name="bell" size={30} color={color} />
+              <Feather name="shuffle" size={34} color={color} />
             ),
         }}
       />
@@ -236,9 +124,9 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Saved',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="bookmark" tintColor={color} size={32} />
+              <SymbolView name="bookmark" tintColor={color} size={36} />
             ) : (
-              <Feather name="bookmark" size={30} color={color} />
+              <Feather name="bookmark" size={34} color={color} />
             ),
         }}
       />
@@ -248,13 +136,29 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
           title: 'Profile',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="person" tintColor={color} size={32} />
+              <SymbolView name="person" tintColor={color} size={36} />
             ) : (
-              <Feather name="user" size={30} color={color} />
+              <Feather name="user" size={34} color={color} />
             ),
         }}
       />
-      {/* More screen — navigable but takes no space in the tab bar */}
+      {/* Secondary screens remain navigable without occupying a tab slot. */}
+      <Tabs.Screen
+        name="map"
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none', width: 0 },
+          title: 'Map',
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none', width: 0 },
+          title: 'Alerts',
+        }}
+      />
       <Tabs.Screen
         name="more"
         options={{
@@ -268,29 +172,5 @@ function ClassicTabLayout({ unreadCount }: { unreadCount: number }) {
 }
 
 export default function TabLayout() {
-  const unreadCount = useUnreadCount();
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout unreadCount={unreadCount} />;
-  }
-  return <ClassicTabLayout unreadCount={unreadCount} />;
+  return <ClassicTabLayout />;
 }
-
-const styles = StyleSheet.create({
-  nativeBellWrap: { position: 'relative' },
-  nativeBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -6,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  nativeBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    lineHeight: 12,
-  },
-});

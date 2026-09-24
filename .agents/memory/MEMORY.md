@@ -4,3 +4,4 @@
 - [Expo Web API routing](expo-web-api-routing.md) — use same-origin API requests on web; reserve the external API base and bearer-token getter for native
 - [Mobile build port collision](mobile-build-port-collision.md) — Expo static build assumes local 8081; stop/restart mockup preview around production builds.
 - [Expo SDK dependency updates](expo-sdk-updates.md) — update the mobile importer as a pair, validate with Expo’s compatibility check, and review workspace metadata changes.
+- [Hidden native tabs](hidden-native-tabs.md) — hidden NativeTabs routes cannot serve as secondary screens in this Expo Router version; use routable classic tabs or a separate stack.
