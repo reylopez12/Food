@@ -2,8 +2,8 @@ import { Platform, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WEB_STATUS_INSET = 67;
-const WEB_TAB_BAR_HEIGHT = 124;
-const NATIVE_TAB_BAR_HEIGHT = 120;
+const WEB_TAB_BAR_HEIGHT = 72;
+const NATIVE_TAB_BAR_HEIGHT = 68;
 
 export function useResponsiveLayout() {
   const insets = useSafeAreaInsets();
@@ -19,6 +19,6 @@ export function useResponsiveLayout() {
     bottomTabPadding:
       Platform.OS === 'web'
         ? WEB_TAB_BAR_HEIGHT + 20
-        : NATIVE_TAB_BAR_HEIGHT + Math.max(insets.bottom, 16) + 16,
+        : NATIVE_TAB_BAR_HEIGHT + insets.bottom + 16,
   };
 }

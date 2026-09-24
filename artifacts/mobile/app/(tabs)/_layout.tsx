@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 function useTabBarEdgeFix() {
   useEffect(() => {
     if (Platform.OS !== 'web') return;
@@ -24,12 +25,14 @@ function useTabBarEdgeFix() {
 function ClassicTabLayout() {
   useTabBarEdgeFix();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
   const isDark = colorScheme === 'dark';
   const isIOS = Platform.OS === 'ios';
   const isWeb = Platform.OS === 'web';
   const isCompact = width < 360;
+  const iconSize = isCompact ? 24 : 26;
 
   return (
     <Tabs
@@ -41,25 +44,26 @@ function ClassicTabLayout() {
           flex: 1,
           minWidth: 0,
           margin: 0,
-          paddingVertical: 14,
+          paddingVertical: 4,
           paddingHorizontal: 0,
         },
         tabBarIconStyle: {
-          width: 42,
-          height: 42,
-          marginBottom: 4,
+          width: iconSize,
+          height: iconSize,
+          marginBottom: 2,
         },
         tabBarLabelStyle: {
-          fontSize: isCompact ? 15 : 17,
+          fontSize: isCompact ? 11 : 12,
           fontFamily: 'Inter_700Bold',
-          paddingBottom: 6,
-          letterSpacing: isCompact ? -0.3 : 0,
+          paddingBottom: 0,
+          letterSpacing: 0,
         },
         tabBarStyle: {
           position: 'absolute',
           left: 0,
           right: 0,
-          minHeight: isWeb ? 124 : 120,
+          bottom: 0,
+          height: isWeb ? 72 : 68 + insets.bottom,
           backgroundColor: isIOS ? 'transparent' : colors.card,
           borderTopWidth: 1,
           borderTopColor: colors.border,
@@ -67,8 +71,8 @@ function ClassicTabLayout() {
           paddingHorizontal: 0,
           paddingLeft: 0,
           paddingRight: 0,
-          paddingTop: 10,
-          ...(isWeb ? { height: 124 } : { height: 120 }),
+          paddingTop: 6,
+          paddingBottom: isWeb ? 4 : insets.bottom,
         },
         tabBarBackground: () =>
           isIOS ? (
@@ -93,9 +97,9 @@ function ClassicTabLayout() {
           title: 'Home',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="house" tintColor={color} size={42} />
+              <SymbolView name="house" tintColor={color} size={iconSize} />
             ) : (
-              <Feather name="home" size={40} color={color} />
+              <Feather name="home" size={iconSize} color={color} />
             ),
         }}
       />
@@ -105,9 +109,9 @@ function ClassicTabLayout() {
           title: 'Explore',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="magnifyingglass" tintColor={color} size={42} />
+              <SymbolView name="magnifyingglass" tintColor={color} size={iconSize} />
             ) : (
-              <Feather name="search" size={40} color={color} />
+              <Feather name="search" size={iconSize} color={color} />
             ),
         }}
       />
@@ -117,9 +121,9 @@ function ClassicTabLayout() {
           title: 'Spin',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="shuffle" tintColor={color} size={42} />
+              <SymbolView name="shuffle" tintColor={color} size={iconSize} />
             ) : (
-              <Feather name="shuffle" size={40} color={color} />
+              <Feather name="shuffle" size={iconSize} color={color} />
             ),
         }}
       />
@@ -129,9 +133,9 @@ function ClassicTabLayout() {
           title: 'Saved',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="bookmark" tintColor={color} size={42} />
+              <SymbolView name="bookmark" tintColor={color} size={iconSize} />
             ) : (
-              <Feather name="bookmark" size={40} color={color} />
+              <Feather name="bookmark" size={iconSize} color={color} />
             ),
         }}
       />
@@ -141,9 +145,9 @@ function ClassicTabLayout() {
           title: 'Profile',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="person" tintColor={color} size={42} />
+              <SymbolView name="person" tintColor={color} size={iconSize} />
             ) : (
-              <Feather name="user" size={40} color={color} />
+              <Feather name="user" size={iconSize} color={color} />
             ),
         }}
       />
