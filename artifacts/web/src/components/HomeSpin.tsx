@@ -65,7 +65,10 @@ function drawWheel(
   primaryColor: string,
 ) {
   const ctx = canvas.getContext("2d")!;
-  const { width, height } = canvas;
+  const dpr = Number(canvas.dataset.dpr) || 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const width = canvas.width / dpr;
+  const height = canvas.height / dpr;
   const cx = width / 2;
   const cy = height / 2;
   const r  = Math.min(cx, cy) - 6;
@@ -137,8 +140,10 @@ function drawWheel(
 
 function drawPointer(canvas: HTMLCanvasElement, accentColor: string) {
   const ctx = canvas.getContext("2d")!;
-  const cx  = canvas.width  / 2;
-  const cy  = canvas.height / 2;
+  const dpr = Number(canvas.dataset.dpr) || 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cx  = canvas.width  / dpr / 2;
+  const cy  = canvas.height / dpr / 2;
   const r   = Math.min(cx, cy) - 6;
 
   ctx.save();
@@ -252,11 +257,18 @@ export function HomeSpin() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const parent = canvas.parentElement!;
-    const size = Math.min(parent.clientWidth, 440);
-    canvas.width  = size;
-    canvas.height = size;
-    redraw(currentAngleRef.current);
+    // Back the canvas with device pixels so the wheel stays crisp on phones.
+    const fit = () => {
+      const size = Math.min(canvas.parentElement!.clientWidth, 440);
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      canvas.width  = Math.round(size * dpr);
+      canvas.height = Math.round(size * dpr);
+      canvas.dataset.dpr = String(dpr);
+      redraw(currentAngleRef.current);
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
   }, [spinItems, redraw]);
 
   useEffect(() => { redraw(displayAngle); }, [displayAngle, redraw]);
@@ -363,7 +375,7 @@ export function HomeSpin() {
               Not sure what you're craving?
             </p>
 
-            <h2 className="text-5xl md:text-6xl font-serif font-bold text-primary-foreground tracking-tight leading-[1.05] mb-6">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold text-primary-foreground tracking-tight leading-[1.05] mb-6">
               Let the city pick.
             </h2>
 
@@ -398,7 +410,7 @@ export function HomeSpin() {
                   </button>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {RADIUS_OPTIONS.map((option) => (
                   <button
                     key={option}

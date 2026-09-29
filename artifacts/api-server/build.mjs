@@ -47,6 +47,8 @@ async function buildAll() {
       "isolated-vm",
       "lightningcss",
       "pg-native",
+      // PGlite loads its .wasm/.data files relative to its own module URL
+      "@electric-sql/pglite",
       "oracledb",
       "mongodb-client-encryption",
       "nodemailer",

@@ -12,11 +12,14 @@ import {
   Bell,
   Bookmark,
   User,
+  Store,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "../hooks/useTheme";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useNotifications } from "../hooks/useNotifications";
+import { useIsAdmin } from "../hooks/useIsAdmin";
 import {
   Sheet,
   SheetContent,
@@ -36,6 +39,8 @@ interface NavLink {
   label: string;
   icon?: React.ReactNode;
   highlight?: boolean;
+  /** Extra classes for the desktop link (e.g. hide at tighter widths) */
+  desktopClass?: string;
 }
 
 export function Navbar() {
@@ -43,11 +48,13 @@ export function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
   const { unreadCount } = useNotifications(isAuthenticated);
+  const { isAdmin } = useIsAdmin(isAuthenticated);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks: NavLink[] = [
-    { href: "/", label: "Home" },
+    { href: "/", label: "Home", desktopClass: "hidden lg:inline" },
     { href: "/explore", label: "Explore" },
+    { href: "/partners", label: "For Business", icon: <Store className="w-4 h-4" /> },
     { href: "/spin", label: "Indecisive Spin", icon: <Shuffle className="w-3.5 h-3.5" />, highlight: true },
   ];
 
@@ -72,13 +79,13 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden md:flex items-center gap-5 lg:gap-7">
           {navLinks.map((link) => (
             link.highlight ? (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-1.5 text-sm font-bold px-4 py-1.5 rounded-full transition-all border ${
+                className={`flex items-center gap-1.5 text-sm font-bold px-4 py-1.5 rounded-full transition-all border whitespace-nowrap ${
                   location === link.href
                     ? "bg-secondary text-secondary-foreground border-secondary shadow-sm"
                     : location === '/' ? "border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-white/10" : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/30"
@@ -91,7 +98,7 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-semibold transition-colors hover:text-primary ${
+                className={`text-sm font-semibold transition-colors hover:text-primary whitespace-nowrap ${link.desktopClass ?? ""} ${
                   location === link.href ? "text-primary" : location === '/' ? "text-white/70 hover:text-white" : "text-muted-foreground"
                 }`}
               >
@@ -168,6 +175,15 @@ export function Navbar() {
                       )}
                     </Link>
                   </DropdownMenuItem>
+
+                  {isAdmin && (
+                    <DropdownMenuItem asChild className="gap-2.5 cursor-pointer py-2 focus:bg-muted">
+                      <Link href="/admin">
+                        <ShieldCheck className="w-4 h-4" />
+                        <span className="font-medium">Admin</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
 
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="gap-2.5 cursor-pointer py-2 focus:bg-destructive/10 focus:text-destructive">
@@ -251,6 +267,19 @@ export function Navbar() {
                         {unreadCount}
                       </span>
                     )}
+                  </Link>
+                )}
+
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 text-lg font-semibold transition-colors py-1 ${
+                      location === "/admin" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <ShieldCheck className="w-5 h-5" />
+                    Admin
                   </Link>
                 )}
 

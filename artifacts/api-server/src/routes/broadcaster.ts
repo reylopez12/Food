@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, venuesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { isAdmin } from "../lib/access";
 
 const router: IRouter = Router();
 
@@ -25,19 +26,9 @@ router.get("/broadcaster/status/:venueId", async (req, res) => {
       return;
     }
 
-    const adminEmails = (process.env.ADMIN_EMAILS ?? "")
-      .split(",")
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean);
-    const callerEmail = ((req.user as { email?: string | null } | undefined)?.email ?? "").toLowerCase();
-    const isAdmin =
-      req.isAuthenticated() &&
-      adminEmails.length > 0 &&
-      adminEmails.includes(callerEmail);
-
     res.json({
       active: venue.broadcasterActive,
-      canPost: venue.broadcasterActive && isAdmin,
+      canPost: venue.broadcasterActive && isAdmin(req),
     });
   } catch (err) {
     console.error("broadcaster status:", err);

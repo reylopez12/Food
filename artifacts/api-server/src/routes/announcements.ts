@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, venuesTable, announcementsTable, followsTable, notificationsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { notifEmitter } from "../lib/notificationEmitter";
+import { isAdmin } from "../lib/access";
 
 const router: IRouter = Router();
 
@@ -71,11 +72,7 @@ router.post("/listings/:id/announcements", async (req, res) => {
     // Authorization: user must be in the ADMIN_EMAILS allowlist.
     // (When venue ownership lands in a future task, the check will broaden to include
     // users who own this specific venue.)
-    const adminEmails = (process.env.ADMIN_EMAILS ?? "")
-      .split(",")
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean);
-    if (adminEmails.length === 0 || !adminEmails.includes((req.user!.email ?? "").toLowerCase())) {
+    if (!isAdmin(req)) {
       res.status(403).json({
         error: "You are not authorized to post announcements for this venue",
       });

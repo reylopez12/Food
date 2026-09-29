@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bell, BellOff, LogIn, CheckCheck } from "lucide-react";
 import { Link } from "wouter";
+import { usePageMeta } from "../hooks/usePageMeta";
 
 const TYPE_LABELS: Record<string, { label: string; class: string }> = {
   closed: { label: "Closed today", class: "bg-destructive/10 text-destructive" },
@@ -23,6 +24,7 @@ function timeAgo(iso: string) {
 }
 
 export default function Notifications() {
+  usePageMeta("Notifications");
   const { isAuthenticated, login } = useAuth();
   const { notifications, loading, unreadCount, markRead } = useNotifications(isAuthenticated);
 

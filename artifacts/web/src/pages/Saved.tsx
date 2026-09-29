@@ -4,8 +4,10 @@ import { useListings } from "@workspace/api-client-react";
 import { useSavedListings } from "../hooks/useSavedListings";
 import { ListingCard } from "../components/ListingCard";
 import { Button } from "@/components/ui/button";
+import { usePageMeta } from "../hooks/usePageMeta";
 
 export default function Saved() {
+  usePageMeta("Saved places");
   const { savedIds } = useSavedListings();
   const { data: allListings = [] } = useListings();
   

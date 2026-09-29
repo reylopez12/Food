@@ -19,6 +19,7 @@ import {
   SESSION_TTL,
   type SessionData,
 } from '../lib/auth';
+import { isLocalDevAuth, LOCAL_DEV_USER } from '../lib/access';
 
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
 
@@ -34,7 +35,8 @@ function getOrigin(req: Request): string {
 function setSessionCookie(res: Response, sid: string) {
   res.cookie(SESSION_COOKIE, sid, {
     httpOnly: true,
-    secure: true,
+    // Local demo runs over plain http://localhost
+    secure: !isLocalDevAuth,
     sameSite: 'lax',
     path: '/',
     maxAge: SESSION_TTL,
@@ -131,6 +133,28 @@ router.get('/auth/user', (req: Request, res: Response) => {
 });
 
 router.get('/login', async (req: Request, res: Response) => {
+  if (isLocalDevAuth) {
+    const dbUser = await upsertUser({
+      sub: LOCAL_DEV_USER.id,
+      email: LOCAL_DEV_USER.email,
+      first_name: LOCAL_DEV_USER.firstName,
+      last_name: LOCAL_DEV_USER.lastName,
+    });
+    const sid = await createSession({
+      user: {
+        id: dbUser.id,
+        email: dbUser.email,
+        firstName: dbUser.firstName,
+        lastName: dbUser.lastName,
+        profileImageUrl: dbUser.profileImageUrl,
+      },
+      access_token: 'local-dev',
+    });
+    setSessionCookie(res, sid);
+    res.redirect(getSafeReturnTo(req.query.returnTo));
+    return;
+  }
+
   const config = await getOidcConfig();
   const callbackUrl = `${getOrigin(req)}/api/callback`;
 
@@ -226,9 +250,15 @@ router.get('/callback', async (req: Request, res: Response) => {
 });
 
 router.get('/logout', async (req: Request, res: Response) => {
+  const returnTo = getSafeReturnTo(req.query.returnTo);
+  if (isLocalDevAuth) {
+    await clearSession(res, getSessionId(req));
+    res.redirect(returnTo);
+    return;
+  }
+
   const config = await getOidcConfig();
   const origin = getOrigin(req);
-  const returnTo = getSafeReturnTo(req.query.returnTo);
   const postLogoutRedirectUrl = new URL(returnTo, `${origin}/`).href;
 
   const sid = getSessionId(req);

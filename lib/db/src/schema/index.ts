@@ -85,3 +85,26 @@ export const notificationsTable = pgTable("notifications", {
 });
 
 export type Notification = typeof notificationsTable.$inferSelect;
+
+// Partner inquiries — businesses asking to be listed, claim a listing, or upgrade
+export const partnerInquiriesTable = pgTable("partner_inquiries", {
+  id: text("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  businessName: text("business_name").notNull(),
+  contactName: text("contact_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull().default(""),
+  city: text("city").notNull().default(""),
+  website: text("website").notNull().default(""),
+  /** Set when the business is claiming an existing directory listing */
+  venueId: text("venue_id"),
+  /** 'listing' | 'claim' | 'broadcaster' | 'featured' | 'other' */
+  interest: text("interest").notNull().default("listing"),
+  message: text("message").notNull().default(""),
+  /** 'new' | 'contacted' | 'approved' | 'declined' */
+  status: text("status").notNull().default("new"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type PartnerInquiry = typeof partnerInquiriesTable.$inferSelect;

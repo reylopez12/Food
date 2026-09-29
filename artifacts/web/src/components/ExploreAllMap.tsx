@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { Venue as Listing } from '@workspace/api-client-react';
 import 'leaflet/dist/leaflet.css';
+import { appPath } from '../lib/venue';
 
 // Fix Leaflet default icon broken by Vite's asset handling
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -149,7 +150,7 @@ export function ExploreAllMap({
                   ) : <span style={{ color: '#6b7280', fontSize: 12 }}>No ratings yet</span>}
                 </div>
                 <a
-                  href={`/listing/${listing.id}`}
+                  href={appPath(`/listing/${listing.id}`)}
                   style={{
                     display: 'inline-block',
                     background: accentColor,

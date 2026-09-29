@@ -8,6 +8,10 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
+// One reverse proxy sits in front of the API in deployment; trust it so
+// req.ip reflects the real client (used for rate limiting).
+app.set("trust proxy", 1);
+
 app.use(
   pinoHttp({
     logger,

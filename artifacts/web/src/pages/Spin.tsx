@@ -13,6 +13,7 @@ import {
   useNearMe,
   type RadiusMiles,
 } from "../hooks/useNearMe";
+import { usePageMeta } from "../hooks/usePageMeta";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -89,7 +90,10 @@ function drawWheel(
   primaryColor: string,
 ) {
   const ctx = canvas.getContext("2d")!;
-  const { width, height } = canvas;
+  const dpr = Number(canvas.dataset.dpr) || 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const width = canvas.width / dpr;
+  const height = canvas.height / dpr;
   const cx = width / 2;
   const cy = height / 2;
   const r  = Math.min(cx, cy) - 6;
@@ -136,7 +140,7 @@ function drawWheel(
     ctx.textAlign = "right";
     ctx.fillStyle = "rgba(255,255,255,0.95)";
     const fontSize = Math.min(14, Math.max(9, 200 / n));
-    ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+    ctx.font = `bold ${fontSize}px "Plus Jakarta Sans", sans-serif`;
     const maxChars = 14;
     const label = item.name.length > maxChars
       ? item.name.slice(0, maxChars - 1) + "…"
@@ -164,8 +168,10 @@ function drawWheel(
 
 function drawPointer(canvas: HTMLCanvasElement, accentColor: string) {
   const ctx = canvas.getContext("2d")!;
-  const cx = canvas.width  / 2;
-  const cy = canvas.height / 2;
+  const dpr = Number(canvas.dataset.dpr) || 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cx = canvas.width  / dpr / 2;
+  const cy = canvas.height / dpr / 2;
   const r  = Math.min(cx, cy) - 6;
 
   ctx.save();
@@ -186,6 +192,15 @@ function drawPointer(canvas: HTMLCanvasElement, accentColor: string) {
   ctx.restore();
 }
 
+/** Size the wheel to its container, backed by device pixels so it stays crisp. */
+function sizeCanvas(canvas: HTMLCanvasElement, max: number) {
+  const size = Math.min(canvas.parentElement!.clientWidth, max);
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  canvas.width = Math.round(size * dpr);
+  canvas.height = Math.round(size * dpr);
+  canvas.dataset.dpr = String(dpr);
+}
+
 function easeOut(t: number) {
   return 1 - Math.pow(1 - t, 3);
 }
@@ -193,6 +208,7 @@ function easeOut(t: number) {
 // ─── Page component ───────────────────────────────────────────────────────────
 
 export default function Spin() {
+  usePageMeta("Indecisive Spin", "Can't decide where to eat? Spin the wheel and let it pick a local Bay Area spot.");
   const [, setLocation] = useLocation();
 
   const [mode,    setMode]    = useState<Mode>("directory");
@@ -301,10 +317,13 @@ export default function Spin() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const size = Math.min(canvas.parentElement!.clientWidth, 440);
-    canvas.width  = size;
-    canvas.height = size;
-    redraw(currentAngleRef.current);
+    const fit = () => {
+      sizeCanvas(canvas, 440);
+      redraw(currentAngleRef.current);
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
   }, [spinItems, redraw]);
 
   useEffect(() => { redraw(displayAngle); }, [displayAngle, redraw]);

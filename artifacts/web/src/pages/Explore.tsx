@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useLocation, useSearch } from "wouter";
 import { Search, Filter, X, List, Map as MapIcon, Navigation, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { ListingCard } from "../components/ListingCard";
 import { ExploreAllMap } from "../components/ExploreAllMap";
 import { useNearMe, haversineDistanceMi, RADIUS_OPTIONS } from "../hooks/useNearMe";
 import { SearchModeChooser, type SearchMode } from "../components/SearchModeChooser";
+import { usePageMeta } from "../hooks/usePageMeta";
 
 const CATEGORIES = [
   { id: 'restaurants', label: 'Restaurants' },
@@ -37,10 +38,23 @@ function hasValidCoords(lat: number, lng: number): boolean {
   return !(lat === 0 && lng === 0);
 }
 
+const SORT_OPTIONS = [
+  { id: "recommended", label: "Recommended" },
+  { id: "name", label: "Name A–Z" },
+  { id: "neighborhood", label: "Neighborhood" },
+] as const;
+type SortId = typeof SORT_OPTIONS[number]["id"];
+
 export default function Explore() {
+  usePageMeta("Explore", "Search and filter independent restaurants and food trucks across the Bay Area.");
   const [locationStr] = useLocation();
+  const searchStr = useSearch();
   const searchParams = new URLSearchParams(window.location.search);
-  const { data: allListings = [] } = useListings();
+  const { data: allListings = [], isLoading: listingsLoading } = useListings();
+  const [sortBy, setSortBy] = useState<SortId>("recommended");
+  // Query string this page last wrote itself, so we only re-sync state from
+  // the URL when navigation (e.g. a footer link) changed it.
+  const ownSearchRef = useRef<string | null>(null);
 
   const { status, userLat, userLng, radius, requestLocation, clearLocation, setRadius } = useNearMe();
 
@@ -82,6 +96,7 @@ export default function Explore() {
   };
 
   useEffect(() => {
+    if (ownSearchRef.current !== null && window.location.search === ownSearchRef.current) return;
     const params = new URLSearchParams(window.location.search);
     const mode = getSearchMode(params);
     const q = params.get("q");
@@ -97,7 +112,10 @@ export default function Explore() {
     setSelectedCategories(cat ? [cat] : []);
     setSelectedNeighborhood(mode === "neighborhood" ? neighborhood || null : null);
     setSelectedCity(mode === "city" ? city || "" : "");
-  }, [locationStr]);
+  }, [locationStr, searchStr]);
+
+  // Ratings only matter once venues actually have reviews.
+  const hasRatings = allListings.some((l) => l.reviewCount > 0);
 
   const distanceActive = status === 'granted' && userLat !== null && userLng !== null && radius !== null;
 
@@ -149,6 +167,16 @@ export default function Explore() {
   }, [allListings, searchMode, searchQuery, selectedCategories, selectedPrices, minRating,
     verifiedOnly, selectedNeighborhood, selectedCity, distanceActive, userLat, userLng, radius]);
 
+  const sortedListings = useMemo(() => {
+    if (sortBy === "name") return [...filteredListings].sort((a, b) => a.name.localeCompare(b.name));
+    if (sortBy === "neighborhood") {
+      return [...filteredListings].sort(
+        (a, b) => (a.neighborhood || a.city).localeCompare(b.neighborhood || b.city) || a.name.localeCompare(b.name),
+      );
+    }
+    return filteredListings;
+  }, [filteredListings, sortBy]);
+
   /** Distance from user to each visible listing (only when location is active). */
   const distanceMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -184,7 +212,8 @@ export default function Explore() {
       params.set(mode === "food" ? "q" : mode, query.trim());
     }
     const serialized = params.toString();
-    window.history.replaceState({}, "", `${window.location.pathname}${serialized ? `?${serialized}` : ""}`);
+    ownSearchRef.current = serialized ? `?${serialized}` : "";
+    window.history.replaceState({}, "", `${window.location.pathname}${ownSearchRef.current}`);
   };
 
   const handleSearchModeChange = (mode: SearchMode) => {
@@ -216,6 +245,7 @@ export default function Explore() {
     setRadius(null);
     const url = new URL(window.location.href);
     url.search = '';
+    ownSearchRef.current = '';
     window.history.replaceState({}, '', url);
   };
 
@@ -229,7 +259,7 @@ export default function Explore() {
     (selectedCity ? 1 : 0) +
     (distanceActive ? 1 : 0);
 
-  const FilterContent = () => (
+  const renderFilters = () => (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-lg">Filters</h3>
@@ -347,7 +377,7 @@ export default function Explore() {
       </div>
 
       {/* ── Minimum Rating ── */}
-      <div className="space-y-4">
+      {hasRatings && <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h4 className="font-medium text-sm text-muted-foreground">Minimum Rating</h4>
           <span className="text-sm font-medium">{minRating[0]} stars</span>
@@ -360,7 +390,7 @@ export default function Explore() {
           onValueChange={setMinRating}
           className="py-4"
         />
-      </div>
+      </div>}
 
       {/* ── Verified Only ── */}
       <div className="space-y-4">
@@ -377,16 +407,16 @@ export default function Explore() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="flex flex-col gap-6 md:flex-row md:items-end justify-between mb-8">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">Explore Bay Area Food</h1>
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end justify-between mb-8">
+        <div className="shrink-0">
+          <h1 className="text-3xl md:text-4xl font-serif font-bold tracking-tight mb-2">Explore Bay Area Food</h1>
           <p className="text-muted-foreground">
-            Search and filter the best restaurants, cafes, bars, and more across the Bay.
+            Search and filter independent restaurants, cafes, bars, and more across the Bay.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-80">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 w-full lg:w-auto lg:justify-end">
+          <div className="relative flex-1 sm:min-w-[240px] lg:w-80 lg:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="search"
@@ -406,6 +436,7 @@ export default function Explore() {
             />
             {searchQuery && (
               <button
+                aria-label="Clear search"
                 onClick={() => handleSearchQueryChange("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -523,7 +554,7 @@ export default function Explore() {
                 <SheetTitle>Filter Listings</SheetTitle>
                 <SheetDescription>Refine your search results</SheetDescription>
               </SheetHeader>
-              <FilterContent />
+              {renderFilters()}
             </SheetContent>
           </Sheet>
         </div>
@@ -540,13 +571,13 @@ export default function Explore() {
           {/* Desktop Sidebar */}
           <aside className="hidden md:block w-64 shrink-0">
             <div className="sticky top-24 bg-card border rounded-xl p-6 shadow-sm">
-              <FilterContent />
+              {renderFilters()}
             </div>
           </aside>
 
           {/* Main Content */}
           <main className="flex-1">
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <div className="text-sm text-muted-foreground">
                 Showing{' '}
                 <span className="font-medium text-foreground">{filteredListings.length}</span>{' '}
@@ -555,11 +586,36 @@ export default function Explore() {
                   <> within <span className="font-medium text-foreground">{radius} mi</span></>
                 )}
               </div>
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                Sort
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortId)}
+                  className="h-9 rounded-lg border bg-card px-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.id} value={o.id}>{o.label}</option>
+                  ))}
+                </select>
+              </label>
             </div>
 
-            {filteredListings.length > 0 ? (
+            {listingsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" aria-busy="true" aria-label="Loading listings">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-72 rounded-2xl border bg-card overflow-hidden">
+                    <div className="h-32 bg-muted animate-pulse" />
+                    <div className="p-6 space-y-3">
+                      <div className="h-6 w-3/4 rounded bg-muted animate-pulse" />
+                      <div className="h-4 w-1/3 rounded bg-muted animate-pulse" />
+                      <div className="h-4 w-1/2 rounded bg-muted animate-pulse" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : sortedListings.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredListings.map(listing => (
+                {sortedListings.map(listing => (
                   <ListingCard
                     key={listing.id}
                     listing={listing}

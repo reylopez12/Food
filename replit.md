@@ -4,6 +4,12 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Run & Operate
 
+**On your own computer (Windows/Mac/Linux):** install Node 24 + pnpm (`npm i -g pnpm@10`), then
+`pnpm install` and `pnpm dev`, and open http://localhost:5173. With no `DATABASE_URL`, the API uses an
+embedded Postgres (PGlite) in `.local/pglite`, seeded from the CSVs in `attached_assets/`, and "Log in"
+signs you in as an admin demo user. Delete `.local/pglite` to reset local data.
+
+
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages

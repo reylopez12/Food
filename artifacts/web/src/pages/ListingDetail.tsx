@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useRoute, Link } from "wouter";
-import { ArrowLeft, Phone, Globe, Navigation, Share2, MapPin, Clock, CheckCircle2, Bookmark, BookmarkCheck, Heart, HeartOff, Megaphone, Send, Copy, Check } from "lucide-react";
+import { ArrowLeft, Phone, Globe, Navigation, Share2, MapPin, Clock, CheckCircle2, Bookmark, BookmarkCheck, Heart, HeartOff, Megaphone, Send, Copy, Check, Store, ArrowRight } from "lucide-react";
 import { useListing } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { StarRating } from "../components/StarRating";
@@ -15,6 +15,9 @@ import { useSavedListings } from "../hooks/useSavedListings";
 import { useFollows } from "../hooks/useFollows";
 import { useAnnouncements, useBroadcasterStatus } from "../hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
+import { usePageMeta } from "../hooks/usePageMeta";
+import { hasValidCoordinates } from "../hooks/useNearMe";
+import { directionsUrl, formatHours, mapsUrl } from "../lib/venue";
 import "leaflet/dist/leaflet.css";
 
 export default function ListingDetail() {
@@ -41,6 +44,7 @@ export default function ListingDetail() {
   const [postSaving, setPostSaving] = useState(false);
   // useListing already sets enabled: id !== null && id !== undefined internally
   const { data: listing, isLoading, isError } = useListing(id);
+  usePageMeta(listing?.name, listing?.description);
 
   if (!match) return null;
 
@@ -66,13 +70,29 @@ export default function ListingDetail() {
 
   const saved = isSaved(listing.id);
   const followed = isFollowing(listing.id);
+  const hasCoords = hasValidCoordinates(listing.lat, listing.lng);
+  const hoursLines = formatHours(listing.hours);
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast({
-      title: "Link copied!",
-      description: "Listing link has been copied to your clipboard.",
-    });
+  const handleShare = async () => {
+    const url = window.location.href;
+    // Native share sheet on phones; clipboard elsewhere.
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: listing.name, text: `${listing.name} on Eat. Local. Food.`, url });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copied!",
+        description: "Listing link has been copied to your clipboard.",
+      });
+    } catch {
+      toast({ title: "Couldn't copy the link", description: url });
+    }
   };
 
   const handleFollow = async () => {
@@ -100,20 +120,20 @@ export default function ListingDetail() {
         className="w-full h-[280px] md:h-[360px] relative flex flex-col items-center justify-center transition-colors"
         style={{ backgroundColor: listing.color }}
       >
-        <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10 container mx-auto">
+        <div className="absolute top-4 inset-x-0 px-4 flex justify-between items-center z-10 max-w-6xl mx-auto">
           <Button variant="secondary" size="icon" asChild className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm">
-            <Link href="/explore">
+            <Link href="/explore" aria-label="Back to explore">
               <ArrowLeft className="w-5 h-5" />
             </Link>
           </Button>
           <div className="flex gap-2">
-            <Button variant="secondary" size="icon" onClick={handleShare} className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm">
+            <Button variant="secondary" size="icon" onClick={handleShare} aria-label="Share" className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm">
               <Share2 className="w-5 h-5" />
             </Button>
             <Button variant="secondary" size="icon" onClick={handleFollow} className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm" aria-label={followed ? "Unfollow" : "Follow"}>
               {followed ? <HeartOff className="w-5 h-5" /> : <Heart className="w-5 h-5" />}
             </Button>
-            <Button variant="secondary" size="icon" onClick={() => toggleSaved(listing.id)} className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm">
+            <Button variant="secondary" size="icon" onClick={() => toggleSaved(listing.id)} aria-label={saved ? "Remove from saved" : "Save"} className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm">
               {saved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
             </Button>
           </div>
@@ -130,14 +150,16 @@ export default function ListingDetail() {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <Badge variant="outline" className="capitalize bg-background">
-                    {listing.category}
+                    {listing.category.replace("-", " ")}
                   </Badge>
-                  <Badge variant="secondary" className="bg-muted">
-                    {listing.priceRange}
-                  </Badge>
+                  {listing.priceRange && (
+                    <Badge variant="secondary" className="bg-muted">
+                      {listing.priceRange}
+                    </Badge>
+                  )}
                 </div>
 
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight flex items-center gap-2 mb-4">
+                <h1 className="text-3xl md:text-4xl font-serif font-bold tracking-tight flex items-center gap-2 mb-4 break-words">
                   {listing.name}
                   {listing.verified && (
                     <CheckCircle2 className="w-6 h-6 text-primary shrink-0" aria-label="Verified" />
@@ -179,7 +201,7 @@ export default function ListingDetail() {
               </div>
 
               {/* Action Buttons Row - Desktop right, Mobile below */}
-              <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto shrink-0 overflow-x-auto pb-2 md:pb-0">
+              <div className="grid grid-cols-3 md:flex md:flex-col gap-2 sm:gap-3 w-full md:w-48 shrink-0 [&>a]:px-2 sm:[&>a]:px-8 [&>a]:text-xs sm:[&>a]:text-sm">
                 {listing.phone ? (
                   <Button size="lg" className="flex-1 md:w-full gap-2" asChild>
                     <a href={`tel:${listing.phone.replace(/[^0-9]/g, '')}`}>
@@ -211,7 +233,7 @@ export default function ListingDetail() {
                   </Button>
                 )}
                 <Button size="lg" variant="secondary" className="flex-1 md:w-full gap-2" asChild>
-                  <a href={`https://maps.google.com/maps?q=${listing.lat},${listing.lng}`} target="_blank" rel="noreferrer">
+                  <a href={directionsUrl(listing)} target="_blank" rel="noreferrer">
                     <Navigation className="w-4 h-4" />
                     <span>Directions</span>
                   </a>
@@ -239,16 +261,18 @@ export default function ListingDetail() {
               </div>
             </section>
 
-            <section>
-              <h2 className="text-2xl font-bold mb-4">Tags & Amenities</h2>
-              <div className="flex flex-wrap gap-2">
-                {listing.tags.map(tag => (
-                  <Badge key={tag} variant="secondary" className="px-3 py-1.5 text-sm font-medium">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </section>
+            {listing.tags.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold mb-4">Known for</h2>
+                <div className="flex flex-wrap gap-2">
+                  {listing.tags.map(tag => (
+                    <Badge key={tag} variant="secondary" className="px-3 py-1.5 text-sm font-medium">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Announcements section */}
             {(announcements.length > 0 || isBroadcaster) && (
@@ -322,13 +346,15 @@ export default function ListingDetail() {
                 {/* Get Broadcaster CTA */}
                 {!canPost && isAuthenticated && (
                   <Card className="mb-4 border-dashed">
-                    <CardContent className="p-4 flex items-center gap-4">
+                    <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
                       <Megaphone className="w-8 h-8 text-muted-foreground shrink-0" />
                       <div className="flex-1">
-                        <p className="font-semibold text-sm">Broadcaster subscription</p>
+                        <p className="font-semibold text-sm">Own this spot? Become a Broadcaster</p>
                         <p className="text-xs text-muted-foreground">Post announcements to all your followers — specials, closures, and more. $29/month.</p>
                       </div>
-                      <Button size="sm" variant="outline" disabled>Coming soon</Button>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link href={`/partners?claim=${encodeURIComponent(listing.id)}#apply`}>Learn more</Link>
+                      </Button>
                     </CardContent>
                   </Card>
                 )}
@@ -392,17 +418,19 @@ export default function ListingDetail() {
                       )}
                     </button>
                   </div>
-                  <div className="mt-4">
-                    <ListingMap lat={listing.lat} lng={listing.lng} name={listing.name} address={listing.address} />
-                  </div>
+                  {hasCoords && (
+                    <div className="mt-4 isolate">
+                      <ListingMap lat={listing.lat} lng={listing.lng} name={listing.name} address={listing.address} />
+                    </div>
+                  )}
                   <a
-                    href={`https://maps.google.com/maps?q=${listing.lat},${listing.lng}`}
+                    href={mapsUrl(listing)}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mt-2"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors mt-3"
                   >
                     <Navigation className="w-3 h-3" />
-                    Open in Maps
+                    Open in Google Maps
                   </a>
                 </div>
 
@@ -413,12 +441,17 @@ export default function ListingDetail() {
                     <Clock className="w-5 h-5 text-primary" />
                     Hours
                   </h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Today</span>
-                      <span className="font-medium text-foreground">{listing.hours}</span>
-                    </div>
-                  </div>
+                  {hoursLines.length > 0 ? (
+                    <ul className="space-y-1.5 text-sm">
+                      {hoursLines.map((line) => (
+                        <li key={line} className="text-foreground/90 leading-snug">{line}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Hours not listed yet. Call ahead or check their website.
+                    </p>
+                  )}
                 </div>
 
                 <div className="h-px bg-border" />
@@ -464,6 +497,25 @@ export default function ListingDetail() {
                 </div>
               </CardContent>
             </Card>
+
+            {!listing.verified && (
+              <Card className="border-dashed bg-muted/30">
+                <CardContent className="p-6">
+                  <div className="mb-3 flex items-center gap-2 font-semibold">
+                    <Store className="w-5 h-5 text-primary" />
+                    Is this your business?
+                  </div>
+                  <p className="mb-4 text-sm text-muted-foreground">
+                    Claim this listing for free to update your details, earn a verified badge, and post announcements to your followers.
+                  </p>
+                  <Button asChild variant="outline" className="w-full gap-2">
+                    <Link href={`/partners?claim=${encodeURIComponent(listing.id)}#apply`}>
+                      Claim this listing <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>

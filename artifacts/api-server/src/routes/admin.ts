@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
-import { db, venuesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, venuesTable, partnerInquiriesTable } from "@workspace/db";
+import { desc, eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { getAdminEmails, isAdmin } from "../lib/access";
 
 const router: IRouter = Router();
 
@@ -16,24 +17,23 @@ router.use((req, res, next) => {
     return;
   }
 
-  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-
-  if (adminEmails.length === 0) {
+  if (getAdminEmails().length === 0) {
     // ADMIN_EMAILS not configured — lock down completely rather than open up
     res.status(403).json({ error: "Admin access not configured (set ADMIN_EMAILS)" });
     return;
   }
 
-  const userEmail = (req.user?.email ?? "").toLowerCase();
-  if (!userEmail || !adminEmails.includes(userEmail)) {
+  if (!isAdmin(req)) {
     res.status(403).json({ error: "Admin access denied" });
     return;
   }
 
   next();
+});
+
+// GET /admin/me — lets the UI confirm admin access before rendering tools
+router.get("/me", (_req, res) => {
+  res.json({ admin: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ router.post("/listings", async (req, res) => {
     const {
       name, category, rating, reviewCount, address, city, neighborhood,
       phone, website, hours, description, tags, featured, verified,
-      priceRange, color, initials, hasVideo, video, lat, lng,
+      priceRange, color, initials, hasVideo, video, lat, lng, broadcasterActive,
     } = req.body;
 
     if (!name || typeof name !== "string" || !name.trim()) {
@@ -85,9 +85,10 @@ router.post("/listings", async (req, res) => {
       return;
     }
 
-    const safeLat = clamp(Number(lat) || 37.7749, -90, 90);
-    const safeLng = clamp(Number(lng) || -122.4194, -180, 180);
-    const safeRating = clamp(Number(rating) || 4.0, 0, 5);
+    // 0,0 means "no coordinates yet" to the clients; never invent a location or rating.
+    const safeLat = clamp(Number(lat) || 0, -90, 90);
+    const safeLng = clamp(Number(lng) || 0, -180, 180);
+    const safeRating = clamp(Number(rating) || 0, 0, 5);
     const safeReviewCount = Math.max(0, Math.floor(Number(reviewCount) || 0));
 
     const id =
@@ -120,6 +121,7 @@ router.post("/listings", async (req, res) => {
         video: video ?? null,
         lat: safeLat,
         lng: safeLng,
+        broadcasterActive: Boolean(broadcasterActive),
       })
       .returning();
 
@@ -176,6 +178,7 @@ router.put("/listings/:id", async (req, res) => {
     if (body.video !== undefined) update.video = body.video;
     if (body.lat !== undefined) update.lat = clamp(Number(body.lat), -90, 90);
     if (body.lng !== undefined) update.lng = clamp(Number(body.lng), -180, 180);
+    if (body.broadcasterActive !== undefined) update.broadcasterActive = Boolean(body.broadcasterActive);
 
     if (Object.keys(update).length === 0) {
       res.status(400).json({ error: "No valid fields to update" });
@@ -220,6 +223,51 @@ router.delete("/listings/:id", async (req, res) => {
   } catch (err) {
     console.error("admin delete listing:", err);
     res.status(500).json({ error: "Failed to delete listing" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/partner-inquiries — newest first
+// ---------------------------------------------------------------------------
+router.get("/partner-inquiries", async (_req, res) => {
+  try {
+    const rows = await db
+      .select()
+      .from(partnerInquiriesTable)
+      .orderBy(desc(partnerInquiriesTable.createdAt))
+      .limit(500);
+    res.json(rows);
+  } catch (err) {
+    console.error("admin list partner inquiries:", err);
+    res.status(500).json({ error: "Failed to fetch partner inquiries" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PATCH /admin/partner-inquiries/:id — update pipeline status
+// ---------------------------------------------------------------------------
+const INQUIRY_STATUSES = ["new", "contacted", "approved", "declined"];
+
+router.patch("/partner-inquiries/:id", async (req, res) => {
+  try {
+    const { status } = req.body ?? {};
+    if (!INQUIRY_STATUSES.includes(status)) {
+      res.status(400).json({ error: `status must be one of ${INQUIRY_STATUSES.join(" | ")}` });
+      return;
+    }
+    const [updated] = await db
+      .update(partnerInquiriesTable)
+      .set({ status })
+      .where(eq(partnerInquiriesTable.id, req.params.id))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "Inquiry not found" });
+      return;
+    }
+    res.json(updated);
+  } catch (err) {
+    console.error("admin update partner inquiry:", err);
+    res.status(500).json({ error: "Failed to update inquiry" });
   }
 });
 

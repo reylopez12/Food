@@ -34,18 +34,14 @@ export function SearchModeChooser({
   onValueChange,
   className,
 }: SearchModeChooserProps) {
-  const Icon = SEARCH_MODE_ICONS[value];
-
   return (
     <Select value={value} onValueChange={(next) => onValueChange(next as SearchMode)}>
       <SelectTrigger
         className={`h-11 w-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none focus:ring-0 ${className ?? ""}`}
         aria-label="Choose what to search"
       >
-        <span className="flex items-center gap-2">
-          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <SelectValue />
-        </span>
+        {/* The selected item's own icon + label render inside SelectValue */}
+        <SelectValue />
       </SelectTrigger>
       <SelectContent>
         {(Object.keys(SEARCH_MODE_LABELS) as SearchMode[]).map((mode) => {

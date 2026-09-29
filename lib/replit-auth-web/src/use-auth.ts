@@ -15,6 +15,29 @@ function getBasePath() {
   return import.meta.env.BASE_URL.replace(/\/+$/, '') || '/';
 }
 
+/** Where to land after login: the page the user is on now. */
+function getReturnTo() {
+  const { pathname, search } = window.location;
+  return pathname.startsWith('/') ? `${pathname}${search}` : getBasePath();
+}
+
+// Every component that calls useAuth shares one request per page load.
+let userRequest: Promise<AuthUser | null> | null = null;
+
+function fetchUser(): Promise<AuthUser | null> {
+  userRequest ??= fetch('/api/auth/user', { credentials: 'include' })
+    .then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json() as Promise<{ user: AuthUser | null }>;
+    })
+    .then((data) => data.user ?? null)
+    .catch(() => {
+      userRequest = null;
+      return null;
+    });
+  return userRequest;
+}
+
 export function useAuth(): AuthState {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,23 +45,12 @@ export function useAuth(): AuthState {
   useEffect(() => {
     let cancelled = false;
 
-    fetch('/api/auth/user', { credentials: 'include' })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<{ user: AuthUser | null }>;
-      })
-      .then((data) => {
-        if (!cancelled) {
-          setUser(data.user ?? null);
-          setIsLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setUser(null);
-          setIsLoading(false);
-        }
-      });
+    fetchUser().then((result) => {
+      if (!cancelled) {
+        setUser(result);
+        setIsLoading(false);
+      }
+    });
 
     return () => {
       cancelled = true;
@@ -46,8 +58,7 @@ export function useAuth(): AuthState {
   }, []);
 
   const login = useCallback(() => {
-    const base = getBasePath();
-    window.location.href = `/api/login?returnTo=${encodeURIComponent(base)}`;
+    window.location.href = `/api/login?returnTo=${encodeURIComponent(getReturnTo())}`;
   }, []);
 
   const logout = useCallback(() => {
