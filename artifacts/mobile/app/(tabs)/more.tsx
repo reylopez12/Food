@@ -12,12 +12,10 @@ import * as SecureStore from 'expo-secure-store';
 import { useColors } from '@/hooks/useColors';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAuth } from '@/lib/auth';
+import { getApiBase } from '@/lib/apiBase';
 
 // ─── Unread count (same pattern as _layout.tsx) ───────────────────────────────
 
-function getApiBase() {
-  return process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : '';
-}
 
 function useUnreadCount(isAuthenticated: boolean) {
   const [count, setCount] = useState(0);

@@ -23,12 +23,8 @@ import { useDirectory } from '@/context/DirectoryContext';
 import { ListingMapWebView } from '@/components/ListingMapWebView';
 import { useAuth } from '@/lib/auth';
 import * as Haptics from 'expo-haptics';
+import { getApiBase } from '@/lib/apiBase';
 
-function getApiBase() {
-  return process.env.EXPO_PUBLIC_DOMAIN
-    ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
-    : '';
-}
 
 // ── Announcement types ────────────────────────────────────────────────────────
 interface Announcement {

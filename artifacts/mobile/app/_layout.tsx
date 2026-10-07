@@ -23,6 +23,7 @@ import * as SecureStore from 'expo-secure-store';
 import { DirectoryProvider } from '@/context/DirectoryContext';
 import { AuthProvider } from '@/lib/auth';
 import { setBaseUrl, setAuthTokenGetter } from '@workspace/api-client-react';
+import { getApiBase } from '@/lib/apiBase';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,17 +35,17 @@ const queryClient = new QueryClient({
   },
 });
 
-// Point the API client at the Replit dev domain so the mobile app can reach
-// the API server.  EXPO_PUBLIC_DOMAIN is injected by the dev script.
-const apiDomain = process.env.EXPO_PUBLIC_DOMAIN;
+// Point the API client at the API server (see lib/apiBase.ts).
 if (Platform.OS === 'web') {
-  // Expo Web is served behind the same Replit proxy as /api, so relative
-  // requests preserve browser caching and cookie semantics.
-  setBaseUrl(null);
+  // On Replit, Expo Web is served behind the same proxy as /api, so relative
+  // requests preserve browser caching and cookie semantics. Running locally
+  // there is no proxy, so use the explicit API URL from `pnpm dev:local`.
+  setBaseUrl(process.env.EXPO_PUBLIC_API_URL ?? null);
   setAuthTokenGetter(null);
 } else {
-  if (apiDomain) {
-    setBaseUrl(`https://${apiDomain}`);
+  const apiBase = getApiBase();
+  if (apiBase) {
+    setBaseUrl(apiBase);
   }
   // Native clients cannot use browser session cookies.
   setAuthTokenGetter(() => SecureStore.getItemAsync('auth_session_token'));

@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import { STREET_TILE_LAYER } from '../lib/mapTiles';
 
 // Fix Leaflet default icon broken by Vite's asset handling
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -38,10 +38,7 @@ export function ListingMap({ lat, lng, name, address }: ListingMapProps) {
         scrollWheelZoom={false}
         attributionControl={false}
       >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        />
+        <TileLayer {...STREET_TILE_LAYER} />
         <Marker position={[lat, lng]} icon={amberIcon}>
           <Popup>
             <strong>{name}</strong>

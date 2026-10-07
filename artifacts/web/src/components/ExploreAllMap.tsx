@@ -1,9 +1,11 @@
 import { useMemo, useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polygon, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { Venue as Listing } from '@workspace/api-client-react';
 import 'leaflet/dist/leaflet.css';
 import { appPath } from '../lib/venue';
+import { STREET_TILE_LAYER, useIsDarkTheme } from '../lib/mapTiles';
+import { CITY_BOUNDARIES } from '../data/cityBoundaries';
 
 // Fix Leaflet default icon broken by Vite's asset handling
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -47,11 +49,6 @@ function buildAmberIcon(accentHex: string): L.Icon {
   });
 }
 
-const CATEGORIES = [
-  { id: 'restaurants', label: 'Restaurants' },
-  { id: 'food-trucks', label: 'Food Trucks' },
-];
-
 interface ExploreAllMapProps {
   /** Filtered listings — these determine which pins are visible */
   listings: Listing[];
@@ -61,13 +58,41 @@ interface ExploreAllMapProps {
 
 const BAY_CENTER: [number, number] = [37.83, -122.27];
 
+// Bounding box of all four cities' official limits (Census data, see
+// ../data/cityBoundaries.ts) — the map opens framed on exactly that area.
+const CITIES_BOUNDS = L.latLngBounds(
+  CITY_BOUNDARIES.flatMap((city) => city.rings[0]),
+);
+
+const BOUNDARY_COLOR = '#f59e0b';
+
+// One polygon covering the whole map with each city cut out as a hole, so
+// everything outside the service area is dimmed. Leaflet fills with the
+// even-odd rule, so Oakland's Piedmont hole comes back shaded as well.
+const OUTSIDE_SERVICE_AREA: [number, number][][] = [
+  [[-85, -180], [-85, 180], [85, 180], [85, -180]],
+  ...CITY_BOUNDARIES.flatMap((city) => city.rings),
+];
+
 // Static fallbacks matching the light-mode theme defaults
 const ACCENT_FALLBACK        = '#F3B944';
+
+function FitCitiesOnLoad() {
+  const map = useMap();
+
+  useEffect(() => {
+    map.fitBounds(CITIES_BOUNDS, { padding: [28, 28] });
+  }, [map]);
+
+  return null;
+}
+
 export function ExploreAllMap({
   listings,
   selectedCategories,
   onCategoryToggle,
-}: ExploreAllMapProps) {
+  showPins,
+}: ExploreAllMapProps & { showPins: boolean }) {
   // Resolve theme colors for Leaflet (canvas context can't use CSS vars directly).
   // Re-resolve whenever the color scheme changes (dark/light toggle).
   const [accentColor,   setAccentColor]   = useState(() => resolveCssVar('--accent',           ACCENT_FALLBACK));
@@ -81,6 +106,8 @@ export function ExploreAllMap({
     return () => observer.disconnect();
   }, []);
 
+  const isDark = useIsDarkTheme();
+
   // Build Leaflet icon that uses the resolved accent color
   const amberIcon = useMemo(() => buildAmberIcon(accentColor), [accentColor]);
 
@@ -89,30 +116,13 @@ export function ExploreAllMap({
     [listings],
   );
 
+  const visibleListings = showPins ? mappedListings : [];
+
   return (
     <div
       className="relative w-full rounded-xl overflow-hidden border shadow-sm"
       style={{ height: 'calc(100vh - 280px)', minHeight: 480 }}
     >
-      {/* Task #13: Floating filter bar */}
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] flex flex-wrap items-center justify-center gap-1.5 px-3 max-w-[calc(100%-2rem)]">
-        {/* Category toggles */}
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            onClick={() => onCategoryToggle(cat.id)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border shadow-sm transition-colors whitespace-nowrap ${
-              selectedCategories.includes(cat.id)
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-background/90 backdrop-blur-sm text-foreground border-border hover:bg-accent'
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-
-      </div>
-
       <MapContainer
         center={BAY_CENTER}
         zoom={11}
@@ -120,13 +130,39 @@ export function ExploreAllMap({
         scrollWheelZoom={true}
         attributionControl={true}
       >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        <FitCitiesOnLoad />
+        <TileLayer {...STREET_TILE_LAYER} />
+
+        {/* Dim everything outside the service area */}
+        <Polygon
+          positions={OUTSIDE_SERVICE_AREA}
+          interactive={false}
+          pathOptions={{
+            stroke: false,
+            fillColor: isDark ? '#000' : '#64748b',
+            fillOpacity: isDark ? 0.45 : 0.3,
+          }}
         />
 
+        {/* Service areas: tinted and outlined; name shows on hover */}
+        {CITY_BOUNDARIES.map((city) => (
+          <Polygon
+            key={city.geoid}
+            positions={city.rings}
+            pathOptions={{
+              color: BOUNDARY_COLOR,
+              weight: 2.5,
+              opacity: 1,
+              fillColor: BOUNDARY_COLOR,
+              fillOpacity: 0.08,
+            }}
+          >
+            <Tooltip sticky>{city.name}</Tooltip>
+          </Polygon>
+        ))}
+
         {/* Individual venue pins */}
-        {mappedListings.map((listing) => (
+        {visibleListings.map((listing) => (
           <Marker
             key={listing.id}
             position={[listing.lat, listing.lng]}
@@ -170,17 +206,16 @@ export function ExploreAllMap({
         ))}
       </MapContainer>
 
-      {mappedListings.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-[1000] pointer-events-none">
-          <div className="text-center">
-            <p className="text-lg font-semibold mb-1">{listings.length ? 'Map locations not yet available' : 'No places match your filters'}</p>
-            <p className="text-sm text-muted-foreground">{listings.length ? 'Browse the list for addresses and details.' : 'Try clearing some filters to see pins on the map.'}</p>
+      {showPins && visibleListings.length === 0 && (
+        <div className="absolute inset-x-0 top-3 z-[1000] flex justify-center pointer-events-none">
+          <div className="rounded-full border bg-background/80 backdrop-blur-sm px-3 py-1.5 text-xs font-medium text-foreground shadow-sm">
+            No places match your filters
           </div>
         </div>
       )}
 
       <div className="absolute bottom-3 left-3 z-[1000] bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-1.5 text-xs font-medium text-foreground shadow">
-        {mappedListings.length} {mappedListings.length === 1 ? 'place' : 'places'} on map
+        {visibleListings.length} {visibleListings.length === 1 ? 'place' : 'places'} on map
       </div>
     </div>
   );

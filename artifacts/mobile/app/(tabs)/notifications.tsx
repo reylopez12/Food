@@ -14,12 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAuth } from '@/lib/auth';
+import { getApiBase } from '@/lib/apiBase';
 
-function getApiBase() {
-  return process.env.EXPO_PUBLIC_DOMAIN
-    ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
-    : '';
-}
 
 interface NotificationItem {
   id: string;

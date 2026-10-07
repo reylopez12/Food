@@ -285,3 +285,11 @@
     inset: -1px;
   }
 }
+
+/* Street map tiles: soften the colours so service areas and pins stand out */
+.map-tiles-muted {
+  filter: grayscale(0.85) contrast(0.95) brightness(1.04);
+}
+.dark .map-tiles-muted {
+  filter: invert(1) hue-rotate(180deg) grayscale(0.85) brightness(0.85) contrast(0.95);
+}

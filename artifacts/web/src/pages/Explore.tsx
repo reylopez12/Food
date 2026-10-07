@@ -565,6 +565,7 @@ export default function Explore() {
           listings={filteredListings}
           selectedCategories={selectedCategories}
           onCategoryToggle={toggleCategory}
+          showPins={Boolean(searchQuery || selectedCity || selectedNeighborhood || selectedCategories.length || selectedPrices.length || minRating[0] > 0 || verifiedOnly || distanceActive)}
         />
       ) : (
         <div className="flex flex-col md:flex-row gap-8">
