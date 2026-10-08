@@ -33,3 +33,18 @@ bridges are necessary; cover all watcher entry points.
 
 **How to apply:** Finish patch commits before restoring explanatory comments,
 especially the minimum-release-age supply-chain warning.
+
+After a merged dependency refresh, an ordinary frozen-lockfile install can
+report “Already up to date” while installed patch contents remain stale. Verify
+the actual consumer-resolved modules rather than trusting that message.
+
+**Why:** A merged security patch initially failed its exploit regression in this
+workspace; a forced frozen-lockfile reinstall restored the patched dependency.
+React type errors also persisted in an incremental cache after the dependency
+graph was corrected.
+
+**How to apply:** If consumer regression tests contradict the committed patches,
+try a forced frozen-lockfile reinstall without changing package versions. Stop
+Metro before reinstalling to avoid watcher crashes on temporary package folders.
+If a clean TypeScript check passes but an incremental check fails, force-refresh
+the affected build cache rather than changing application types.
