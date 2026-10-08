@@ -56,3 +56,17 @@ mtime_ms = 1791479434905
 storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:e7f9ea3e-943f-4efe-973c-55594090372b/79964bc2-9d2f-4882-a32f-cd56c7bfae9a/04e56bd0-3c3c-44fe-9291-a4bc7e225b83"
 storage_version_token = "1791479472633731"
 content_type = "text/html"
+
+[[outputs]]
+id = "umtIwnPOO8WJ_8N3C5MXm"
+uri = "file://reports/spotted-eats-single-statement-import-guide.html"
+type = "html"
+title = "NEW: Single-Statement Restaurant Import"
+description = "Replaces the earlier batch script. Download or copy one atomic SQL statement with no BEGIN, COMMIT, SET LOCAL or LOCK commands. Includes 296 restaurants and 250 validated coordinates. Tested in isolation; production is still awaiting the import."
+logical_id = "98ab29f1-aacc-4989-b383-01fc02f24f58"
+content_hash = "sha256:8a8371fb27d2d47863297664abd36962e7a3e78abed54e9c420ac6b540a34353"
+size = 280637
+mtime_ms = 1791479775853
+storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:e7f9ea3e-943f-4efe-973c-55594090372b/98ab29f1-aacc-4989-b383-01fc02f24f58/88f2edbe-03cd-4af9-b70d-405845134151"
+storage_version_token = "1791479827081466"
+content_type = "text/html"

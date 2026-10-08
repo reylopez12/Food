@@ -6,22 +6,22 @@ const path = require("node:path");
 const dbRequire = createRequire(path.resolve("lib/db/package.json"));
 const { PGlite } = dbRequire("@electric-sql/pglite");
 
-async function main(consoleBatch = false) {
+async function main(singleStatement = false) {
   const originalSql = fs.readFileSync("reports/spotted-eats-production-directory-import.sql", "utf8");
   let sql = originalSql;
-  if (consoleBatch) {
-    const batch = fs.readFileSync("reports/spotted-eats-production-console-import.sql", "utf8");
-    const [header, payload, footer] = batch.split("$directory_data$");
+  if (singleStatement) {
+    const statement = fs.readFileSync("reports/spotted-eats-single-statement-import.sql", "utf8");
+    const [header, payload, footer] = statement.split("$directory_data$");
     assert.equal(payload, originalSql.split("$directory_data$")[1]);
-    assert.doesNotMatch(header + footer, /^\s*(BEGIN|COMMIT);/m);
-    assert.match(header, /SET LOCAL lock_timeout = '10s';/);
-    assert.match(header, /LOCK TABLE public\.venues IN SHARE ROW EXCLUSIVE MODE;/);
-    // Match the console's automatic transaction around selected statements.
-    sql = `BEGIN;\n${batch}\nCOMMIT;`;
-    const guide = fs.readFileSync("reports/spotted-eats-production-import-guide.html", "utf8");
+    assert.match(header, /^WITH incoming AS MATERIALIZED \(/);
+    assert.doesNotMatch(header + footer, /^\s*(BEGIN|COMMIT|SET LOCAL|LOCK TABLE)\b/m);
+    assert.equal((header + footer).split(";").length, 2, "Exactly one SQL statement, excluding dollar-quoted data");
+    // Run directly without any explicit transaction or simulated console batch.
+    sql = statement;
+    const guide = fs.readFileSync("reports/spotted-eats-single-statement-import-guide.html", "utf8");
     const embedded = guide.match(/const sql=([\s\S]*?);document.getElementById\('sql'\)/);
     assert.ok(embedded);
-    assert.equal(JSON.parse(embedded[1]), batch);
+    assert.equal(JSON.parse(embedded[1]), statement);
   }
   const db = new PGlite();
   try {
@@ -118,7 +118,17 @@ async function main(consoleBatch = false) {
     assert.ok(blocked.conflicts > 0);
     assert.equal(await snapshot(), before);
     assert.deepEqual((await db.query("SELECT * FROM untouched_fixture")).rows, [{ id: 1, value: "preserve me" }]);
-    console.log(`PASS (${consoleBatch ? "console batch" : "standalone SQL"}): 296 listings, 250 coordinates, 46 unresolved, corrected addresses, safe upgrade/rerun, protected fields and conflict-blocked atomic import. No real database accessed.`);
+    if (singleStatement) {
+      // A late insert error must roll back updates in the same CTE statement.
+      await db.query("DELETE FROM venues WHERE id = 'ambiguous-fixture'");
+      const deletedId = (await db.query("SELECT id FROM venues WHERE id <> $1 ORDER BY id LIMIT 1", [id])).rows[0].id;
+      await db.query("DELETE FROM venues WHERE id = $1", [deletedId]);
+      await db.exec(`ALTER TABLE venues ADD CONSTRAINT isolated_test_failure CHECK (id <> '${deletedId.replace(/'/g, "''")}')`);
+      const beforeFailure = await snapshot();
+      await assert.rejects(run, /isolated_test_failure/);
+      assert.equal(await snapshot(), beforeFailure, "Updates must roll back when an insert fails");
+    }
+    console.log(`PASS (${singleStatement ? "single statement" : "standalone SQL"}): 296 listings, 250 coordinates, 46 unresolved, corrected addresses, safe upgrade/rerun, protected fields and conflict-blocked atomic import. No real database accessed.`);
   } finally {
     await db.close();
   }
