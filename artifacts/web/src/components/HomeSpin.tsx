@@ -167,7 +167,7 @@ function drawPointer(canvas: HTMLCanvasElement, accentColor: string) {
 
 export function HomeSpin() {
   const [, setLocation] = useLocation();
-  const { data: allListings = [] } = useListings();
+  const { data: allListings = [], isPending, isError, refetch } = useListings();
   const {
     status: locationStatus,
     userLat,
@@ -400,6 +400,28 @@ export function HomeSpin() {
                 )}
               </Button>
             </div>
+            {spinItems.length === 0 && (
+              <div role="status" className="mb-6 max-w-sm mx-auto lg:mx-0 text-primary-foreground">
+                <p className="text-sm mb-3">
+                  {isPending
+                    ? "Loading restaurant choices…"
+                    : isError
+                      ? "Restaurant choices couldn't load. Please try again."
+                      : allListings.length === 0
+                        ? "No restaurant listings are available yet. You can still spin with your own choices."
+                        : "No restaurants with verified locations match this distance. Try a wider radius or use all directory listings."}
+                </p>
+                {!isPending && (
+                  <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+                    {isError && <Button variant="secondary" onClick={() => void refetch()}>Retry loading</Button>}
+                    {locationReady && allListings.length > 0 && (
+                      <Button variant="secondary" onClick={handleLocationClear}>Use all directory listings</Button>
+                    )}
+                    <Button variant="secondary" onClick={() => setLocation("/spin?mode=custom")}>Use my own choices</Button>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="max-w-sm mx-auto lg:mx-0 p-4 border border-white/20 rounded-2xl bg-white/5">
               <div className="flex items-center justify-between gap-4 mb-3">
@@ -519,6 +541,11 @@ export function HomeSpin() {
                   transition: "filter 0.3s",
                 }}
               />
+              {spinItems.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center px-12 text-center text-white">
+                  <span className="font-semibold text-lg">{isPending ? "Loading choices…" : "No restaurant choices available"}</span>
+                </div>
+              )}
             </div>
             <p className="text-center text-white/50 text-xs mt-3">
               {locationReady

@@ -20,3 +20,15 @@ Research notes, suggested marketing placeholders, and verification questions are
 **Why:** Uploaded directories can mix publishable restaurant information with research tables and suggested placeholder copy. Publishing the latter as facts would mislead customers.
 
 **How to apply:** Distinguish source facts from research notes before importing; include unresolved questions in the review report rather than filling customer-facing fields from guesses.
+
+Confirm directory data separately in development and production before declaring
+uploaded listings available on the published site.
+
+**Why:** A successfully published app can have an empty production directory even
+when the preview has imported restaurants, leaving restaurant wheels and browsing
+without choices. Successful builds and schema synchronization do not prove that
+listing records were copied.
+
+**How to apply:** Check the live listings endpoint or a read-only production count
+after publishing. Treat missing production records as a data-import issue, not a
+reason to invent demo restaurants or disable distance constraints.

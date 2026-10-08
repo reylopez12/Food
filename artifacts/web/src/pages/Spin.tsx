@@ -211,7 +211,9 @@ export default function Spin() {
   usePageMeta("Indecisive Spin", "Can't decide where to eat? Spin the wheel and let it pick a local Bay Area spot.");
   const [, setLocation] = useLocation();
 
-  const [mode,    setMode]    = useState<Mode>("directory");
+  const [mode,    setMode]    = useState<Mode>(() =>
+    new URLSearchParams(window.location.search).get("mode") === "custom" ? "custom" : "directory"
+  );
   const [filter,  setFilter]  = useState<Filter>("all");
   const [price,   setPrice]   = useState<Price>("all");
   const [spinning, setSpinning] = useState(false);
@@ -245,7 +247,7 @@ export default function Spin() {
     return () => observer.disconnect();
   }, []);
 
-  const { data: allListings = [] } = useListings();
+  const { data: allListings = [], isPending, isError, refetch } = useListings();
   const {
     status: locationStatus,
     userLat,
@@ -722,6 +724,29 @@ export default function Spin() {
               transition: "filter 0.3s",
             }}
           />
+          {spinItems.length === 0 && (
+            <div role="status" className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-12 text-center">
+              <p className="font-semibold">
+                {mode === "custom"
+                  ? "Add your choices above"
+                  : isPending
+                    ? "Loading restaurant choices…"
+                    : isError
+                      ? "Restaurant choices couldn't load"
+                      : allListings.length === 0
+                        ? "No restaurant listings available"
+                        : !locationReady
+                          ? "Enable location and choose a distance"
+                          : "No nearby restaurants with verified locations"}
+              </p>
+              {mode === "directory" && !isPending && (
+                <>
+                  {isError && <Button variant="outline" size="sm" onClick={() => void refetch()}>Retry loading</Button>}
+                  <Button variant="outline" size="sm" onClick={() => switchMode("custom")}>Use my own choices</Button>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
@@ -763,7 +788,13 @@ export default function Spin() {
         <p className="mt-8 text-muted-foreground text-sm text-center max-w-md">
           {mode === "custom"
             ? "Add at least one entry above to spin."
-            : locationStatus === "requesting"
+            : isPending
+              ? "Loading restaurant choices…"
+              : isError
+                ? "Could not load restaurant listings. Retry loading or use Custom choices."
+                : allListings.length === 0
+                  ? "No restaurant listings are available on this site yet. Switch to Custom to spin with your own choices."
+                  : locationStatus === "requesting"
               ? "Getting your location…"
               : locationStatus !== "granted"
                 ? "Enable location to build a wheel of nearby recommendations."
