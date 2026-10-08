@@ -11,7 +11,8 @@
   "scripts": {
     "push": "drizzle-kit push --config ./drizzle.config.ts",
     "push-force": "drizzle-kit push --force --config ./drizzle.config.ts",
-    "seed": "../../artifacts/web/node_modules/.bin/tsx src/import-directory-csv.ts --seed"
+    "seed": "../../artifacts/web/node_modules/.bin/tsx src/import-directory-csv.ts --seed",
+    "geocode": "../../artifacts/web/node_modules/.bin/tsx src/geocode-directory.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

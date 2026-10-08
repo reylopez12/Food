@@ -1,6 +1,7 @@
 import path from "node:path";
 import { asVenue, loadDirectoryVenues, readDirectoryCsv, PREVIOUS_DIRECTORY_FILES, UPDATED_DIRECTORY_FILES, type DirectorySource } from "./directory";
 import type { InsertVenue } from "./schema";
+import { withVerifiedLocations } from "./verified-locations";
 
 export interface DirectoryUpdate {
   venue: InsertVenue;
@@ -87,7 +88,7 @@ export function loadSeedDirectoryVenues(assetsDir: string): InsertVenue[] {
   for (const files of [PREVIOUS_DIRECTORY_FILES, UPDATED_DIRECTORY_FILES]) {
     venues = planDirectoryUpdates(venues, loadDirectoryUpdates(assetsDir, files)).venues;
   }
-  return venues;
+  return withVerifiedLocations(venues);
 }
 
 export function normalizeIdentity(value: string): string {
@@ -174,6 +175,12 @@ export function planDirectoryUpdates(existing: InsertVenue[], incoming: Director
         Object.assign(match, { [field]: value });
         fields.push(field);
       }
+    }
+    // A confirmed location belongs to its address, not just the restaurant ID.
+    // Re-geocode after a move; never keep a previous-address pin.
+    if (fields.includes("address") || fields.includes("city")) {
+      if (match.lat !== 0) { match.lat = 0; fields.push("lat"); }
+      if (match.lng !== 0) { match.lng = 0; fields.push("lng"); }
     }
     actions.push({ kind: fields.length ? "updated" : "unchanged", id: match.id, fields, source, row, name: match.name });
   }

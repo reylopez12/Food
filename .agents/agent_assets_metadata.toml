@@ -28,3 +28,17 @@ mtime_ms = 1791422238327
 storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:e7f9ea3e-943f-4efe-973c-55594090372b/ac3a963c-ee52-4e39-b51a-3648786be754/c269242a-33d0-4924-8947-a508e0151249"
 storage_version_token = "1791422347072137"
 content_type = "text/csv"
+
+[[outputs]]
+id = "94DDIo-3l6TyqadO_4M2y"
+uri = "file://reports/directory-geocoding.csv"
+type = "table"
+title = "Restaurant location matching report"
+description = "248 accepted street-address matches and 48 unresolved addresses, with provider match details and review reasons."
+logical_id = "6113ea69-6ae3-4e39-a16e-2c8ff243a56a"
+content_hash = "sha256:08aa12c107f93135a1d9f8ad26a64580a96d8bf29ad9fb1a97bdeaf2b8f3f468"
+size = 76119
+mtime_ms = 1791430781970
+storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:e7f9ea3e-943f-4efe-973c-55594090372b/6113ea69-6ae3-4e39-a16e-2c8ff243a56a/6879b721-5936-4021-869b-f067e738d7a9"
+storage_version_token = "1791430874326911"
+content_type = "text/csv"

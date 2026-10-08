@@ -32,3 +32,16 @@ listing records were copied.
 **How to apply:** Check the live listings endpoint or a read-only production count
 after publishing. Treat missing production records as a data-import issue, not a
 reason to invent demo restaurants or disable distance constraints.
+
+Street-address geocoding is not business verification. Census locations are
+estimated along address ranges, not rooftops or entrances. Treat differing
+street types, directions and cities as unresolved even when the provider says
+it found a match; never convert coordinate acceptance into a verified badge.
+
+**Why:** East Bay Census responses can change supplied Park Street to Park
+Avenue or Grand Avenue to West Grand Avenue. Accepting those would attach a
+plausible but wrong pin to an unchanged restaurant record.
+
+**How to apply:** Keep exact street-and-city matching with standard abbreviation
+normalization only, preserve evidence for review, and invalidate coordinates
+when the underlying supplied address changes.

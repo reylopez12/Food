@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "test:locations": "node --test scripts/tests/nearby-locations.test.cjs && artifacts/web/node_modules/.bin/tsx --test lib/db/src/geocoding.test.ts lib/db/src/directory-updates.test.ts",
     "test:dependency-security": "node --test scripts/tests/dependency-security.test.cjs",
     "preinstall": "node -e \"if(!/^pnpm\\//.test(process.env.npm_config_user_agent||'')){console.error('Use pnpm instead');process.exit(1)}\"",
     "dev": "pnpm --parallel --filter @workspace/api-server --filter @workspace/web run dev",
