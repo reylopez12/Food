@@ -14,3 +14,9 @@ For directory uploads, the user asked: "Do not make duplicates, flag duplicates 
 **Why:** The user explicitly requested matching and updating existing restaurants rather than copying them twice.
 
 **How to apply:** Treat future uploads as additive updates, report duplicate or ambiguous matches, and do not infer that restaurants omitted from a file should be deleted.
+
+Research notes, suggested marketing placeholders, and verification questions are not confirmed restaurant descriptions, addresses, or verification status. Leave unknown details empty and hold listings with unconfirmed street addresses for review.
+
+**Why:** Uploaded directories can mix publishable restaurant information with research tables and suggested placeholder copy. Publishing the latter as facts would mislead customers.
+
+**How to apply:** Distinguish source facts from research notes before importing; include unresolved questions in the review report rather than filling customer-facing fields from guesses.

@@ -1,5 +1,5 @@
 import path from "node:path";
-import { asVenue, readDirectoryCsv, UPDATED_DIRECTORY_FILES } from "./directory";
+import { asVenue, loadDirectoryVenues, readDirectoryCsv, PREVIOUS_DIRECTORY_FILES, UPDATED_DIRECTORY_FILES, type DirectorySource } from "./directory";
 import type { InsertVenue } from "./schema";
 
 export interface DirectoryUpdate {
@@ -10,10 +10,57 @@ export interface DirectoryUpdate {
   notes: string;
 }
 
-export function loadDirectoryUpdates(assetsDir: string): DirectoryUpdate[] {
-  return UPDATED_DIRECTORY_FILES.flatMap(([city, filename]) =>
-    readDirectoryCsv(path.join(assetsDir, filename)).map((row, index) => {
-      const fields: (keyof InsertVenue)[] = ["name", "address", "city", "description"];
+export interface DirectoryFlag {
+  source: string;
+  row: number;
+  name: string;
+  reason: string;
+}
+
+type DirectoryFiles = readonly (readonly [DirectorySource, string])[];
+
+export function loadDirectoryUpdateBatch(assetsDir: string, files: DirectoryFiles = UPDATED_DIRECTORY_FILES) {
+  const updates: DirectoryUpdate[] = [];
+  const flags: DirectoryFlag[] = [];
+  let inputRows = 0;
+  let ignoredRows = 0;
+  for (const [city, filename] of files) {
+    let supplementaryTable = false;
+    for (const [index, original] of readDirectoryCsv(path.join(assetsDir, filename)).entries()) {
+      const name = original.Restaurant || original.Name || "";
+      // Alameda contains a second table with a different header in the same CSV.
+      if (!Object.values(original).some((value) => value.trim())
+        || name === "RESTAURANTS WITHOUT ENOUGH INFORMATION FOR A DESCRIPTION") {
+        ignoredRows++;
+        continue;
+      }
+      if (name === "Restaurant" && original.Neighborhood === "Address" && original.Cuisine === "Phone") {
+        supplementaryTable = true;
+        ignoredRows++;
+        continue;
+      }
+      inputRows++;
+      const notes = supplementaryTable
+        ? `What was found: ${original.Address}. Verification next step: ${original.Phone}. Sources checked: ${original.Website}`
+        : [original["Verify Before Publishing"], original["Notes to Verify"], original["What to verify"], original.Notes]
+          .filter(Boolean).join("; ");
+      const row = supplementaryTable
+        ? {
+            Restaurant: name,
+            Address: `${original.Neighborhood}, Alameda, CA`,
+            // "Not found" is not a phone number; placeholder text is not a description.
+            Phone: original.Cuisine.replace(/\D/g, "").length === 10 ? original.Cuisine : "",
+          }
+        : original;
+      if (!name || !/^\d/.test(row.Address)) {
+        flags.push({ source: filename, row: index + 2, name,
+          reason: `Missing or ambiguous street address; not imported. ${notes}` });
+        continue;
+      }
+      const fields: (keyof InsertVenue)[] = ["name", "address", "city"];
+      if (row["Directory Description"] || row["Listing Description"] || row.Description || row.Summary) {
+        fields.push("description");
+      }
       for (const [column, field] of [
         ["Neighborhood", "neighborhood"], ["Phone", "phone"], ["Website", "website"],
         ["Hours", "hours"], ["Price Level", "priceRange"], ["Rating", "rating"],
@@ -22,12 +69,25 @@ export function loadDirectoryUpdates(assetsDir: string): DirectoryUpdate[] {
         if (row[column]?.trim()) fields.push(field);
       }
       if (row.Cuisine || row.Highlights) fields.push("tags");
-      return {
-        venue: asVenue(row, city), fields, source: filename, row: index + 2,
-        notes: row["Verify Before Publishing"] || row["Notes to Verify"] || "",
-      };
-    }),
-  );
+      updates.push({
+        venue: asVenue(row, city, true), fields, source: filename, row: index + 2, notes,
+      });
+    }
+  }
+  return { updates, flags, inputRows, ignoredRows };
+}
+
+export function loadDirectoryUpdates(assetsDir: string, files: DirectoryFiles = UPDATED_DIRECTORY_FILES): DirectoryUpdate[] {
+  return loadDirectoryUpdateBatch(assetsDir, files).updates;
+}
+
+/** Apply upload generations separately so older supplied fields survive partial updates. */
+export function loadSeedDirectoryVenues(assetsDir: string): InsertVenue[] {
+  let venues = loadDirectoryVenues(assetsDir);
+  for (const files of [PREVIOUS_DIRECTORY_FILES, UPDATED_DIRECTORY_FILES]) {
+    venues = planDirectoryUpdates(venues, loadDirectoryUpdates(assetsDir, files)).venues;
+  }
+  return venues;
 }
 
 export function normalizeIdentity(value: string): string {
@@ -45,6 +105,14 @@ function addressKey(value: string): string {
       (word) => ({ street: "st", avenue: "ave", boulevard: "blvd", road: "rd", drive: "dr", lane: "ln" })[word.toLowerCase()]!));
 }
 
+/** Unit/context differences do not imply a new business when the phone also matches. */
+function streetKey(value: string): string {
+  return addressKey(value.replace(/\([^)]*\)/g, "")
+    .replace(/(?:,?\s*(?:suite|ste|apt|unit)\s*\S+|\s*#\s*\S+)/gi, "")
+    .replace(/\b(north|south|east|west)\b/gi,
+      (word) => ({ north: "n", south: "s", east: "e", west: "w" })[word.toLowerCase()]!));
+}
+
 function identityMatch(a: InsertVenue, b: InsertVenue): boolean {
   if (a.id === b.id) return true;
   if (cityKey(a) !== cityKey(b)) return false;
@@ -52,13 +120,13 @@ function identityMatch(a: InsertVenue, b: InsertVenue): boolean {
   // Address alone is unsafe: food halls can house different businesses.
   const phoneA = a.phone.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
   const phoneB = b.phone.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
-  return addressKey(a.address) === addressKey(b.address) && phoneA.length === 10 && phoneA === phoneB;
+  return streetKey(a.address) === streetKey(b.address) && phoneA.length === 10 && phoneA === phoneB;
 }
 
 export function planDirectoryUpdates(existing: InsertVenue[], incoming: DirectoryUpdate[]) {
   const working = existing.map((venue) => ({ ...venue }));
   const actions: { kind: "new" | "updated" | "unchanged"; id: string; fields: string[]; source: string; row: number; name: string }[] = [];
-  const flags: { source: string; row: number; name: string; reason: string }[] = [];
+  const flags: DirectoryFlag[] = [];
   const seen = new Set<string>();
   for (const entry of incoming) {
     const { venue, source, row } = entry;
@@ -86,6 +154,10 @@ export function planDirectoryUpdates(existing: InsertVenue[], incoming: Director
       continue;
     }
     seen.add(match.id);
+    if (!/[?\uFFFD]/.test(venue.name) && normalizeIdentity(match.name) !== normalizeIdentity(venue.name)) {
+      flags.push({ source, row, name: venue.name,
+        reason: `Existing listing "${match.name}" (${match.id}) matched by street address and phone; updated instead of creating a duplicate.` });
+    }
     const fields: string[] = [];
     for (const field of entry.fields) {
       let value = venue[field];

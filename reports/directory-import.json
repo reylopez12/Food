@@ -1,1761 +1,2184 @@
 {
   "summary": {
     "mode": "applied",
-    "inputRows": 175,
-    "added": 0,
-    "updated": 91,
-    "unchanged": 84,
-    "flagged": 1,
-    "total": 175
+    "inputRows": 147,
+    "ignoredFormattingRows": 4,
+    "added": 121,
+    "updated": 17,
+    "unchanged": 1,
+    "skipped": 8,
+    "duplicateMatches": 3,
+    "flagged": 11,
+    "total": 296
   },
   "actions": [
     {
-      "kind": "unchanged",
-      "id": "1400-bar-grill-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
+      "kind": "updated",
+      "id": "fikscue-craft-barbecue-alameda",
+      "fields": [
+        "address",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
       "row": 2,
-      "name": "1400 Bar & Grill"
+      "name": "Fikscue Craft Barbecue"
     },
     {
-      "kind": "unchanged",
-      "id": "a-town-pizza-and-kabob-house-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 3,
-      "name": "A-Town Pizza and Kabob House"
-    },
-    {
-      "kind": "unchanged",
-      "id": "abigail-s-moroccan-cuisine-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 4,
-      "name": "Abigail's Moroccan Cuisine"
-    },
-    {
-      "kind": "unchanged",
-      "id": "alameda-brewing-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 5,
-      "name": "Alameda Brewing"
-    },
-    {
-      "kind": "unchanged",
-      "id": "alameda-cinema-grill-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 6,
-      "name": "Alameda Cinema Grill"
-    },
-    {
-      "kind": "unchanged",
+      "kind": "updated",
       "id": "alley-vine-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 7,
+      "fields": [
+        "address",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 3,
       "name": "Alley & Vine"
     },
     {
-      "kind": "unchanged",
-      "id": "ark-chinese-restaurant-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 8,
-      "name": "Ark Chinese Restaurant"
-    },
-    {
-      "kind": "unchanged",
+      "kind": "updated",
       "id": "asena-restaurant-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 9,
+      "fields": [
+        "address",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 4,
       "name": "Asena Restaurant"
-    },
-    {
-      "kind": "unchanged",
-      "id": "bhan-mae-vane-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 10,
-      "name": "Bhan Mae Vane"
-    },
-    {
-      "kind": "unchanged",
-      "id": "burma-superstar-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 11,
-      "name": "Burma Superstar"
-    },
-    {
-      "kind": "unchanged",
-      "id": "c-era-una-volta-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 12,
-      "name": "C'era Una Volta"
-    },
-    {
-      "kind": "unchanged",
-      "id": "cafe-jolie-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 13,
-      "name": "Cafe Jolie"
-    },
-    {
-      "kind": "unchanged",
-      "id": "calafia-taqueria-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 14,
-      "name": "Calafia Taqueria"
-    },
-    {
-      "kind": "unchanged",
-      "id": "casa-revolucion-taqueria-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 15,
-      "name": "Casa Revolución Taqueria"
-    },
-    {
-      "kind": "unchanged",
-      "id": "ceron-kitchen-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 16,
-      "name": "Ceron Kitchen"
-    },
-    {
-      "kind": "unchanged",
-      "id": "cholita-linda-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 17,
-      "name": "Cholita Linda"
-    },
-    {
-      "kind": "unchanged",
-      "id": "domenico-s-italian-deli-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 18,
-      "name": "Domenico's Italian Deli"
-    },
-    {
-      "kind": "unchanged",
-      "id": "dragon-rouge-bistro-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 19,
-      "name": "Dragon Rouge Bistro"
     },
     {
       "kind": "updated",
       "id": "east-end-alameda",
       "fields": [
-        "description"
+        "address",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
       ],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 20,
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 5,
       "name": "East End"
     },
     {
-      "kind": "unchanged",
-      "id": "east-ocean-seafood-restaurant-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
+      "kind": "new",
+      "id": "mekong-kitchen-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 6,
+      "name": "Mekong Kitchen"
+    },
+    {
+      "kind": "new",
+      "id": "taco-fino-express-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 7,
+      "name": "Taco Fino Express"
+    },
+    {
+      "kind": "new",
+      "id": "toomie-s-thai-toomie-s-by-thai-golden-rice-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 8,
+      "name": "Toomie's Thai (Toomie's by Thai Golden Rice)"
+    },
+    {
+      "kind": "new",
+      "id": "the-star-on-park-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 9,
+      "name": "The Star on Park"
+    },
+    {
+      "kind": "new",
+      "id": "the-park-street-tavern-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 10,
+      "name": "The Park Street Tavern"
+    },
+    {
+      "kind": "new",
+      "id": "yellowtail-japanese-bistro-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 11,
+      "name": "Yellowtail Japanese Bistro"
+    },
+    {
+      "kind": "new",
+      "id": "shaka-shack-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 12,
+      "name": "Shaka Shack"
+    },
+    {
+      "kind": "new",
+      "id": "bacogai-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 13,
+      "name": "Bacogai"
+    },
+    {
+      "kind": "new",
+      "id": "sidestreet-pho-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 14,
+      "name": "Sidestreet Pho"
+    },
+    {
+      "kind": "new",
+      "id": "marti-s-place-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 15,
+      "name": "Marti's Place"
+    },
+    {
+      "kind": "new",
+      "id": "acapulco-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 16,
+      "name": "Acapulco"
+    },
+    {
+      "kind": "updated",
+      "id": "ceron-kitchen-alameda",
+      "fields": [
+        "address",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 17,
+      "name": "Ceron Kitchen"
+    },
+    {
+      "kind": "new",
+      "id": "angela-s-eatery-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 18,
+      "name": "Angela's Eatery"
+    },
+    {
+      "kind": "new",
+      "id": "macondo-colombian-fusion-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 19,
+      "name": "Macondo Colombian Fusion"
+    },
+    {
+      "kind": "updated",
+      "id": "calafia-taqueria-alameda",
+      "fields": [
+        "name",
+        "address",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 20,
+      "name": "Calafia Taquería"
+    },
+    {
+      "kind": "updated",
+      "id": "cafe-jolie-alameda",
+      "fields": [
+        "address",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
       "row": 21,
+      "name": "Cafe Jolie"
+    },
+    {
+      "kind": "new",
+      "id": "donut-petit-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 22,
+      "name": "Donut Petit"
+    },
+    {
+      "kind": "updated",
+      "id": "east-ocean-seafood-restaurant-alameda",
+      "fields": [
+        "address",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 23,
       "name": "East Ocean Seafood Restaurant"
     },
     {
-      "kind": "unchanged",
-      "id": "fikscue-craft-barbecue-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 22,
-      "name": "Fikscue Craft Barbecue"
-    },
-    {
-      "kind": "unchanged",
-      "id": "fowl-fare-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 23,
-      "name": "Fowl + Fare"
-    },
-    {
-      "kind": "unchanged",
-      "id": "genghis-khan-kitchen-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
+      "kind": "updated",
+      "id": "1400-bar-grill-alameda",
+      "fields": [
+        "address",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
       "row": 24,
+      "name": "1400 Bar & Grill"
+    },
+    {
+      "kind": "new",
+      "id": "india-palace-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 25,
+      "name": "India Palace"
+    },
+    {
+      "kind": "new",
+      "id": "share-pizza-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 26,
+      "name": "Share Pizza"
+    },
+    {
+      "kind": "new",
+      "id": "the-rake-at-admiral-maltings-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 27,
+      "name": "The Rake at Admiral Maltings"
+    },
+    {
+      "kind": "new",
+      "id": "firebrand-artisan-breads-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 28,
+      "name": "Firebrand Artisan Breads"
+    },
+    {
+      "kind": "updated",
+      "id": "c-era-una-volta-alameda",
+      "fields": [
+        "name",
+        "address",
+        "description",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 29,
+      "name": "C'era Una Volta Kitchen & Catering"
+    },
+    {
+      "kind": "new",
+      "id": "cafe-jolie-petit-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 30,
+      "name": "Cafe Jolie Petit"
+    },
+    {
+      "kind": "new",
+      "id": "china-villa-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 31,
+      "name": "China Villa"
+    },
+    {
+      "kind": "new",
+      "id": "mosley-s-cafe-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 32,
+      "name": "Mosley's Cafe"
+    },
+    {
+      "kind": "new",
+      "id": "crepe-haven-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 37,
+      "name": "Crêpe Haven"
+    },
+    {
+      "kind": "updated",
+      "id": "dragon-rouge-bistro-alameda",
+      "fields": [
+        "name",
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 38,
+      "name": "Dragon Rouge"
+    },
+    {
+      "kind": "updated",
+      "id": "a-town-pizza-and-kabob-house-alameda",
+      "fields": [
+        "name",
+        "address",
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 39,
+      "name": "A Town Pizza"
+    },
+    {
+      "kind": "updated",
+      "id": "ark-chinese-restaurant-alameda",
+      "fields": [
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 40,
+      "name": "Ark Chinese Restaurant"
+    },
+    {
+      "kind": "new",
+      "id": "alameda-grill-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 41,
+      "name": "Alameda Grill"
+    },
+    {
+      "kind": "new",
+      "id": "ballpark-alameda-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 42,
+      "name": "Ballpark Alameda"
+    },
+    {
+      "kind": "updated",
+      "id": "genghis-khan-kitchen-alameda",
+      "fields": [
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 43,
       "name": "Genghis Khan Kitchen"
     },
     {
-      "kind": "unchanged",
-      "id": "hang-ten-boiler-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 25,
-      "name": "Hang Ten Boiler"
-    },
-    {
-      "kind": "unchanged",
-      "id": "homeskillet-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 26,
-      "name": "Homeskillet"
-    },
-    {
-      "kind": "unchanged",
-      "id": "hong-kong-city-restaurant-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 27,
-      "name": "Hong Kong City Restaurant"
-    },
-    {
-      "kind": "unchanged",
-      "id": "island-taqueria-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 28,
-      "name": "Island Taqueria"
-    },
-    {
-      "kind": "unchanged",
-      "id": "jim-s-coffee-shop-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 29,
-      "name": "Jim's Coffee Shop"
-    },
-    {
-      "kind": "unchanged",
-      "id": "la-penca-azul-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 30,
-      "name": "La Penca Azul"
-    },
-    {
-      "kind": "unchanged",
-      "id": "lena-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 31,
-      "name": "Leña"
-    },
-    {
-      "kind": "unchanged",
-      "id": "mango-mint-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 32,
-      "name": "Mango & Mint"
-    },
-    {
-      "kind": "unchanged",
-      "id": "moxie-steak-house-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 33,
-      "name": "Moxie Steak House"
-    },
-    {
-      "kind": "updated",
-      "id": "pasta-pelican-restaurant-alameda",
-      "fields": [
-        "description"
-      ],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 34,
-      "name": "Pasta Pelican Restaurant"
-    },
-    {
-      "kind": "unchanged",
-      "id": "peak-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 35,
-      "name": "Peak"
-    },
-    {
-      "kind": "unchanged",
-      "id": "phnom-penh-house-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 36,
-      "name": "Phnom Penh House"
-    },
-    {
-      "kind": "unchanged",
-      "id": "pizzeria-pappo-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 37,
-      "name": "Pizzeria Pappo"
-    },
-    {
-      "kind": "unchanged",
-      "id": "rose-s-sandwich-shop-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 38,
-      "name": "Rose's Sandwich Shop"
-    },
-    {
-      "kind": "unchanged",
-      "id": "saltbreaker-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 39,
-      "name": "Saltbreaker"
-    },
-    {
-      "kind": "unchanged",
-      "id": "scolari-s-good-eats-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 40,
-      "name": "Scolari's Good Eats"
-    },
-    {
-      "kind": "updated",
-      "id": "southern-comfort-kitchen-alameda",
-      "fields": [
-        "description"
-      ],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 41,
-      "name": "Southern Comfort Kitchen"
-    },
-    {
-      "kind": "unchanged",
-      "id": "southie-at-park-station-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 42,
-      "name": "Southie (at Park Station)"
-    },
-    {
-      "kind": "unchanged",
-      "id": "speisekammer-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 43,
-      "name": "Speisekammer"
-    },
-    {
-      "kind": "updated",
-      "id": "spinning-bones-alameda",
-      "fields": [
-        "description"
-      ],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 44,
-      "name": "Spinning Bones"
-    },
-    {
-      "kind": "unchanged",
-      "id": "tahina-fresh-mediterranean-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 45,
-      "name": "Tahina Fresh Mediterranean"
-    },
-    {
-      "kind": "unchanged",
-      "id": "the-bureau-510-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 46,
-      "name": "The Bureau 510"
-    },
-    {
-      "kind": "unchanged",
-      "id": "the-hobnob-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 47,
-      "name": "The Hobnob"
-    },
-    {
-      "kind": "unchanged",
-      "id": "trabocco-kitchen-cocktails-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 48,
-      "name": "Trabocco Kitchen & Cocktails"
-    },
-    {
-      "kind": "unchanged",
-      "id": "waki-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 49,
-      "name": "Waki"
-    },
-    {
-      "kind": "unchanged",
-      "id": "wild-ginger-alameda",
-      "fields": [],
-      "source": "AlamedaCSV2_1791420661822.csv",
-      "row": 50,
-      "name": "Wild Ginger"
-    },
-    {
-      "kind": "unchanged",
-      "id": "310-eatery-la-style-street-food-albany",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 2,
-      "name": "310 Eatery - LA Style Street Food"
-    },
-    {
-      "kind": "unchanged",
-      "id": "900-grayson-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 3,
-      "name": "900 Grayson"
-    },
-    {
-      "kind": "unchanged",
-      "id": "angeline-s-louisiana-kitchen-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 4,
-      "name": "Angeline's Louisiana Kitchen"
-    },
-    {
-      "kind": "unchanged",
-      "id": "anja-s-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 5,
-      "name": "Anja's"
-    },
-    {
-      "kind": "unchanged",
-      "id": "ashby-eatery-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 6,
-      "name": "Ashby Eatery"
-    },
-    {
-      "kind": "unchanged",
-      "id": "bangalore-blues-by-pochys-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 7,
-      "name": "Bangalore Blues (by Pochys)"
-    },
-    {
-      "kind": "unchanged",
-      "id": "bangkok-by-the-bay-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 8,
-      "name": "Bangkok by the Bay"
-    },
-    {
-      "kind": "unchanged",
-      "id": "brezo-albany",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 9,
-      "name": "Brezo"
-    },
-    {
-      "kind": "unchanged",
-      "id": "califa-s-greens-styled-califas-greens-on-its-website-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 10,
-      "name": "Califa's Greens (styled \"Califas Greens\" on its website)"
-    },
-    {
-      "kind": "unchanged",
-      "id": "chez-mansour-restaurant-wine-bar-albany",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 11,
-      "name": "Chez Mansour Restaurant & Wine Bar"
-    },
-    {
-      "kind": "unchanged",
-      "id": "chez-panisse-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 12,
-      "name": "Chez Panisse"
-    },
-    {
-      "kind": "unchanged",
-      "id": "dh-noodles-and-grill-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 13,
-      "name": "DH Noodles and Grill"
-    },
-    {
-      "kind": "updated",
-      "id": "divan-modern-turkish-cuisine-berkeley",
+      "kind": "new",
+      "id": "greens-grains-alameda",
       "fields": [
         "name",
-        "description",
-        "tags"
+        "address",
+        "city",
+        "phone"
       ],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 14,
-      "name": "Divan  Modern Turkish Cuisine"
-    },
-    {
-      "kind": "unchanged",
-      "id": "dolly-s-el-cerrito",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 15,
-      "name": "Dolly's"
-    },
-    {
-      "kind": "unchanged",
-      "id": "duo-grill-house-albany",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 16,
-      "name": "Duo Grill House"
-    },
-    {
-      "kind": "updated",
-      "id": "el-mono-fresh-flavors-of-peru-el-cerrito",
-      "fields": [
-        "hours"
-      ],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 17,
-      "name": "El Mono | Fresh Flavors of Peru"
-    },
-    {
-      "kind": "updated",
-      "id": "fava-berkeley",
-      "fields": [
-        "hours"
-      ],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 18,
-      "name": "FAVA"
-    },
-    {
-      "kind": "updated",
-      "id": "gather-berkeley",
-      "fields": [
-        "hours"
-      ],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 19,
-      "name": "Gather"
-    },
-    {
-      "kind": "updated",
-      "id": "gusto-berkeley",
-      "fields": [
-        "hours"
-      ],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 20,
-      "name": "Gusto"
-    },
-    {
-      "kind": "updated",
-      "id": "homeroom-berkeley-homeroom-mac-cheese-berkeley",
-      "fields": [
-        "hours"
-      ],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 21,
-      "name": "Homeroom Berkeley (Homeroom Mac+Cheese)"
-    },
-    {
-      "kind": "updated",
-      "id": "in-the-wood-berkeley",
-      "fields": [
-        "hours"
-      ],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 22,
-      "name": "In the Wood"
-    },
-    {
-      "kind": "updated",
-      "id": "inn-kensington-kensington",
-      "fields": [
-        "hours"
-      ],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 23,
-      "name": "Inn Kensington"
-    },
-    {
-      "kind": "updated",
-      "id": "juanita-maude-albany",
-      "fields": [
-        "hours"
-      ],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 24,
-      "name": "Juanita & Maude"
-    },
-    {
-      "kind": "unchanged",
-      "id": "kaokao-grill-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 25,
-      "name": "KAOKAO Grill"
-    },
-    {
-      "kind": "unchanged",
-      "id": "kiraku-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 26,
-      "name": "Kiraku"
-    },
-    {
-      "kind": "unchanged",
-      "id": "korean-superette-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 27,
-      "name": "Korean Superette"
-    },
-    {
-      "kind": "unchanged",
-      "id": "la-marcha-tapas-bar-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 28,
-      "name": "La Marcha Tapas Bar"
-    },
-    {
-      "kind": "unchanged",
-      "id": "la-note-restaurant-provencal-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 29,
-      "name": "La Note Restaurant Provençal"
-    },
-    {
-      "kind": "unchanged",
-      "id": "lao-garden-restaurant-bar-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 30,
-      "name": "Lao Garden Restaurant & Bar"
-    },
-    {
-      "kind": "unchanged",
-      "id": "larb-thai-food-tapas-el-cerrito",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 31,
-      "name": "Larb Thai Food & Tapas"
-    },
-    {
-      "kind": "unchanged",
-      "id": "li-s-knife-cut-noodle-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 32,
-      "name": "Li's Knife Cut Noodle"
-    },
-    {
-      "kind": "unchanged",
-      "id": "lulu-s-little-kitchen-albany",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 33,
-      "name": "Lulu's Little Kitchen"
-    },
-    {
-      "kind": "unchanged",
-      "id": "mercado-925-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 34,
-      "name": "Mercado 925"
-    },
-    {
-      "kind": "unchanged",
-      "id": "mezzo-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 35,
-      "name": "Mezzo"
-    },
-    {
-      "kind": "unchanged",
-      "id": "mount-everest-restaurant-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 36,
-      "name": "Mount Everest Restaurant"
-    },
-    {
-      "kind": "unchanged",
-      "id": "noodle-dynasty-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 37,
-      "name": "Noodle Dynasty"
-    },
-    {
-      "kind": "unchanged",
-      "id": "o2-eatery-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 38,
-      "name": "O2 Eatery"
-    },
-    {
-      "kind": "unchanged",
-      "id": "peace-natural-vegan-food-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 39,
-      "name": "Peace Natural Vegan Food"
-    },
-    {
-      "kind": "unchanged",
-      "id": "phosho-dough-phosho-dough-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 40,
-      "name": "Phosho Dough (Phởsho Dough)"
-    },
-    {
-      "kind": "unchanged",
-      "id": "picnic-picnic-rotisserie-albany",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 41,
-      "name": "Picnic (Picnic Rotisserie)"
-    },
-    {
-      "kind": "unchanged",
-      "id": "roses-on-adeline-bar-kitchen-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 42,
-      "name": "Roses on Adeline Bar & Kitchen"
-    },
-    {
-      "kind": "unchanged",
-      "id": "sakana-sushi-roll-kensington",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 43,
-      "name": "Sakana Sushi & Roll"
-    },
-    {
-      "kind": "unchanged",
-      "id": "sam-s-log-cabin-albany",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
+      "source": "AlamedaCSV2.1_1791421821864.csv",
       "row": 44,
-      "name": "Sam's Log Cabin"
+      "name": "Greens & Grains"
     },
     {
-      "kind": "unchanged",
-      "id": "tanzie-s-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
+      "kind": "updated",
+      "id": "casa-revolucion-taqueria-alameda",
+      "fields": [
+        "address",
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
       "row": 45,
-      "name": "Tanzie's"
+      "name": "Casa Revolución Taqueria"
     },
     {
-      "kind": "unchanged",
-      "id": "tarocco-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
+      "kind": "updated",
+      "id": "fowl-fare-alameda",
+      "fields": [
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
       "row": 46,
-      "name": "TAROCCO"
+      "name": "Fowl + Fare"
     },
     {
-      "kind": "unchanged",
-      "id": "the-hidden-cafe-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
+      "kind": "updated",
+      "id": "alameda-cinema-grill-alameda",
+      "fields": [
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
       "row": 47,
-      "name": "The Hidden Café"
+      "name": "Alameda Cinema Grill"
     },
     {
-      "kind": "unchanged",
-      "id": "tipsy-yeti-restaurant-bar-berkeley",
-      "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
+      "kind": "new",
+      "id": "good-2-go-liquor-curry-shanvi-indian-kitchen-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
       "row": 48,
-      "name": "Tipsy Yeti Restaurant & Bar"
+      "name": "Good 2 Go Liquor & Curry (Shanvi Indian Kitchen)"
+    },
+    {
+      "kind": "new",
+      "id": "house-of-bagels-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 49,
+      "name": "House of Bagels"
+    },
+    {
+      "kind": "new",
+      "id": "alameda-bagels-donuts-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 50,
+      "name": "Alameda Bagels & Donuts"
+    },
+    {
+      "kind": "new",
+      "id": "crispian-bakery-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "phone"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 51,
+      "name": "Crispian Bakery"
+    },
+    {
+      "kind": "new",
+      "id": "the-pampered-pup-alameda",
+      "fields": [
+        "name",
+        "address",
+        "city"
+      ],
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 52,
+      "name": "The Pampered Pup"
     },
     {
       "kind": "unchanged",
-      "id": "via-del-corso-berkeley",
+      "id": "cholita-linda-alameda",
       "fields": [],
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 49,
-      "name": "Via del Corso"
-    },
-    {
-      "kind": "updated",
-      "id": "acre-kitchen-and-bar-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 2,
-      "name": "ACRE Kitchen and Bar"
-    },
-    {
-      "kind": "updated",
-      "id": "almond-and-oak-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 3,
-      "name": "Almond and Oak"
-    },
-    {
-      "kind": "updated",
-      "id": "aloha-club-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 4,
-      "name": "Aloha Club"
-    },
-    {
-      "kind": "updated",
-      "id": "aman-cafe-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 5,
-      "name": "Aman Cafe"
-    },
-    {
-      "kind": "updated",
-      "id": "bardo-lounge-supper-club-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 6,
-      "name": "Bardo Lounge & Supper Club"
-    },
-    {
-      "kind": "updated",
-      "id": "battambang-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 7,
-      "name": "Battambang"
-    },
-    {
-      "kind": "updated",
-      "id": "bellanico-restaurant-and-wine-bar-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 8,
-      "name": "Bellanico Restaurant and Wine Bar"
-    },
-    {
-      "kind": "updated",
-      "id": "belotti-bottega-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 9,
-      "name": "Belotti Bottega"
-    },
-    {
-      "kind": "updated",
-      "id": "belotti-ristorante-e-bottega-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 10,
-      "name": "Belotti Ristorante E Bottega"
-    },
-    {
-      "kind": "updated",
-      "id": "bird-buffalo-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 11,
-      "name": "Bird & Buffalo"
-    },
-    {
-      "kind": "updated",
-      "id": "bistro-4293-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 12,
-      "name": "Bistro 4293"
-    },
-    {
-      "kind": "updated",
-      "id": "bombera-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 13,
-      "name": "Bombera"
-    },
-    {
-      "kind": "updated",
-      "id": "brotzeit-lokal-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 14,
-      "name": "Brotzeit Lokal"
-    },
-    {
-      "kind": "updated",
-      "id": "burma-superstar-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 15,
-      "name": "Burma Superstar"
-    },
-    {
-      "kind": "updated",
-      "id": "cambodian-street-food-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 16,
-      "name": "Cambodian Street Food"
-    },
-    {
-      "kind": "updated",
-      "id": "cholita-linda-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 17,
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 56,
       "name": "Cholita Linda"
     },
     {
-      "kind": "updated",
-      "id": "crogan-s-montclair-oakland",
+      "kind": "new",
+      "id": "treats-by-mrs-t-alameda",
       "fields": [
-        "description",
-        "rating",
-        "tags"
+        "name",
+        "address",
+        "city",
+        "phone"
       ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 18,
-      "name": "Crogan's Montclair"
-    },
-    {
-      "kind": "updated",
-      "id": "dan-sung-sa-restaurant-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 19,
-      "name": "Dan Sung Sa Restaurant"
-    },
-    {
-      "kind": "updated",
-      "id": "daughter-thai-kitchen-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 20,
-      "name": "Daughter Thai Kitchen"
-    },
-    {
-      "kind": "updated",
-      "id": "daytrip-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 21,
-      "name": "Daytrip"
-    },
-    {
-      "kind": "updated",
-      "id": "degrees-plato-tap-room-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 22,
-      "name": "Degrees Plato Tap Room"
-    },
-    {
-      "kind": "updated",
-      "id": "fob-kitchen-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 23,
-      "name": "FOB Kitchen"
-    },
-    {
-      "kind": "updated",
-      "id": "gangnam-jajang-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 24,
-      "name": "Gangnam Jajang"
-    },
-    {
-      "kind": "updated",
-      "id": "ghost-town-brewing-laurel-biergarten-kitchen-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 25,
-      "name": "Ghost Town Brewing - Laurel Biergarten & Kitchen"
-    },
-    {
-      "kind": "updated",
-      "id": "grand-lake-kitchen-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 26,
-      "name": "Grand Lake Kitchen"
-    },
-    {
-      "kind": "updated",
-      "id": "grand-lake-kitchen-dimond-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 27,
-      "name": "Grand Lake Kitchen - Dimond"
-    },
-    {
-      "kind": "updated",
-      "id": "gum-kuo-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 28,
-      "name": "Gum Kuo"
-    },
-    {
-      "kind": "updated",
-      "id": "huangcheng-noodle-house-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 29,
-      "name": "Huangcheng Noodle House"
-    },
-    {
-      "kind": "updated",
-      "id": "innenaskitchen-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 30,
-      "name": "InNenasKitchen"
-    },
-    {
-      "kind": "updated",
-      "id": "italian-colors-restaurant-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 31,
-      "name": "Italian Colors Restaurant"
-    },
-    {
-      "kind": "updated",
-      "id": "itsumo-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 32,
-      "name": "Itsumo"
-    },
-    {
-      "kind": "updated",
-      "id": "jo-s-modern-thai-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 33,
-      "name": "Jo's Modern Thai"
-    },
-    {
-      "kind": "updated",
-      "id": "joodooboo-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 34,
-      "name": "Joodooboo"
-    },
-    {
-      "kind": "updated",
-      "id": "kakui-sushi-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 35,
-      "name": "Kakui Sushi"
-    },
-    {
-      "kind": "updated",
-      "id": "kotobuki-japanese-restaurant-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 36,
-      "name": "Kotobuki Japanese Restaurant"
-    },
-    {
-      "kind": "updated",
-      "id": "lucky-three-seven-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 37,
-      "name": "Lucky Three Seven"
-    },
-    {
-      "kind": "updated",
-      "id": "mama-oakland-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 38,
-      "name": "MAMA Oakland"
-    },
-    {
-      "kind": "updated",
-      "id": "mi-grullense-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 39,
-      "name": "Mi Grullense"
-    },
-    {
-      "kind": "updated",
-      "id": "montclair-egg-shop-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 40,
-      "name": "Montclair Egg Shop"
-    },
-    {
-      "kind": "updated",
-      "id": "moo-bong-ri-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 41,
-      "name": "Moo Bong Ri"
-    },
-    {
-      "kind": "updated",
-      "id": "mr-liu-noodle-house-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 42,
-      "name": "Mr Liu Noodle House"
-    },
-    {
-      "kind": "updated",
-      "id": "mugunghwa-korean-restaurant-oakland-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 43,
-      "name": "Mugunghwa Korean Restaurant (Oakland)"
-    },
-    {
-      "kind": "updated",
-      "id": "nido-s-backyard-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 44,
-      "name": "NIDO's BackYard"
-    },
-    {
-      "kind": "updated",
-      "id": "oakland-street-food-co-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 45,
-      "name": "Oakland Street Food Co."
-    },
-    {
-      "kind": "updated",
-      "id": "ohgane-oakland-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 46,
-      "name": "Ohgane Oakland"
-    },
-    {
-      "kind": "updated",
-      "id": "parche-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 47,
-      "name": "Parche"
-    },
-    {
-      "kind": "updated",
-      "id": "pizzaiolo-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 48,
-      "name": "Pizzaiolo"
-    },
-    {
-      "kind": "updated",
-      "id": "pomet-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 49,
-      "name": "Pomet"
-    },
-    {
-      "kind": "updated",
-      "id": "prescott-market-west-oakland-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 50,
-      "name": "Prescott Market West Oakland"
-    },
-    {
-      "kind": "updated",
-      "id": "puerto-rican-street-cuisine-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 51,
-      "name": "Puerto Rican Street Cuisine"
-    },
-    {
-      "kind": "updated",
-      "id": "qi-wei-house-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 52,
-      "name": "Qi Wei House"
-    },
-    {
-      "kind": "updated",
-      "id": "rose-garden-uptown-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 53,
-      "name": "Rose Garden Uptown"
-    },
-    {
-      "kind": "updated",
-      "id": "saffron-kitchen-restaurant-bar-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 54,
-      "name": "Saffron Kitchen, Restaurant & Bar"
-    },
-    {
-      "kind": "updated",
-      "id": "saucy-oakland-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 55,
-      "name": "Saucy Oakland"
-    },
-    {
-      "kind": "updated",
-      "id": "seoul-gom-tang-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 56,
-      "name": "Seoul Gom Tang"
-    },
-    {
-      "kind": "updated",
-      "id": "sequoia-diner-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
+      "source": "AlamedaCSV2.1_1791421821864.csv",
       "row": 57,
-      "name": "Sequoia Diner"
+      "name": "Treats by Mrs. T"
     },
     {
-      "kind": "updated",
-      "id": "sfizio-oakland",
+      "kind": "new",
+      "id": "forbidden-island-tiki-lounge-alameda",
       "fields": [
-        "description",
-        "rating",
-        "tags"
+        "name",
+        "address",
+        "city",
+        "phone"
       ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 58,
-      "name": "Sfizio"
-    },
-    {
-      "kind": "updated",
-      "id": "shan-dong-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 59,
-      "name": "Shan Dong"
-    },
-    {
-      "kind": "updated",
-      "id": "snail-bar-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
+      "source": "AlamedaCSV2.1_1791421821864.csv",
       "row": 60,
-      "name": "Snail Bar"
+      "name": "Forbidden Island Tiki Lounge"
     },
     {
-      "kind": "updated",
-      "id": "sun-moon-studio-oakland",
+      "kind": "new",
+      "id": "vinyl-wine-bar-shop-alameda",
       "fields": [
-        "description",
-        "rating",
-        "tags"
+        "name",
+        "address",
+        "city",
+        "phone"
       ],
-      "source": "OaklandCSV2_1791421080980.csv",
+      "source": "AlamedaCSV2.1_1791421821864.csv",
       "row": 61,
-      "name": "Sun Moon Studio"
+      "name": "Vinyl Wine Bar & Shop"
     },
     {
-      "kind": "updated",
-      "id": "t-chaka-a-taste-of-haiti-oakland",
+      "kind": "new",
+      "id": "funky-elephant-berkeley",
       "fields": [
+        "name",
+        "address",
+        "city",
         "description",
-        "rating",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
         "tags"
       ],
-      "source": "OaklandCSV2_1791421080980.csv",
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 2,
+      "name": "Funky Elephant"
+    },
+    {
+      "kind": "new",
+      "id": "berkeley-social-club-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 3,
+      "name": "Berkeley Social Club"
+    },
+    {
+      "kind": "new",
+      "id": "cafe-brusco-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "website",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 4,
+      "name": "Cafe Brusco"
+    },
+    {
+      "kind": "new",
+      "id": "rose-pizzeria-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 5,
+      "name": "Rose Pizzeria"
+    },
+    {
+      "kind": "new",
+      "id": "ippuku-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 6,
+      "name": "Ippuku"
+    },
+    {
+      "kind": "new",
+      "id": "middle-east-market-cafe-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 7,
+      "name": "Middle East Market & Cafe"
+    },
+    {
+      "kind": "new",
+      "id": "great-china-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 8,
+      "name": "Great China"
+    },
+    {
+      "kind": "new",
+      "id": "vik-s-chaat-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 9,
+      "name": "Vik's Chaat"
+    },
+    {
+      "kind": "new",
+      "id": "cafe-bolita-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 10,
+      "name": "Cafe Bolita"
+    },
+    {
+      "kind": "new",
+      "id": "state-flour-pizza-company-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "website",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 11,
+      "name": "State Flour Pizza Company"
+    },
+    {
+      "kind": "new",
+      "id": "lemat-ethiopian-restaurant-cafe-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 12,
+      "name": "Lemat Ethiopian Restaurant & Cafe"
+    },
+    {
+      "kind": "new",
+      "id": "comal-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 13,
+      "name": "Comal"
+    },
+    {
+      "kind": "new",
+      "id": "iyasare-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 14,
+      "name": "Iyasare"
+    },
+    {
+      "kind": "new",
+      "id": "tacubaya-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 15,
+      "name": "Tacubaya"
+    },
+    {
+      "kind": "new",
+      "id": "cha-ya-vegetarian-japanese-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 16,
+      "name": "Cha-Ya Vegetarian Japanese"
+    },
+    {
+      "kind": "new",
+      "id": "the-butcher-s-son-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 17,
+      "name": "The Butcher's Son"
+    },
+    {
+      "kind": "new",
+      "id": "bar-panisse-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 20,
+      "name": "Bar Panisse"
+    },
+    {
+      "kind": "new",
+      "id": "sichuan-style-restaurant-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 21,
+      "name": "Sichuan Style Restaurant"
+    },
+    {
+      "kind": "new",
+      "id": "noor-indian-fusion-kitchen-berkeley",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 22,
+      "name": "Noor Indian Fusion Kitchen"
+    },
+    {
+      "kind": "new",
+      "id": "zaytoon-mediterranean-restaurant-bar-albany",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 23,
+      "name": "Zaytoon Mediterranean Restaurant & Bar"
+    },
+    {
+      "kind": "new",
+      "id": "bowl-d-korean-rice-bar-albany",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 24,
+      "name": "Bowl'd Korean Rice Bar"
+    },
+    {
+      "kind": "new",
+      "id": "5-tacos-and-beers-albany",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 25,
+      "name": "5 Tacos and Beers"
+    },
+    {
+      "kind": "new",
+      "id": "cugini-ristorante-albany",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 26,
+      "name": "Cugini Ristorante"
+    },
+    {
+      "kind": "new",
+      "id": "everest-kitchen-albany",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 27,
+      "name": "Everest Kitchen"
+    },
+    {
+      "kind": "new",
+      "id": "aangan-albany",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 28,
+      "name": "Aangan"
+    },
+    {
+      "kind": "new",
+      "id": "patisserie-rotha-albany",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "description",
+        "neighborhood",
+        "phone",
+        "website",
+        "hours",
+        "tags"
+      ],
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 29,
+      "name": "Pâtisserie Rotha"
+    },
+    {
+      "kind": "new",
+      "id": "3-bottled-fish-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 2,
+      "name": "3 Bottled Fish"
+    },
+    {
+      "kind": "new",
+      "id": "5-spiced-kitchen-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 3,
+      "name": "5 Spiced Kitchen"
+    },
+    {
+      "kind": "new",
+      "id": "abesha-ethiopian-cuisine-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 4,
+      "name": "Abesha Ethiopian Cuisine"
+    },
+    {
+      "kind": "new",
+      "id": "agave-uptown-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 5,
+      "name": "Agave Uptown"
+    },
+    {
+      "kind": "new",
+      "id": "alem-s-coffee-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 6,
+      "name": "Alem's Coffee"
+    },
+    {
+      "kind": "new",
+      "id": "bakesale-betty-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 7,
+      "name": "Bakesale Betty"
+    },
+    {
+      "kind": "new",
+      "id": "bar-skula-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 8,
+      "name": "Bar Skula"
+    },
+    {
+      "kind": "new",
+      "id": "barcote-ethiopian-restaurant-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 9,
+      "name": "Barcote Ethiopian Restaurant"
+    },
+    {
+      "kind": "new",
+      "id": "big-momma-s-kitchen-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 10,
+      "name": "Big Momma's Kitchen"
+    },
+    {
+      "kind": "new",
+      "id": "camchilao-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 11,
+      "name": "Camchilao"
+    },
+    {
+      "kind": "new",
+      "id": "carnitas-carnitas-zamora-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 12,
+      "name": "Carnitas Carnitas Zamora"
+    },
+    {
+      "kind": "new",
+      "id": "champa-garden-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 13,
+      "name": "Champa Garden"
+    },
+    {
+      "kind": "new",
+      "id": "chef-smelly-s-smelly-s-creole-soul-food-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 14,
+      "name": "Chef Smelly's (Smelly's Creole & Soul Food)"
+    },
+    {
+      "kind": "new",
+      "id": "chuan-yu-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 15,
+      "name": "Chuan Yu"
+    },
+    {
+      "kind": "new",
+      "id": "classic-guilin-rice-noodles-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 16,
+      "name": "Classic Guilin Rice Noodles"
+    },
+    {
+      "kind": "new",
+      "id": "cocobreeze-caribbean-restaurant-and-bakery-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 17,
+      "name": "CocoBreeze Caribbean Restaurant and Bakery"
+    },
+    {
+      "kind": "new",
+      "id": "delage-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 18,
+      "name": "Delage"
+    },
+    {
+      "kind": "new",
+      "id": "el-rinconcito-chapin-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 19,
+      "name": "El Rinconcito Chapin"
+    },
+    {
+      "kind": "new",
+      "id": "el-tio-juan-taco-truck-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 20,
+      "name": "El Tio Juan Taco Truck"
+    },
+    {
+      "kind": "new",
+      "id": "enssaro-ethiopian-restaurant-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 21,
+      "name": "Enssaro Ethiopian Restaurant"
+    },
+    {
+      "kind": "new",
+      "id": "gogi-time-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 22,
+      "name": "Gogi Time"
+    },
+    {
+      "kind": "new",
+      "id": "guadalajara-restaurant-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 23,
+      "name": "Guadalajara Restaurant"
+    },
+    {
+      "kind": "new",
+      "id": "home-of-chicken-and-waffles-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 24,
+      "name": "Home of Chicken and Waffles"
+    },
+    {
+      "kind": "new",
+      "id": "hyphy-burger-international-blvd-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 25,
+      "name": "Hyphy Burger (International Blvd)"
+    },
+    {
+      "kind": "new",
+      "id": "izakaya-shodai-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 26,
+      "name": "Izakaya Shodai"
+    },
+    {
+      "kind": "new",
+      "id": "jalisco-restaurant-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 27,
+      "name": "Jalisco Restaurant"
+    },
+    {
+      "kind": "new",
+      "id": "june-s-pizza-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 28,
+      "name": "June's Pizza"
+    },
+    {
+      "kind": "new",
+      "id": "kuidaore-handroll-bar-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 29,
+      "name": "Kuidaore Handroll Bar"
+    },
+    {
+      "kind": "new",
+      "id": "la-grana-fish-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 30,
+      "name": "La Grana Fish"
+    },
+    {
+      "kind": "new",
+      "id": "la-parrilla-loca-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 31,
+      "name": "La Parrilla Loca"
+    },
+    {
+      "kind": "new",
+      "id": "leaning-tower-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 32,
+      "name": "Leaning Tower"
+    },
+    {
+      "kind": "new",
+      "id": "los-cocos-salvadoran-restaurant-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 33,
+      "name": "Los Cocos Salvadoran Restaurant"
+    },
+    {
+      "kind": "new",
+      "id": "lovely-s-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 34,
+      "name": "Lovely's"
+    },
+    {
+      "kind": "new",
+      "id": "malibu-s-burgers-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 35,
+      "name": "Malibu's Burgers"
+    },
+    {
+      "kind": "new",
+      "id": "mariscos-la-costa-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 36,
+      "name": "Mariscos La Costa"
+    },
+    {
+      "kind": "new",
+      "id": "messob-ethiopian-restaurant-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 37,
+      "name": "Messob Ethiopian Restaurant"
+    },
+    {
+      "kind": "new",
+      "id": "mistura-rotisserie-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 38,
+      "name": "Mistura Rotisserie"
+    },
+    {
+      "kind": "new",
+      "id": "mom-s-pho-banh-mi-mom-s-bun-mi-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 39,
+      "name": "Mom's Pho & Banh Mi (Mom's Bun Mi)"
+    },
+    {
+      "kind": "new",
+      "id": "mujiri-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 40,
+      "name": "Mujiri"
+    },
+    {
+      "kind": "new",
+      "id": "mago-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 41,
+      "name": "Mägo"
+    },
+    {
+      "kind": "new",
+      "id": "new-gold-medal-restaurant-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 42,
+      "name": "New Gold Medal Restaurant"
+    },
+    {
+      "kind": "new",
+      "id": "paulista-brazilian-kitchen-taproom-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 43,
+      "name": "Paulista Brazilian Kitchen & Taproom"
+    },
+    {
+      "kind": "new",
+      "id": "peony-seafood-restaurant-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 44,
+      "name": "Peony Seafood Restaurant"
+    },
+    {
+      "kind": "new",
+      "id": "phnom-penh-house-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 45,
+      "name": "Phnom Penh House"
+    },
+    {
+      "kind": "new",
+      "id": "pho-king-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 46,
+      "name": "Pho King"
+    },
+    {
+      "kind": "new",
+      "id": "portal-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 47,
+      "name": "Portal"
+    },
+    {
+      "kind": "new",
+      "id": "pyeong-chang-tofu-house-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 48,
+      "name": "Pyeong Chang Tofu House"
+    },
+    {
+      "kind": "new",
+      "id": "ramen-shop-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 49,
+      "name": "Ramen Shop"
+    },
+    {
+      "kind": "new",
+      "id": "sobo-ramen-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 50,
+      "name": "SOBO Ramen"
+    },
+    {
+      "kind": "new",
+      "id": "soi-4-bangkok-eatery-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 51,
+      "name": "Soi 4 Bangkok Eatery"
+    },
+    {
+      "kind": "new",
+      "id": "spices-3-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 52,
+      "name": "Spices 3"
+    },
+    {
+      "kind": "new",
+      "id": "tacos-mi-rancho-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 53,
+      "name": "Tacos Mi Rancho"
+    },
+    {
+      "kind": "new",
+      "id": "tacos-mi-reynita-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 54,
+      "name": "Tacos Mi Reynita"
+    },
+    {
+      "kind": "new",
+      "id": "tamaleria-azteca-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 55,
+      "name": "Tamaleria Azteca"
+    },
+    {
+      "kind": "new",
+      "id": "taqueria-el-paisa-com-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 56,
+      "name": "Taqueria El Paisa@.com"
+    },
+    {
+      "kind": "new",
+      "id": "taqueria-san-jose-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 57,
+      "name": "Taqueria San Jose"
+    },
+    {
+      "kind": "new",
+      "id": "vien-huong-restaurant-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 58,
+      "name": "Vien Huong Restaurant"
+    },
+    {
+      "kind": "new",
+      "id": "vientian-cafe-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 59,
+      "name": "Vientian Cafe"
+    },
+    {
+      "kind": "new",
+      "id": "viridian-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 60,
+      "name": "Viridian"
+    },
+    {
+      "kind": "new",
+      "id": "world-famous-hotboys-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
+      "row": 61,
+      "name": "World Famous HotBoys"
+    },
+    {
+      "kind": "new",
+      "id": "xolo-taqueria-oakland",
+      "fields": [
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
+      ],
+      "source": "OaklandCSV2.1_1791421836714.csv",
       "row": 62,
-      "name": "T'chaka a Taste of Haiti"
+      "name": "Xolo Taqueria"
     },
     {
-      "kind": "updated",
-      "id": "teni-east-kitchen-oakland",
+      "kind": "new",
+      "id": "yonsei-handrolls-oakland",
       "fields": [
-        "description",
-        "rating",
-        "tags"
+        "name",
+        "address",
+        "city",
+        "neighborhood",
+        "phone",
+        "website"
       ],
-      "source": "OaklandCSV2_1791421080980.csv",
+      "source": "OaklandCSV2.1_1791421836714.csv",
       "row": 63,
-      "name": "Teni East Kitchen"
-    },
-    {
-      "kind": "updated",
-      "id": "the-cook-and-her-farmer-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 64,
-      "name": "The Cook and Her Farmer"
-    },
-    {
-      "kind": "updated",
-      "id": "the-fat-lady-bar-restaurant-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 65,
-      "name": "The Fat Lady Bar & Restaurant"
-    },
-    {
-      "kind": "updated",
-      "id": "the-hatch-oakland-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 66,
-      "name": "The Hatch Oakland"
-    },
-    {
-      "kind": "updated",
-      "id": "the-monk-s-kettle-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 67,
-      "name": "The Monk's Kettle"
-    },
-    {
-      "kind": "updated",
-      "id": "the-saap-avenue-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 68,
-      "name": "The Saap Avenue"
-    },
-    {
-      "kind": "updated",
-      "id": "the-salty-pearl-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 69,
-      "name": "The Salty Pearl"
-    },
-    {
-      "kind": "updated",
-      "id": "the-saucy-hut-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 70,
-      "name": "The Saucy Hut"
-    },
-    {
-      "kind": "updated",
-      "id": "the-wolf-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 71,
-      "name": "The Wolf"
-    },
-    {
-      "kind": "updated",
-      "id": "to-the-moon-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 72,
-      "name": "To The Moon"
-    },
-    {
-      "kind": "updated",
-      "id": "town-fare-by-chef-michele-mcqueen-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 73,
-      "name": "Town Fare by Chef Michele McQueen"
-    },
-    {
-      "kind": "updated",
-      "id": "twinflame-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 74,
-      "name": "Twinflame"
-    },
-    {
-      "kind": "updated",
-      "id": "understory-oakland-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 75,
-      "name": "Understory Oakland"
-    },
-    {
-      "kind": "updated",
-      "id": "wahpepah-s-kitchen-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 76,
-      "name": "Wahpepah's Kitchen"
-    },
-    {
-      "kind": "updated",
-      "id": "willows-pine-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 77,
-      "name": "Willows & Pine"
-    },
-    {
-      "kind": "updated",
-      "id": "wood-tavern-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 78,
-      "name": "Wood Tavern"
-    },
-    {
-      "kind": "updated",
-      "id": "yellow-door-oakland",
-      "fields": [
-        "description",
-        "rating",
-        "tags"
-      ],
-      "source": "OaklandCSV2_1791421080980.csv",
-      "row": 79,
-      "name": "Yellow Door"
+      "name": "Yonsei Handrolls"
     }
   ],
   "flags": [
     {
-      "source": "Berkeley_Restaurant_Directory_Listings_1791420877482.csv",
-      "row": 40,
-      "name": "Phosho Dough (Phởsho Dough)",
-      "reason": "Damaged characters in incoming name; kept existing spelling"
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 53,
+      "name": "The Local",
+      "reason": "Missing or ambiguous street address; not imported. What was found: Restaurant Week 2026 participant only. Verification next step: Confirm address and concept. Placeholder: 'A Park Street neighborhood spot; details coming soon.'. Sources checked: alamedarestaurantweek.com"
+    },
+    {
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 54,
+      "name": "Poke Koma",
+      "reason": "Missing or ambiguous street address; not imported. What was found: Poke shop; Restaurant Week 2026 participant. Verification next step: Confirm address and ownership. Placeholder: 'Build-your-own poke bowls near Park Street.'. Sources checked: alamedarestaurantweek.com"
+    },
+    {
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 55,
+      "name": "Julie's Coffee & Tea",
+      "reason": "Missing or ambiguous street address; not imported. What was found: Café; Restaurant Week 2026 participant. Verification next step: Confirm address and food menu. Placeholder: 'A neighborhood café for coffee, tea and light bites.'. Sources checked: alamedarestaurantweek.com"
+    },
+    {
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 58,
+      "name": "Whisk Cake Creations",
+      "reason": "Missing or ambiguous street address; not imported. What was found: Cake bakery; Restaurant Week 2025 and 2026 participant. Verification next step: Confirm address and whether it serves food. Placeholder: 'A custom cake bakery; details coming soon.'. Sources checked: alamedarestaurantweek.com"
+    },
+    {
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 59,
+      "name": "Lee's Donuts",
+      "reason": "Missing or ambiguous street address; not imported. What was found: Donut shop; Restaurant Week 2026 participant. Verification next step: Confirm address and ownership. Placeholder: 'A West End donut shop for classic morning treats.'. Sources checked: alamedarestaurantweek.com"
+    },
+    {
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 62,
+      "name": "VJ Sports Bar (Marina Village) / Angelfish (Harbor Bay Landing)",
+      "reason": "Missing or ambiguous street address; not imported. What was found: Named only in Restaurant Week 2025 (VJ) and the Harbor Bay Landing tenant list (Angelfish, Japanese). Verification next step: Call or visit both. Placeholder: 'A Marina Village sports bar' / 'A Bay Farm Japanese restaurant; details coming soon.'. Sources checked: alamedarestaurantweek.com; yelp.com/biz/harbor-bay-landing-alameda"
+    },
+    {
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 18,
+      "name": "Oceanview Diner",
+      "reason": "Missing or ambiguous street address; not imported. Address, phone and hours could not be scraped; the address shown is unconfirmed. Owner and history unknown."
+    },
+    {
+      "source": "Berkeley_&_Albany_CSV2_1791421846482.csv",
+      "row": 19,
+      "name": "Kopi Bar & Bakery",
+      "reason": "Missing or ambiguous street address; not imported. Exact street address and phone not found. Hours conflict between Berkeleyside (11-5) and website/Yelp (9-4 / 10-5)."
+    },
+    {
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 29,
+      "name": "C'era Una Volta Kitchen & Catering",
+      "reason": "Existing listing \"C'era Una Volta\" (c-era-una-volta-alameda) matched by street address and phone; updated instead of creating a duplicate."
+    },
+    {
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 38,
+      "name": "Dragon Rouge",
+      "reason": "Existing listing \"Dragon Rouge Bistro\" (dragon-rouge-bistro-alameda) matched by street address and phone; updated instead of creating a duplicate."
+    },
+    {
+      "source": "AlamedaCSV2.1_1791421821864.csv",
+      "row": 39,
+      "name": "A Town Pizza",
+      "reason": "Existing listing \"A-Town Pizza and Kabob House\" (a-town-pizza-and-kabob-house-alameda) matched by street address and phone; updated instead of creating a duplicate."
     }
   ]
 }

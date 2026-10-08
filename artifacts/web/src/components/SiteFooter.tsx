@@ -15,6 +15,7 @@ const LINK_GROUPS = [
     links: [
       { href: "/explore?mode=city&city=Oakland", label: "Oakland" },
       { href: "/explore?mode=city&city=Berkeley", label: "Berkeley" },
+      { href: "/explore?mode=city&city=Albany", label: "Albany" },
       { href: "/explore?mode=city&city=Alameda", label: "Alameda" },
     ],
   },

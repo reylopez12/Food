@@ -1,7 +1,7 @@
 import { db, pool } from "./index";
 import { venuesTable } from "./schema";
-import { findWorkspaceRoot, loadDirectoryVenues } from "./directory";
-import { loadDirectoryUpdates, planDirectoryUpdates } from "./directory-updates";
+import { findWorkspaceRoot } from "./directory";
+import { loadDirectoryUpdateBatch, loadSeedDirectoryVenues, planDirectoryUpdates } from "./directory-updates";
 import { eq, sql } from "drizzle-orm";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -10,7 +10,8 @@ import { fileURLToPath } from "node:url";
 async function main() {
   const root = findWorkspaceRoot(path.dirname(fileURLToPath(import.meta.url)));
   const assetsDir = path.join(root, "attached_assets");
-  const updates = loadDirectoryUpdates(assetsDir);
+  const batch = loadDirectoryUpdateBatch(assetsDir);
+  const { updates } = batch;
   const check = process.argv.includes("--check");
   const seed = process.argv.includes("--seed");
   const result = await db.transaction(async (tx) => {
@@ -18,7 +19,7 @@ async function main() {
     await tx.execute(sql`LOCK TABLE venues IN SHARE ROW EXCLUSIVE MODE`);
     const current = await tx.select().from(venuesTable);
     const pending = seed
-      ? planDirectoryUpdates(loadDirectoryVenues(assetsDir), updates).venues.map((venue) => ({
+      ? loadSeedDirectoryVenues(assetsDir).map((venue) => ({
           venue, fields: [], source: "seed", row: 0, notes: "",
         }))
       : updates;
@@ -36,12 +37,16 @@ async function main() {
     }
     return plan;
   });
+  result.flags.unshift(...batch.flags);
   const summary = {
     mode: check ? "preview" : seed ? "seed-missing-only" : "applied",
-    inputRows: updates.length,
+    inputRows: batch.inputRows,
+    ignoredFormattingRows: batch.ignoredRows,
     added: result.actions.filter((action) => action.kind === "new").length,
     updated: result.actions.filter((action) => action.kind === "updated").length,
     unchanged: result.actions.filter((action) => action.kind === "unchanged").length,
+    skipped: seed ? 0 : batch.inputRows - result.actions.length,
+    duplicateMatches: result.flags.filter((flag) => flag.reason.includes("instead of creating a duplicate")).length,
     flagged: result.flags.length,
     total: result.venues.length,
   };

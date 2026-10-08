@@ -14,3 +14,17 @@ mtime_ms = 1791421520868
 storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:e7f9ea3e-943f-4efe-973c-55594090372b/b109ff17-add6-44cd-8949-353861fd8cb5/caaebf87-98c3-496e-aaf2-85ffd6293ea3"
 storage_version_token = "1791421638466734"
 content_type = "text/csv"
+
+[[outputs]]
+id = "_7SNb6A78MmkpmYkWeUvj"
+uri = "file://reports/directory-import-updated-files.csv"
+type = "table"
+title = "Updated listings and duplicate review"
+description = "Results for 147 restaurant rows: 121 additions, 17 updates, 1 unchanged, 8 held for address review, and 3 duplicate-name matches updated without copying."
+logical_id = "ac3a963c-ee52-4e39-b51a-3648786be754"
+content_hash = "sha256:3d0982f066d13c1463ec3c02e5ffc34c20db329af48fc6acbf0625e0df6851c0"
+size = 43145
+mtime_ms = 1791422238327
+storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:e7f9ea3e-943f-4efe-973c-55594090372b/ac3a963c-ee52-4e39-b51a-3648786be754/c269242a-33d0-4924-8947-a508e0151249"
+storage_version_token = "1791422347072137"
+content_type = "text/csv"

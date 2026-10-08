@@ -5,10 +5,16 @@ import type { InsertVenue } from "./schema";
 type CsvRow = Record<string, string>;
 export type DirectorySource = "Alameda" | "Berkeley" | "Oakland";
 
-export const UPDATED_DIRECTORY_FILES = [
+export const PREVIOUS_DIRECTORY_FILES = [
   ["Alameda", "AlamedaCSV2_1791420661822.csv"],
   ["Berkeley", "Berkeley_Restaurant_Directory_Listings_1791420877482.csv"],
   ["Oakland", "OaklandCSV2_1791421080980.csv"],
+] as const;
+
+export const UPDATED_DIRECTORY_FILES = [
+  ["Alameda", "AlamedaCSV2.1_1791421821864.csv"],
+  ["Berkeley", "Berkeley_&_Albany_CSV2_1791421846482.csv"],
+  ["Oakland", "OaklandCSV2.1_1791421836714.csv"],
 ] as const;
 
 export const DIRECTORY_FILES = [
@@ -49,7 +55,7 @@ export function parseCsv(content: string): CsvRow[] {
     } else if ((char === "\n" || char === "\r") && !quoted) {
       if (char === "\r" && content[i + 1] === "\n") i++;
       row.push(value);
-      if (row.some((cell) => cell.trim())) records.push(row);
+      if (row.length > 1 || row.some((cell) => cell.trim())) records.push(row);
       row = [];
       value = "";
     } else {
@@ -78,12 +84,13 @@ function slug(value: string): string {
 
 const palette = ["#995B46", "#486D68", "#A16D40", "#695F82", "#9B5050", "#4C688C"];
 
-export function asVenue(row: CsvRow, source: DirectorySource): InsertVenue {
+export function asVenue(row: CsvRow, source: DirectorySource, allowPartial = false): InsertVenue {
   const name = row.Restaurant || row.Name;
-  if (!name || !row.Address || !(row["Directory Description"] || row["Listing Description"] || row.Summary)) {
+  const description = row["Directory Description"] || row["Listing Description"] || row.Description || row.Summary || "";
+  if (!name || !row.Address || (!allowPartial && !description)) {
     throw new Error(`Missing name, address or description in ${source}: ${JSON.stringify(row)}`);
   }
-  const addressCity = row.Address.match(/,\s*(Berkeley|Albany|El Cerrito|Kensington),\s*CA(?:\s*\d{5})?$/i);
+  const addressCity = row.Address.match(/,\s*(Berkeley|Albany|El Cerrito|Kensington|Alameda|Oakland),\s*CA(?:\s*\d{5})?(?:\s*\([^)]*\))?$/i);
   const city = source === "Berkeley" ? addressCity?.[1] : source;
   if (!city) throw new Error(`Unrecognized Berkeley-area city for ${name}: ${row.Address}`);
   const address = addressCity ? row.Address.slice(0, addressCity.index).trim() : row.Address.replace(/,\s*Oakland,\s*CA(?:\s*\d{5})?$/i, "").trim();
@@ -92,7 +99,6 @@ export function asVenue(row: CsvRow, source: DirectorySource): InsertVenue {
   const highlights = (row.Highlights || "").split(";").map((value) => value.trim()).filter(Boolean);
   const tags = [...new Set([...cuisine, ...highlights].filter((value) => value.length <= 38))].slice(0, 5);
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0].toUpperCase()).join("");
-  const description = row["Directory Description"] || row["Listing Description"] || row.Summary;
   const rating = row.Rating ? Number(row.Rating) : 0;
   if (!Number.isFinite(rating) || rating < 0 || rating > 5) throw new Error(`Invalid rating for ${name}`);
   return {
@@ -105,7 +111,7 @@ export function asVenue(row: CsvRow, source: DirectorySource): InsertVenue {
     city: `${city}, CA`,
     neighborhood: row.Neighborhood || "",
     phone: row.Phone || "",
-    website: row.Website || "",
+    website: row.Website ? (/^https?:\/\//i.test(row.Website) ? row.Website : `https://${row.Website}`) : "",
     hours: row.Hours || "",
     description: row.Status === "Temporarily closed" ? `Temporarily closed. ${description}` : description,
     tags,
