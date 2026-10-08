@@ -78,11 +78,11 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
           </div>
 
           <div className="flex items-center gap-2 mb-4">
-            {listing.reviewCount > 0 ? (
+            {listing.rating > 0 ? (
               <>
                 <StarRating rating={listing.rating} className="scale-90 origin-left" />
                 <span className="text-sm font-bold text-card-foreground">{listing.rating}</span>
-                <span className="text-sm text-muted-foreground font-medium">({listing.reviewCount})</span>
+                <span className="text-sm text-muted-foreground font-medium">{listing.reviewCount > 0 ? `(${listing.reviewCount})` : "Source rating"}</span>
               </>
             ) : <span className="text-sm text-muted-foreground">No ratings yet</span>}
             {listing.priceRange && <>

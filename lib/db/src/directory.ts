@@ -3,6 +3,13 @@ import path from "node:path";
 import type { InsertVenue } from "./schema";
 
 type CsvRow = Record<string, string>;
+export type DirectorySource = "Alameda" | "Berkeley" | "Oakland";
+
+export const UPDATED_DIRECTORY_FILES = [
+  ["Alameda", "AlamedaCSV2_1791420661822.csv"],
+  ["Berkeley", "Berkeley_Restaurant_Directory_Listings_1791420877482.csv"],
+  ["Oakland", "OaklandCSV2_1791421080980.csv"],
+] as const;
 
 export const DIRECTORY_FILES = [
   ["Alameda", "Alameda_CSV1_1790271911542.csv"],
@@ -10,7 +17,16 @@ export const DIRECTORY_FILES = [
   ["Oakland", "OaklandCSV1_1790271925802.csv"],
 ] as const;
 
-type DirectorySource = (typeof DIRECTORY_FILES)[number][0];
+export function readDirectoryCsv(filename: string): CsvRow[] {
+  const bytes = readFileSync(filename);
+  let content: string;
+  try {
+    content = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    content = new TextDecoder("windows-1252", { fatal: true }).decode(bytes);
+  }
+  return parseCsv(content);
+}
 
 // Handle commas, escaped quotes, and newlines inside quoted CSV fields.
 export function parseCsv(content: string): CsvRow[] {
@@ -62,9 +78,9 @@ function slug(value: string): string {
 
 const palette = ["#995B46", "#486D68", "#A16D40", "#695F82", "#9B5050", "#4C688C"];
 
-function asVenue(row: CsvRow, source: DirectorySource): InsertVenue {
+export function asVenue(row: CsvRow, source: DirectorySource): InsertVenue {
   const name = row.Restaurant || row.Name;
-  if (!name || !row.Address || !(row["Directory Description"] || row["Listing Description"])) {
+  if (!name || !row.Address || !(row["Directory Description"] || row["Listing Description"] || row.Summary)) {
     throw new Error(`Missing name, address or description in ${source}: ${JSON.stringify(row)}`);
   }
   const addressCity = row.Address.match(/,\s*(Berkeley|Albany|El Cerrito|Kensington),\s*CA(?:\s*\d{5})?$/i);
@@ -72,22 +88,24 @@ function asVenue(row: CsvRow, source: DirectorySource): InsertVenue {
   if (!city) throw new Error(`Unrecognized Berkeley-area city for ${name}: ${row.Address}`);
   const address = addressCity ? row.Address.slice(0, addressCity.index).trim() : row.Address.replace(/,\s*Oakland,\s*CA(?:\s*\d{5})?$/i, "").trim();
   const id = `${slug(name)}-${slug(city)}`;
-  const cuisine = row.Cuisine.split(/[\/,]/).map((value) => value.trim()).filter(Boolean);
+  const cuisine = (row.Cuisine || "").split(/[\/,]/).map((value) => value.trim()).filter(Boolean);
   const highlights = (row.Highlights || "").split(";").map((value) => value.trim()).filter(Boolean);
   const tags = [...new Set([...cuisine, ...highlights].filter((value) => value.length <= 38))].slice(0, 5);
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0].toUpperCase()).join("");
-  const description = row["Directory Description"] || row["Listing Description"];
+  const description = row["Directory Description"] || row["Listing Description"] || row.Summary;
+  const rating = row.Rating ? Number(row.Rating) : 0;
+  if (!Number.isFinite(rating) || rating < 0 || rating > 5) throw new Error(`Invalid rating for ${name}`);
   return {
     id,
     name,
     category: "restaurants",
-    rating: 0, // The supplied files do not contain ratings.
+    rating, // Only use a rating explicitly supplied by the CSV.
     reviewCount: 0,
     address,
     city: `${city}, CA`,
-    neighborhood: row.Neighborhood,
-    phone: row.Phone,
-    website: row.Website,
+    neighborhood: row.Neighborhood || "",
+    phone: row.Phone || "",
+    website: row.Website || "",
     hours: row.Hours || "",
     description: row.Status === "Temporarily closed" ? `Temporarily closed. ${description}` : description,
     tags,
@@ -106,7 +124,7 @@ function asVenue(row: CsvRow, source: DirectorySource): InsertVenue {
 /** Parse the three city CSVs in `assetsDir` into venue rows. */
 export function loadDirectoryVenues(assetsDir: string): InsertVenue[] {
   const venues = DIRECTORY_FILES.flatMap(([city, filename]) =>
-    parseCsv(readFileSync(path.join(assetsDir, filename), "utf8")).map((row) => asVenue(row, city)),
+    readDirectoryCsv(path.join(assetsDir, filename)).map((row) => asVenue(row, city)),
   );
   const ids = venues.map((venue) => venue.id);
   if (new Set(ids).size !== ids.length) throw new Error("Duplicate venue IDs in CSVs");

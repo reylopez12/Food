@@ -168,11 +168,11 @@ export default function ListingDetail() {
 
                 <div className="flex flex-wrap items-center gap-4 text-sm mb-6">
                   <div className="flex items-center gap-2 bg-accent/10 px-3 py-1.5 rounded-full">
-                    {listing.reviewCount > 0 ? (
+                    {listing.rating > 0 ? (
                       <>
                         <span className="font-bold text-base text-accent-foreground">{listing.rating}</span>
                         <StarRating rating={listing.rating} />
-                        <span className="text-muted-foreground font-medium">({listing.reviewCount} reviews)</span>
+                        <span className="text-muted-foreground font-medium">{listing.reviewCount > 0 ? `(${listing.reviewCount} reviews)` : "Source rating"}</span>
                       </>
                     ) : <span className="text-muted-foreground font-medium">No ratings yet</span>}
                   </div>

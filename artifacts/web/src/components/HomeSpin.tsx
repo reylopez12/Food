@@ -471,7 +471,7 @@ export function HomeSpin() {
                                 {winner.distanceMi < 0.1 ? "< 0.1 mi" : `${winner.distanceMi.toFixed(1)} mi`}
                               </Badge>
                             )}
-                            {winnerListing.reviewCount > 0 && (
+                            {winnerListing.rating > 0 && (
                               <div className="flex items-center gap-1 text-sm ml-auto">
                                 <Star className="w-3.5 h-3.5 fill-secondary text-secondary" />
                                 <span className="font-bold">{winnerListing.rating}</span>

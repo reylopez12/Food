@@ -1,36 +1,66 @@
-import { db } from "./index";
+import { db, pool } from "./index";
 import { venuesTable } from "./schema";
 import { findWorkspaceRoot, loadDirectoryVenues } from "./directory";
+import { loadDirectoryUpdates, planDirectoryUpdates } from "./directory-updates";
+import { eq, sql } from "drizzle-orm";
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 async function main() {
   const root = findWorkspaceRoot(path.dirname(fileURLToPath(import.meta.url)));
-  const venues = loadDirectoryVenues(path.join(root, "attached_assets"));
-  if (venues.length !== 175) throw new Error(`Expected 175 CSV records; got ${venues.length}`);
-
-  if (process.argv.includes("--check")) {
-    console.log(`Validated ${venues.length} listings: Alameda 49, Berkeley-area 48, Oakland 78.`);
-    return;
-  }
-  if (process.argv.includes("--seed")) {
-    for (let i = 0; i < venues.length; i += 50) {
-      await db.insert(venuesTable).values(venues.slice(i, i + 50)).onConflictDoNothing();
+  const assetsDir = path.join(root, "attached_assets");
+  const updates = loadDirectoryUpdates(assetsDir);
+  const check = process.argv.includes("--check");
+  const seed = process.argv.includes("--seed");
+  const result = await db.transaction(async (tx) => {
+    // Serialize imports and prevent concurrent listing edits while comparing.
+    await tx.execute(sql`LOCK TABLE venues IN SHARE ROW EXCLUSIVE MODE`);
+    const current = await tx.select().from(venuesTable);
+    const pending = seed
+      ? planDirectoryUpdates(loadDirectoryVenues(assetsDir), updates).venues.map((venue) => ({
+          venue, fields: [], source: "seed", row: 0, notes: "",
+        }))
+      : updates;
+    const plan = planDirectoryUpdates(current, pending);
+    if (!check) {
+      for (const action of plan.actions) {
+        const venue = plan.venues.find((item) => item.id === action.id)!;
+        if (action.kind === "new") {
+          await tx.insert(venuesTable).values(venue).onConflictDoNothing();
+        } else if (action.kind === "updated" && !seed) {
+          const patch = Object.fromEntries(action.fields.map((field) => [field, venue[field as keyof typeof venue]]));
+          await tx.update(venuesTable).set(patch).where(eq(venuesTable.id, action.id));
+        }
+      }
     }
-    console.log(`Seeded missing CSV listings from ${venues.length} rows.`);
-    return;
-  }
-  // Replace the directory atomically so a failed import leaves the old data intact.
-  await db.transaction(async (tx) => {
-    await tx.delete(venuesTable);
-    for (let i = 0; i < venues.length; i += 50) {
-      await tx.insert(venuesTable).values(venues.slice(i, i + 50));
-    }
+    return plan;
   });
-  console.log(`Replaced directory with ${venues.length} CSV listings.`);
+  const summary = {
+    mode: check ? "preview" : seed ? "seed-missing-only" : "applied",
+    inputRows: updates.length,
+    added: result.actions.filter((action) => action.kind === "new").length,
+    updated: result.actions.filter((action) => action.kind === "updated").length,
+    unchanged: result.actions.filter((action) => action.kind === "unchanged").length,
+    flagged: result.flags.length,
+    total: result.venues.length,
+  };
+  const reportDir = path.join(root, "reports");
+  mkdirSync(reportDir, { recursive: true });
+  const quote = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+  const rows = [
+    ["Result", "Restaurant", "Listing ID", "File", "CSV row", "Changed fields / flag", "Source verification notes"],
+    ...result.actions.map((action) => [action.kind, action.name, action.id, action.source, action.row,
+      action.fields.join("; "), updates.find((entry) => entry.source === action.source && entry.row === action.row)?.notes]),
+    ...result.flags.map((flag) => ["flagged", flag.name, "", flag.source, flag.row, flag.reason, ""]),
+  ];
+  writeFileSync(path.join(reportDir, "directory-import.csv"), "\uFEFF" + rows.map((row) => row.map(quote).join(",")).join("\n"));
+  writeFileSync(path.join(reportDir, "directory-import.json"), JSON.stringify({ summary, ...result, venues: undefined }, null, 2));
+  console.log(JSON.stringify(summary, null, 2));
+  console.log("Report: reports/directory-import.csv");
 }
 
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
-});
+}).finally(() => pool?.end());

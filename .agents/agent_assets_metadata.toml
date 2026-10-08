@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "F1gQOhvwnhNMDbf3x6iLZ"
+uri = "file://reports/directory-import.csv"
+type = "table"
+title = "Listing import and duplicate review"
+description = "Results for all 175 CSV rows, changed fields, source verification notes, and the flagged damaged restaurant name."
+logical_id = "b109ff17-add6-44cd-8949-353861fd8cb5"
+content_hash = "sha256:23def8a3da315c22e4d3bfa5c98791cbfc33994c9dcd4bd8cd05cd00d1d2d2c0"
+size = 36442
+mtime_ms = 1791421520868
+storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:e7f9ea3e-943f-4efe-973c-55594090372b/b109ff17-add6-44cd-8949-353861fd8cb5/caaebf87-98c3-496e-aaf2-85ffd6293ea3"
+storage_version_token = "1791421638466734"
+content_type = "text/csv"

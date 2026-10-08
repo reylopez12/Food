@@ -6,6 +6,7 @@ import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { drizzle as drizzlePglite } from "drizzle-orm/pglite";
 import pg from "pg";
 import { findWorkspaceRoot, loadDirectoryVenues } from "./directory";
+import { loadDirectoryUpdates, planDirectoryUpdates } from "./directory-updates";
 import * as schema from "./schema";
 
 const { Pool } = pg;
@@ -140,7 +141,8 @@ export async function ensureDatabase(): Promise<void> {
   await embedded.exec(EMBEDDED_SCHEMA_SQL);
   const [{ value }] = await db.select({ value: count() }).from(schema.venuesTable);
   if (value > 0) return;
-  const venues = loadDirectoryVenues(path.join(workspaceRoot, "attached_assets"));
+  const assetsDir = path.join(workspaceRoot, "attached_assets");
+  const venues = planDirectoryUpdates(loadDirectoryVenues(assetsDir), loadDirectoryUpdates(assetsDir)).venues;
   for (let i = 0; i < venues.length; i += 50) {
     await db.insert(schema.venuesTable).values(venues.slice(i, i + 50)).onConflictDoNothing();
   }

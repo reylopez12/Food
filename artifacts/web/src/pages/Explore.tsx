@@ -114,8 +114,8 @@ export default function Explore() {
     setSelectedCity(mode === "city" ? city || "" : "");
   }, [locationStr, searchStr]);
 
-  // Ratings only matter once venues actually have reviews.
-  const hasRatings = allListings.some((l) => l.reviewCount > 0);
+  // Uploaded source scores can exist without a supplied review count.
+  const hasRatings = allListings.some((l) => l.rating > 0);
 
   const distanceActive = status === 'granted' && userLat !== null && userLng !== null && radius !== null;
 

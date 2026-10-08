@@ -461,7 +461,7 @@ export function HomeSpinWidget() {
                       </Text>
                     </View>
                   </View>
-                  {winnerListing.reviewCount > 0 && (
+                  {winnerListing.rating > 0 && (
                     <View style={styles.ratingRow}>
                       <Feather name="star" size={12} color={colors.accent} />
                       <Text style={[styles.ratingText, { color: colors.foreground }]}>{winnerListing.rating}</Text>
