@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/web/"
-title = "Eat. Local. Food."
+title = "Spotted Eats"
 version = "1.0.0"
 id = "artifacts/web"
 router = "path"

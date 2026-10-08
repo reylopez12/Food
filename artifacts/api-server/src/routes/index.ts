@@ -8,6 +8,7 @@ import announcementsRouter from "./announcements";
 import notificationsRouter from "./notifications";
 import broadcasterRouter from "./broadcaster";
 import partnersRouter from "./partners";
+import feedbackRouter from "./feedback";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(announcementsRouter);
 router.use(notificationsRouter);
 router.use(broadcasterRouter);
 router.use(partnersRouter);
+router.use(feedbackRouter);
 
 export default router;

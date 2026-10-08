@@ -68,6 +68,43 @@ const STATUS_STYLES: Record<string, string> = {
   declined: "bg-muted text-muted-foreground border-border",
 };
 
+interface FeedbackItem {
+  id: string;
+  category: string;
+  venueId: string | null;
+  topic: string;
+  message: string;
+  name: string;
+  email: string;
+  userId: string | null;
+  status: string;
+  createdAt: string;
+}
+
+const FEEDBACK_STATUSES = ["new", "reviewed", "resolved", "dismissed"] as const;
+
+const FEEDBACK_STATUS_STYLES: Record<string, string> = {
+  new: STATUS_STYLES.new,
+  reviewed: STATUS_STYLES.contacted,
+  resolved: STATUS_STYLES.approved,
+  dismissed: STATUS_STYLES.declined,
+};
+
+const isOpenFeedback = (f: FeedbackItem) => f.status === "new" || f.status === "reviewed";
+
+const TOPIC_LABELS: Record<string, string> = {
+  hours: "Hours",
+  address: "Address / pin",
+  phone: "Phone",
+  website: "Website",
+  details: "Description / tags",
+  closed: "Permanently closed",
+  idea: "Idea",
+  problem: "Problem",
+  praise: "Praise",
+  other: "Other",
+};
+
 // The API is always mounted at /api, independent of the web app's base path.
 const API = "/api";
 
@@ -367,6 +404,173 @@ function InquiriesPanel({ listings }: { listings: Listing[] }) {
   );
 }
 
+function FeedbackPanel({ listings, onEditListing }: { listings: Listing[]; onEditListing: (listing: Listing) => void }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [statusFilter, setStatusFilter] = useState<string>("open");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["/api/admin/feedback"],
+    queryFn: () => apiJson<FeedbackItem[]>(`${API}/admin/feedback`),
+    staleTime: 30_000,
+  });
+
+  const inCategory = useMemo(
+    () => items.filter((f) => categoryFilter === "all" || f.category === categoryFilter),
+    [items, categoryFilter],
+  );
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { open: 0 };
+    for (const f of inCategory) {
+      c[f.status] = (c[f.status] ?? 0) + 1;
+      if (isOpenFeedback(f)) c.open++;
+    }
+    return c;
+  }, [inCategory]);
+
+  const visible = inCategory.filter((f) =>
+    statusFilter === "all" ? true : statusFilter === "open" ? isOpenFeedback(f) : f.status === statusFilter,
+  );
+
+  async function updateStatus(id: string, status: string) {
+    try {
+      await apiJson(`${API}/admin/feedback/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+      await queryClient.invalidateQueries({ queryKey: ["/api/admin/feedback"] });
+    } catch (err) {
+      toast({ title: "Couldn't update status", description: String(err), variant: "destructive" });
+    }
+  }
+
+  const STATUS_FILTERS = [
+    { id: "open", label: "Open" },
+    ...FEEDBACK_STATUSES.map((s) => ({ id: s, label: s[0].toUpperCase() + s.slice(1) })),
+    { id: "all", label: "All" },
+  ];
+  const CATEGORY_FILTERS = [
+    { id: "all", label: "All feedback" },
+    { id: "listing_edit", label: "Listing edits" },
+    { id: "general", label: "General" },
+  ];
+
+  return (
+    <div>
+      <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+        {CATEGORY_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => setCategoryFilter(f.id)}
+            className={`whitespace-nowrap rounded-lg border px-3 py-1.5 text-sm font-semibold transition-colors ${
+              categoryFilter === f.id ? "border-foreground bg-foreground text-background" : "bg-card text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+      <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
+        {STATUS_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => setStatusFilter(f.id)}
+            className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
+              statusFilter === f.id ? "border-primary bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {f.label}
+            <span className="ml-1.5 opacity-70">{f.id === "all" ? inCategory.length : counts[f.id] ?? 0}</span>
+          </button>
+        ))}
+      </div>
+
+      {isLoading ? (
+        <div className="flex h-40 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      ) : visible.length === 0 ? (
+        <div className="rounded-xl border border-dashed bg-card/50 px-6 py-16 text-center">
+          <p className="text-lg font-semibold">No feedback here yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Notes from the <Link href="/feedback" className="underline hover:text-foreground">Feedback</Link> page and "Suggest an edit" links show up here.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {visible.map((item) => {
+            const venue = item.venueId ? listings.find((l) => l.id === item.venueId) : undefined;
+            return (
+              <div key={item.id} className="flex flex-col rounded-xl border bg-card p-5 shadow-sm">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-lg font-bold leading-tight">
+                      {item.category === "listing_edit" ? venue?.name ?? "Deleted listing" : "General feedback"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {item.name || "Anonymous"}
+                      {item.userId ? " · signed in" : ""}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="shrink-0">{TOPIC_LABELS[item.topic] ?? item.topic}</Badge>
+                </div>
+
+                <p className="mb-3 whitespace-pre-line rounded-lg bg-muted/50 p-3 text-sm text-foreground/90">{item.message}</p>
+
+                {(item.email || venue) && (
+                  <div className="mb-3 space-y-1.5 text-sm">
+                    {item.email && (
+                      <a href={`mailto:${item.email}`} className="flex items-center gap-2 text-primary hover:underline">
+                        <Mail className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{item.email}</span>
+                      </a>
+                    )}
+                    {venue && (
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                        <Link href={`/listing/${venue.id}`} className="flex items-center gap-2 font-medium text-foreground hover:underline">
+                          <ExternalLink className="h-3.5 w-3.5 shrink-0" /> View listing
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => onEditListing(venue)}
+                          className="flex items-center gap-2 font-medium text-foreground hover:underline"
+                        >
+                          <Pencil className="h-3.5 w-3.5 shrink-0" /> Edit listing
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t pt-3">
+                  <span className="text-xs text-muted-foreground">{new Date(item.createdAt).toLocaleString()}</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {FEEDBACK_STATUSES.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => item.status !== s && updateStatus(item.id, s)}
+                        className={`rounded-full border px-2.5 py-1 text-xs font-semibold capitalize transition-colors ${
+                          item.status === s ? FEEDBACK_STATUS_STYLES[s] : "border-transparent text-muted-foreground hover:border-border"
+                        }`}
+                        aria-pressed={item.status === s}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Admin() {
   usePageMeta("Admin");
   const { isAuthenticated, isLoading: authLoading, login } = useAuth();
@@ -376,7 +580,7 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const [tab, setTab] = useState<"listings" | "inquiries">("listings");
+  const [tab, setTab] = useState<"listings" | "inquiries" | "feedback">("listings");
   const [query, setQuery] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Listing | null>(null);
@@ -480,6 +684,7 @@ export default function Admin() {
         {([
           { id: "listings", label: "Listings" },
           { id: "inquiries", label: "Partner inquiries" },
+          { id: "feedback", label: "Feedback" },
         ] as const).map((t) => (
           <button
             key={t.id}
@@ -497,6 +702,8 @@ export default function Admin() {
 
       {tab === "inquiries" ? (
         <InquiriesPanel listings={listings} />
+      ) : tab === "feedback" ? (
+        <FeedbackPanel listings={listings} onEditListing={(l) => { setEditTarget(l); setFormOpen(true); }} />
       ) : isLoading ? (
         <div className="flex items-center justify-center h-40">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />

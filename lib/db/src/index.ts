@@ -129,6 +129,19 @@ CREATE TABLE IF NOT EXISTS partner_inquiries (
   status text NOT NULL DEFAULT 'new',
   created_at timestamp NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS feedback (
+  id text PRIMARY KEY DEFAULT gen_random_uuid(),
+  category text NOT NULL DEFAULT 'general',
+  venue_id text,
+  topic text NOT NULL DEFAULT 'other',
+  message text NOT NULL,
+  name text NOT NULL DEFAULT '',
+  email text NOT NULL DEFAULT '',
+  user_id text,
+  status text NOT NULL DEFAULT 'new',
+  created_at timestamp NOT NULL DEFAULT now()
+);
 `;
 
 /**

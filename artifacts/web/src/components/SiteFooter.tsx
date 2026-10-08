@@ -8,6 +8,7 @@ const LINK_GROUPS = [
       { href: "/explore", label: "Explore the directory" },
       { href: "/spin", label: "Indecisive Spin" },
       { href: "/saved", label: "Saved places" },
+      { href: "/feedback", label: "Send feedback" },
     ],
   },
   {
@@ -38,7 +39,7 @@ export function SiteFooter() {
               <span className="bg-secondary p-1.5 rounded-lg text-secondary-foreground">
                 <UtensilsCrossed className="w-5 h-5" />
               </span>
-              <span className="font-bold font-serif text-xl tracking-tight">Eat. Local. Food.</span>
+              <span className="font-bold font-serif text-xl tracking-tight">Spotted Eats</span>
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-[#F7F4F0]/60">
               A directory of independent, locally owned restaurants and food trucks across the Bay Area. No chains, no gatekeeping.
@@ -76,7 +77,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-12 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-[#F7F4F0]/40 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Eat. Local. Food. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Spotted Eats. All rights reserved.</p>
           <p>Made for the people who keep the Bay Area delicious.</p>
         </div>
       </div>
