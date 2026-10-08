@@ -48,7 +48,11 @@ pnpm --filter @workspace/mobile exec expo install --check
 
 The audit check fails on any advisory other than the three explicitly patched
 package/version pairs, prints the residual findings, and runs exploit-regression
-tests against the actual dependencies resolved by their consumers. It also tests
+tests against the actual dependencies resolved by their consumers. These tests
+also require all three patches to remain registered in the workspace, match the
+lockfile's SHA-256 hashes, have no unpatched lockfile snapshots, and resolve to
+the hash-verified installed modules (including Expo's certificate-signing consumer).
+It also tests
 ordinary brace expansion/compilation, floating-point formatting, RSA signatures,
 URI decoding, uuid generation, and Expo watcher subscription/unsubscription.
 

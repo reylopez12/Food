@@ -2,6 +2,8 @@ const assert = require('node:assert/strict');
 const { createRequire } = require('node:module');
 const path = require('node:path');
 const { EventEmitter } = require('node:events');
+const { createHash } = require('node:crypto');
+const fs = require('node:fs');
 const { test } = require('node:test');
 
 // Follow real consumer dependency edges; never test a stale pnpm-store copy.
@@ -20,6 +22,34 @@ const yamlRequire = createRequire(nycRequire.resolve('js-yaml'));
 const argparseRequire = createRequire(yamlRequire.resolve('argparse'));
 const { sprintf, vsprintf } = argparseRequire('sprintf-js');
 
+test('all three security patches are registered, hash-verified, and used by consumers', () => {
+  const root = path.resolve(__dirname, '../..');
+  const { load } = cliRequire('js-yaml');
+  const workspace = load(fs.readFileSync(path.join(root, 'pnpm-workspace.yaml'), 'utf8'));
+  const lock = load(fs.readFileSync(path.join(root, 'pnpm-lock.yaml'), 'utf8'));
+  const certificatesRequire = createRequire(cliRequire.resolve('@expo/code-signing-certificates'));
+  for (const [name, version, consumers] of [
+    ['node-forge', '1.4.0', [cliRequire, certificatesRequire]],
+    ['braces', '3.0.3', [micromatchRequire]],
+    ['sprintf-js', '1.0.3', [argparseRequire]],
+  ]) {
+    const key = `${name}@${version}`;
+    const patchPath = `patches/${key}.patch`;
+    assert.equal(workspace.patchedDependencies[key], patchPath, `${key} must be patched on install`);
+    assert.equal(lock.patchedDependencies[key].path, patchPath);
+    const hash = createHash('sha256').update(fs.readFileSync(path.join(root, patchPath))).digest('hex');
+    assert.equal(lock.patchedDependencies[key].hash, hash, `${key} patch hash must match the lockfile`);
+    const snapshot = `${key}(patch_hash=${hash})`;
+    assert.ok(Object.hasOwn(lock.snapshots, snapshot), `${key} must have a patched snapshot`);
+    assert.equal(Object.hasOwn(lock.snapshots, key), false, `${key} must not have an unpatched snapshot`);
+    for (const consumer of consumers) {
+      assert.equal(consumer(`${name}/package.json`).version, version);
+      assert.ok(fs.realpathSync(consumer.resolve(name)).includes(`${key}_patch_hash=${hash}`),
+        `${key} consumer must resolve the hash-verified patched module`);
+    }
+  }
+});
+
 test('RSA verification rejects surplus nested DigestAlgorithm elements', () => {
   const keys = forge.pki.rsa.generateKeyPair({ bits: 1024, e: 3 });
   const digest = forge.md.sha256.create().update('security regression');
@@ -36,8 +66,11 @@ test('RSA verification rejects surplus nested DigestAlgorithm elements', () => {
     ])).getBytes(), 'NONE');
   assert.equal(keys.publicKey.verify(hash, keys.privateKey.sign(digest)), true);
   assert.equal(keys.publicKey.verify(hash, signature([oid])), true);
+  assert.equal(keys.publicKey.verify(hash, signature([oid, nullNode])), true);
   for (const elements of [
     [oid, nullNode, node(asn1.Type.OCTETSTRING, false, 'garbage')],
+    [oid, nullNode, nullNode],
+    [oid, node(asn1.Type.SEQUENCE, true, [nullNode])],
     [oid, node(asn1.Type.NULL, false, 'garbage')],
     [oid, node(asn1.Type.OCTETSTRING, false, 'garbage')],
   ]) {
@@ -72,6 +105,7 @@ test('sprintf validates precision before native numeric formatters run', () => {
   assert.equal(vsprintf('%s %d', ['value', 42]), 'value 42');
   for (const format of ['%.101f', '%.101e', '%.101g', '%.0g', '%.9999999999999999999999f']) {
     assert.throws(() => sprintf(format, 1.25), { name: 'SyntaxError' });
+    assert.throws(() => vsprintf(format, [1.25]), { name: 'SyntaxError' });
   }
   for (const format of ['%.0f', '%.0e', '%.1g', '%.100f', '%.100e', '%.100g']) {
     assert.equal(typeof sprintf(format, 1.25), 'string');
