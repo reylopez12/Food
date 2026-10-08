@@ -5,3 +5,4 @@
 - [Expo SDK dependency updates](expo-sdk-updates.md) — update the mobile importer as a pair, validate with Expo’s compatibility check, and review workspace metadata changes.
 - [Hidden native tabs](hidden-native-tabs.md) — hidden NativeTabs routes cannot serve as secondary screens in this Expo Router version; use routable classic tabs or a separate stack.
 - [Imported venue provenance](imported-venue-provenance.md) — never infer ratings, verification, or pin locations from a restaurant CSV that omits them.
+- [GitHub access](github-access.md) — native Git authentication can work even when no GitHub integration connection is listed.
