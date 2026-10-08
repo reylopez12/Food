@@ -1,5 +1,44 @@
-import { Link } from "wouter";
+import { useRef } from "react";
+import { Link, useLocation } from "wouter";
 import { UtensilsCrossed, ArrowRight } from "lucide-react";
+
+/** Clicks needed on the hidden footer word to open the admin page. */
+const ADMIN_CLICKS = 3;
+/** The clicks must all land within this window. */
+const ADMIN_CLICK_WINDOW_MS = 1500;
+
+/**
+ * The last word of the footer, with no visual hint that it does anything.
+ * Clicking it three times in quick succession opens /admin, which asks for a
+ * login and still checks ADMIN_EMAILS on the server.
+ */
+function HiddenAdminWord({ children }: { children: string }) {
+  const [, navigate] = useLocation();
+  const clicks = useRef<number[]>([]);
+
+  const handleClick = () => {
+    const now = Date.now();
+    clicks.current = [...clicks.current, now].filter((t) => now - t < ADMIN_CLICK_WINDOW_MS);
+    if (clicks.current.length >= ADMIN_CLICKS) {
+      clicks.current = [];
+      navigate("/admin");
+    }
+  };
+
+  // The invisible hit area covers the word and the empty space below it down
+  // to the bottom of the footer. select-none stops the triple click from
+  // highlighting the text.
+  return (
+    <span className="relative inline-block select-none">
+      {children}
+      <span
+        aria-hidden="true"
+        onClick={handleClick}
+        className="absolute -left-3 -right-3 -top-2 -bottom-14 md:-bottom-16"
+      />
+    </span>
+  );
+}
 
 const LINK_GROUPS = [
   {
@@ -78,7 +117,9 @@ export function SiteFooter() {
 
         <div className="mt-12 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-[#F7F4F0]/40 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Spotted Eats. All rights reserved.</p>
-          <p>Made for the people who keep the Bay Area delicious.</p>
+          <p>
+            Made for the people who keep the Bay Area <HiddenAdminWord>delicious.</HiddenAdminWord>
+          </p>
         </div>
       </div>
     </footer>
