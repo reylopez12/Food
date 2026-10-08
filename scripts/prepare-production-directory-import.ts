@@ -79,7 +79,16 @@ rows.forEach((row, index) => {
 mkdirSync("reports", { recursive: true });
 const outputPath = "reports/spotted-eats-production-directory-import.sql";
 writeFileSync(outputPath, sql);
-const encodedSql = JSON.stringify(sql).replace(/</g, "\\u003c");
+// Replit's SQL Console owns the batch transaction. Remove transaction commands
+// only outside the dollar-quoted payload; keep the local timeout, table lock and
+// complete import statement together so the console can wrap all three.
+const consoleSql = "-- Select ALL three statements and run as ONE batch; the SQL Console supplies the transaction.\n"
+  + sql.split(delimiter).map((part, index) => index === 1 ? part : part
+    .replace(/^BEGIN;[ \t]*\r?\n/gm, "")
+    .replace(/^COMMIT;[ \t]*(?:\r?\n|$)/gm, "")).join(delimiter);
+const consoleOutputPath = "reports/spotted-eats-production-console-import.sql";
+writeFileSync(consoleOutputPath, consoleSql);
+const encodedSql = JSON.stringify(consoleSql).replace(/</g, "\\u003c");
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Spotted Eats — Production directory import</title>
@@ -90,12 +99,14 @@ const html = `<!doctype html>
 <h2>What the import does</h2>
 <ul><li>Adds missing restaurants and updates matching directory records.</li><li>Includes only two source-guarded address cleanups: 800 West Tower Avenue for C'era Una Volta, and 2350 Saratoga St #166 for Vinyl. Context annotations were removed; street numbers, direction and unit were preserved.</li><li>Great China's official ZIP 94704 resolves its provider ambiguity. Great China and Vinyl have newly validated coordinates; all accepted evidence is revalidated by the generator.</li><li>Stops the whole batch if the existing duplicate/identity checks find conflicts.</li><li>No schema changes, deletions, or writes to other tables.</li><li>Preserves existing verification, ratings, review counts, promotions and subscriptions.</li><li>Leaves unresolved locations at (0,0). Census coordinates are street-address-range estimates, not verified businesses, rooftops or entrances.</li></ul>
 <h2>Run the import</h2>
-<ol><li>Open your Replit project's <strong>Database → Production → My Data → SQL</strong>. Confirm you selected Production.</li>
-<li>Download the SQL file below, or copy its full contents, and paste into the SQL editor.</li><li>Run the full script together, including BEGIN and COMMIT. Do not run it in separate parts.</li>
+<ol><li>Open your Replit project's <strong>Database → Production → My Data</strong>. Confirm you selected Production and turn <strong>Edit mode ON</strong>, then open <strong>SQL</strong>.</li>
+<li>Download the console-compatible SQL file below, or copy its full contents, and paste into the SQL editor. This version deliberately has no BEGIN or COMMIT commands.</li>
+<li><strong>Select the entire pasted script</strong> (Ctrl+A on Windows, Command+A on Mac while focused in the SQL editor) and run all three statements <strong>as one batch</strong>. The SQL Console automatically wraps the batch in a transaction. Do not execute statements separately: the local timeout and table lock must be in the same transaction as the import.</li>
 <li>Check the returned status. <strong>IMPORTED</strong> means the import succeeded. <strong>BLOCKED_NO_CHANGES</strong> means no listings were changed; review conflict_details before proceeding.</li>
-<li>On an initially empty directory, expect 296 inserted, 0 updated, and 0 conflicts. Re-running after a successful unchanged import should report 0 inserted, 0 updated, and 296 unchanged.</li></ol>
+<li>On an initially empty directory, expect 296 inserted, 0 updated, and 0 conflicts. Re-running after a successful unchanged import should report 0 inserted, 0 updated, and 296 unchanged.</li>
+<li>After checking the result, turn <strong>Edit mode OFF</strong>.</li></ol>
 <p class="note">These are writes to your live directory. Review the script before running it. Existing confirmed locations are retained when the supplied address and city are unchanged and the import has no replacement coordinates.</p>
-<button id="download">Download import SQL</button><button id="copy">Copy full SQL</button><p id="status" role="status"></p>
+<button id="download">Download console-compatible SQL</button><button id="copy">Copy full SQL</button><p id="status" role="status"></p>
 <textarea id="sql" readonly aria-label="Full production directory import SQL"></textarea>
 <h2>Confirm the result</h2><p>Run this read-only query:</p>
 <pre>SELECT COUNT(*) AS listings,
@@ -103,6 +114,6 @@ const html = `<!doctype html>
 FROM public.venues;</pre>
 <p>For an initially empty directory, expect <strong>${rows.length} listings</strong>, <strong>${updated} with coordinates</strong> and <strong>${rows.length - updated} unresolved locations</strong>. If existing records are present, use the import's counts and conflict report rather than assuming these totals.</p>
 <p>Then check <a href="https://spottedeats.com/api/listings">the live listings endpoint</a> and the wheel. Cached listing responses can take up to five minutes to refresh. Nearby spins still require location permission, a selected distance, and a restaurant within that radius; the ${rows.length - updated} unresolved locations cannot appear in nearby results.</p>
-<script>const sql=${encodedSql};document.getElementById('sql').value=sql;document.getElementById('download').onclick=()=>{const url=URL.createObjectURL(new Blob([sql],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='spotted-eats-production-directory-import.sql';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};document.getElementById('copy').onclick=async()=>{const status=document.getElementById('status');try{await navigator.clipboard.writeText(sql);status.textContent='Full SQL copied.'}catch{document.getElementById('sql').focus();document.getElementById('sql').select();status.textContent='Automatic copy is unavailable. The full SQL is selected; copy it manually.'}};</script></body></html>`;
+<script>const sql=${encodedSql};document.getElementById('sql').value=sql;document.getElementById('download').onclick=()=>{const url=URL.createObjectURL(new Blob([sql],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='spotted-eats-production-console-import.sql';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};document.getElementById('copy').onclick=async()=>{const status=document.getElementById('status');try{await navigator.clipboard.writeText(sql);status.textContent='Full SQL copied.'}catch{document.getElementById('sql').focus();document.getElementById('sql').select();status.textContent='Automatic copy is unavailable. The full SQL is selected; copy it manually.'}};</script></body></html>`;
 writeFileSync("reports/spotted-eats-production-import-guide.html", html);
-console.log(JSON.stringify({ outputPath, listings: rows.length, withCoordinates: updated, unresolved: rows.length - updated, databaseWrites: 0 }, null, 2));
+console.log(JSON.stringify({ outputPath, consoleOutputPath, listings: rows.length, withCoordinates: updated, unresolved: rows.length - updated, databaseWrites: 0 }, null, 2));

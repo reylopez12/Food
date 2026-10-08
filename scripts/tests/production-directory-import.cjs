@@ -6,8 +6,23 @@ const path = require("node:path");
 const dbRequire = createRequire(path.resolve("lib/db/package.json"));
 const { PGlite } = dbRequire("@electric-sql/pglite");
 
-async function main() {
-  const sql = fs.readFileSync("reports/spotted-eats-production-directory-import.sql", "utf8");
+async function main(consoleBatch = false) {
+  const originalSql = fs.readFileSync("reports/spotted-eats-production-directory-import.sql", "utf8");
+  let sql = originalSql;
+  if (consoleBatch) {
+    const batch = fs.readFileSync("reports/spotted-eats-production-console-import.sql", "utf8");
+    const [header, payload, footer] = batch.split("$directory_data$");
+    assert.equal(payload, originalSql.split("$directory_data$")[1]);
+    assert.doesNotMatch(header + footer, /^\s*(BEGIN|COMMIT);/m);
+    assert.match(header, /SET LOCAL lock_timeout = '10s';/);
+    assert.match(header, /LOCK TABLE public\.venues IN SHARE ROW EXCLUSIVE MODE;/);
+    // Match the console's automatic transaction around selected statements.
+    sql = `BEGIN;\n${batch}\nCOMMIT;`;
+    const guide = fs.readFileSync("reports/spotted-eats-production-import-guide.html", "utf8");
+    const embedded = guide.match(/const sql=([\s\S]*?);document.getElementById\('sql'\)/);
+    assert.ok(embedded);
+    assert.equal(JSON.parse(embedded[1]), batch);
+  }
   const db = new PGlite();
   try {
     await db.exec(`
@@ -103,9 +118,9 @@ async function main() {
     assert.ok(blocked.conflicts > 0);
     assert.equal(await snapshot(), before);
     assert.deepEqual((await db.query("SELECT * FROM untouched_fixture")).rows, [{ id: 1, value: "preserve me" }]);
-    console.log("PASS: 296 listings, 250 coordinates, 46 unresolved, corrected addresses, safe upgrade/rerun, protected fields and conflict-blocked atomic import. No real database accessed.");
+    console.log(`PASS (${consoleBatch ? "console batch" : "standalone SQL"}): 296 listings, 250 coordinates, 46 unresolved, corrected addresses, safe upgrade/rerun, protected fields and conflict-blocked atomic import. No real database accessed.`);
   } finally {
     await db.close();
   }
 }
-main().catch(error => { console.error(error); process.exitCode = 1; });
+main().then(() => main(true)).catch(error => { console.error(error); process.exitCode = 1; });
