@@ -1,0 +1,20 @@
+diff --git a/src/sprintf.js b/src/sprintf.js
+index c0fc7c08b2e6fe38de2883034b8d28c8f34e9866..ba711eaa5582326fe6d55b3dfcc177a4ec1c8f94 100644
+--- a/src/sprintf.js
++++ b/src/sprintf.js
+@@ -58,6 +58,15 @@
+                     is_positive = arg >= 0
+                 }
+ 
++                // Bound floating-point precision before calling native methods.
++                // Invalid format strings must not trigger a native RangeError.
++                if (match[7] && /^[efg]$/.test(match[8])) {
++                    var precision = Number(match[7])
++                    if (precision > 100 || (match[8] === "g" && precision < 1)) {
++                        throw new SyntaxError("[sprintf] precision must be within the ECMAScript range")
++                    }
++                }
++
+                 switch (match[8]) {
+                     case "b":
+                         arg = arg.toString(2)

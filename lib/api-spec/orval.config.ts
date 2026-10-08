@@ -30,6 +30,10 @@ export default defineConfig({
       clean: true,
       prettier: true,
       override: {
+        // Keep query options on v5 even when codegen runs outside the workspace.
+        query: {
+          version: 5,
+        },
         fetch: {
           includeHttpResponseReturnType: false,
         },
