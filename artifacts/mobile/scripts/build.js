@@ -491,9 +491,9 @@ function updateManifests(manifests, timestamp, baseUrl, assetsByHash) {
       Number(timestamp.split('-')[0]),
     ).toISOString();
     manifest.extra.expoClient.hostUri =
-      baseUrl.replace('https://', '') + '/' + platform;
+      baseUrl.replace('https://', '') + basePath + '/' + platform;
     manifest.extra.expoGo.debuggerHost =
-      baseUrl.replace('https://', '') + '/' + platform;
+      baseUrl.replace('https://', '') + basePath + '/' + platform;
     manifest.extra.expoGo.packagerOpts.dev = false;
 
     if (manifest.assets && manifest.assets.length > 0) {
