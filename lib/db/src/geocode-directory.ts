@@ -5,6 +5,7 @@ import { db, pool, isEmbeddedDatabase } from "./index";
 import { venuesTable } from "./schema";
 import { findWorkspaceRoot } from "./directory";
 import { addressParts, locationPatch, validateCensusMatches, type CensusMatch, type LocationEvidence } from "./geocoding";
+import { confirmedPostalCode } from "./confirmed-addresses";
 
 const root = findWorkspaceRoot();
 const reportDir = path.join(root, "reports");
@@ -35,9 +36,11 @@ async function main() {
     await Promise.all(Array.from({ length: 4 }, async () => {
       while (next < pending.length) {
         const venue = pending[next++];
-        const input = { id: venue.id, name: venue.name, address: venue.address, city: venue.city };
+        const baseInput = { id: venue.id, name: venue.name, address: venue.address, city: venue.city };
+        const zip = confirmedPostalCode(baseInput);
+        const input = zip ? { ...baseInput, zip } : baseInput;
         const cached = cache.get(`${venue.id}|${venue.address}|${venue.city}`);
-        if (cached && !process.argv.includes("--refresh") && !cached.reason.startsWith("Provider unavailable")) {
+        if (cached && cached.zip === zip && !process.argv.includes("--refresh") && !cached.reason.startsWith("Provider unavailable")) {
           report.push(validateCensusMatches(input, cached.matches, cached.checkedAt, cached.benchmark));
           continue;
         }
@@ -47,7 +50,7 @@ async function main() {
           continue;
         }
         const url = new URL(endpoint);
-        Object.entries({ ...parts, benchmark: "Public_AR_Current", format: "json" })
+        Object.entries({ ...parts, ...(zip ? { zip } : {}), benchmark: "Public_AR_Current", format: "json" })
           .forEach(([key, value]) => url.searchParams.set(key, value));
         let result: LocationEvidence | undefined;
         for (let attempt = 0; attempt < 2 && !result; attempt++) {

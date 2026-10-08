@@ -34,12 +34,45 @@ async function main() {
     assert.equal(first.conflicts, 0);
     const counts = (await db.query("SELECT count(*) AS total, count(*) FILTER (WHERE lat <> 0 AND lng <> 0) AS located FROM venues")).rows[0];
     assert.equal(counts.total, 296);
-    assert.equal(counts.located, 248);
+    assert.equal(counts.located, 250);
+    assert.equal(counts.total - counts.located, 46);
+    const addresses = (await db.query("SELECT id, address, city, lat, lng FROM venues WHERE id IN ('c-era-una-volta-alameda', 'vinyl-wine-bar-shop-alameda', 'great-china-berkeley') ORDER BY id")).rows;
+    assert.equal(addresses[0].address, "800 West Tower Avenue");
+    assert.equal(addresses[0].lat, 0);
+    assert.equal(addresses[1].address, "2190 Bancroft Way");
+    assert.equal(addresses[2].address, "2350 Saratoga St #166");
+    for (const row of addresses.slice(1)) {
+      assert.notEqual(row.lat, 0);
+      assert.notEqual(row.lng, 0);
+    }
     const second = await run();
     assert.equal(second.status, "IMPORTED");
     assert.equal(second.inserted, 0);
     assert.equal(second.updated, 0);
     assert.equal(second.unchanged, 296);
+
+    // Upgrading the old 248-pin payload must correct both annotated addresses
+    // and add only the two newly confirmed pins, without adding IDs or badges.
+    await db.query("UPDATE venues SET address = $1, lat = 0, lng = 0 WHERE id = $2",
+      ["800 West Tower Avenue (inside SoFive Soccer Center / The Hub)", "c-era-una-volta-alameda"]);
+    await db.query("UPDATE venues SET address = $1, lat = 0, lng = 0, verified = true, rating = 4.9, \"reviewCount\" = 77 WHERE id = $2",
+      ["2350 Saratoga St #166 (Alameda Point)", "vinyl-wine-bar-shop-alameda"]);
+    await db.query("UPDATE venues SET lat = 0, lng = 0 WHERE id = 'great-china-berkeley'");
+    const upgrade = await run();
+    assert.equal(upgrade.status, "IMPORTED");
+    assert.equal(upgrade.inserted, 0);
+    assert.equal(upgrade.updated, 3);
+    const vinyl = (await db.query("SELECT * FROM venues WHERE id = 'vinyl-wine-bar-shop-alameda'")).rows[0];
+    assert.equal(vinyl.address, "2350 Saratoga St #166");
+    assert.equal(vinyl.verified, true);
+    assert.equal(vinyl.reviewCount, 77);
+    assert.ok(Math.abs(vinyl.rating - 4.9) < 0.00001);
+    const afterUpgrade = (await db.query("SELECT count(*) AS total, count(*) FILTER (WHERE lat <> 0 AND lng <> 0) AS located FROM venues")).rows[0];
+    assert.equal(afterUpgrade.total, 296);
+    assert.equal(afterUpgrade.located, 250);
+    const upgradeRerun = await run();
+    assert.equal(upgradeRerun.updated, 0);
+    assert.equal(upgradeRerun.unchanged, 296);
 
     const id = (await db.query("SELECT id FROM venues WHERE lat <> 0 ORDER BY id LIMIT 1")).rows[0].id;
     await db.query(`UPDATE venues SET verified = true, featured = true,
@@ -70,7 +103,7 @@ async function main() {
     assert.ok(blocked.conflicts > 0);
     assert.equal(await snapshot(), before);
     assert.deepEqual((await db.query("SELECT * FROM untouched_fixture")).rows, [{ id: 1, value: "preserve me" }]);
-    console.log("PASS: 296 listings, 248 coordinates, safe rerun, protected fields and conflict-blocked atomic import. No real database accessed.");
+    console.log("PASS: 296 listings, 250 coordinates, 46 unresolved, corrected addresses, safe upgrade/rerun, protected fields and conflict-blocked atomic import. No real database accessed.");
   } finally {
     await db.close();
   }

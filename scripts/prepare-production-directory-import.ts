@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { locationPatch, type LocationEvidence } from "../lib/db/src/geocoding";
+import { withConfirmedAddresses } from "../lib/db/src/confirmed-addresses";
 
 // Generates a handoff only. Never connects to or writes a database.
 const sourcePath = process.argv[2];
@@ -9,9 +10,25 @@ const original = readFileSync(sourcePath, "utf8");
 const delimiter = "$directory_data$";
 const parts = original.split(delimiter);
 if (parts.length !== 3) throw new Error("Expected exactly one dollar-quoted directory payload.");
-const rows = JSON.parse(parts[1]) as Array<{
+const before = JSON.parse(parts[1]) as Array<{
   id: string; name: string; address: string; city: string; lat: number; lng: number;
+  name_key: string; address_key: string; city_key: string;
 }>;
+const rows = withConfirmedAddresses(before.map(row => ({ ...row })));
+const identityKey = (value: string) => value.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]/g, "");
+const addressKey = (value: string) => identityKey(value
+  .replace(/,\s*[^,]+,\s*CA(?:\s*\d{5})?$/i, "")
+  .replace(/\b(street|avenue|boulevard|road|drive|lane)\b/gi,
+    word => ({ street: "st", avenue: "ave", boulevard: "blvd", road: "rd", drive: "dr", lane: "ln" })[word.toLowerCase()]!));
+const correctedIds = new Set<string>();
+for (let index = 0; index < rows.length; index++) {
+  const row = rows[index];
+  if (row.address === before[index].address) continue;
+  // Do not mutate the snapshot or recompute unrelated identity fields.
+  rows[index] = { ...row, name_key: identityKey(row.name),
+    address_key: addressKey(row.address), city_key: identityKey(row.city.split(",")[0]) };
+  correctedIds.add(row.id);
+}
 const evidence = JSON.parse(readFileSync(resolve("lib/db/src/data/venue-locations.json"), "utf8")) as LocationEvidence[];
 const byId = new Map(evidence.map(item => [item.id, item]));
 if (byId.size !== evidence.length || new Set(rows.map(row => row.id)).size !== rows.length) {
@@ -23,8 +40,13 @@ for (const row of rows) {
   const match = byId.get(row.id);
   if (!match) continue;
   if (row.name !== match.name) throw new Error(`Restaurant name mismatch: ${row.id}`);
-  const patch = locationPatch(row, match);
+  // An already-generated payload is permitted only when its existing coordinates
+  // agree exactly with freshly revalidated evidence. Never accept arbitrary pins.
+  const patch = locationPatch({ ...row, lat: 0, lng: 0 }, match);
   if (!patch) throw new Error(`Location evidence did not pass revalidation: ${row.id}`);
+  if ((row.lat !== 0 || row.lng !== 0) && (row.lat !== patch.lat || row.lng !== patch.lng)) {
+    throw new Error(`Existing source coordinates differ from evidence: ${row.id}`);
+  }
   Object.assign(row, patch);
   used.add(row.id);
   updated++;
@@ -36,14 +58,20 @@ const sql = [
   "-- Coordinate evidence: US Census Geocoder; exact supplied street/city match.",
   "-- Coordinates are street-address-range estimates, not business verification or rooftop precision.",
   `-- ${rows.length} listings; ${updated} validated coordinates; ${rows.length - updated} unresolved locations left at (0,0).`,
-  parts[0] + delimiter + payload + delimiter + parts[2],
+  parts[0].replace(/^-- Coordinate evidence:[^\n]*\n-- Coordinates are[^\n]*\n-- \d+ listings;[^\n]*\n/, "")
+    + delimiter + payload + delimiter + parts[2],
 ].join("\n");
 
-// Ensure no other directory fields or SQL safeguards were changed.
-const before = JSON.parse(parts[1]);
+// Only source-guarded address corrections and their identity keys may change
+// besides coordinates; preserve every other field and all SQL safeguards.
 rows.forEach((row, index) => {
-  const { lat, lng, ...other } = row;
-  const { lat: oldLat, lng: oldLng, ...oldOther } = before[index];
+  const { lat, lng, ...other } = { ...row };
+  const { lat: oldLat, lng: oldLng, ...oldOther } = { ...before[index] };
+  if (correctedIds.has(row.id)) {
+    for (const key of ["address", "name_key", "address_key", "city_key"] as const) {
+      other[key] = oldOther[key];
+    }
+  }
   if (JSON.stringify(other) !== JSON.stringify(oldOther)) throw new Error(`Unexpected non-location change: ${row.id}`);
   if (!used.has(row.id) && (lat !== oldLat || lng !== oldLng)) throw new Error(`Unresolved location changed: ${row.id}`);
 });
@@ -57,10 +85,10 @@ const html = `<!doctype html>
 <title>Spotted Eats — Production directory import</title>
 <style>body{font:16px/1.6 system-ui,sans-serif;max-width:850px;margin:40px auto;padding:0 24px;color:#172033;background:#faf8f4}h1{line-height:1.2}strong{color:#172033}.counts{display:flex;gap:16px;flex-wrap:wrap}.counts div{background:white;border:1px solid #ddd;border-radius:12px;padding:18px;flex:1}.counts b{display:block;font-size:28px}button{background:#f2bc42;border:0;border-radius:8px;padding:12px 20px;font:inherit;cursor:pointer;margin:8px 8px 8px 0}textarea{box-sizing:border-box;width:100%;height:240px;font:12px/1.5 monospace;border:1px solid #bbb;border-radius:8px;padding:12px;background:white}.note{background:#fff3cc;border-radius:10px;padding:16px}a{color:#51420a}</style></head>
 <body><h1>Spotted Eats: restore the production directory</h1>
-<p>This handoff contains the updated import SQL. <strong>It has not been run against production.</strong> It does not publish the app or update the workspace database.</p>
+<p>This handoff contains the updated import SQL. <strong>It has not been run against production.</strong> It does not publish the app or update the workspace database. Obtain explicit authorization before any live import.</p>
 <div class="counts"><div><b>${rows.length}</b>restaurant listings</div><div><b>${updated}</b>validated coordinates</div><div><b>${rows.length - updated}</b>unresolved locations</div></div>
 <h2>What the import does</h2>
-<ul><li>Adds missing restaurants and updates matching directory records.</li><li>Stops the whole batch if the existing duplicate/identity checks find conflicts.</li><li>No schema changes, deletions, or writes to other tables.</li><li>Preserves existing verification, ratings, review counts, promotions and subscriptions.</li><li>Leaves unresolved locations at (0,0). Census coordinates are street-address-range estimates, not verified businesses, rooftops or entrances.</li></ul>
+<ul><li>Adds missing restaurants and updates matching directory records.</li><li>Includes only two source-guarded address cleanups: 800 West Tower Avenue for C'era Una Volta, and 2350 Saratoga St #166 for Vinyl. Context annotations were removed; street numbers, direction and unit were preserved.</li><li>Great China's official ZIP 94704 resolves its provider ambiguity. Great China and Vinyl have newly validated coordinates; all accepted evidence is revalidated by the generator.</li><li>Stops the whole batch if the existing duplicate/identity checks find conflicts.</li><li>No schema changes, deletions, or writes to other tables.</li><li>Preserves existing verification, ratings, review counts, promotions and subscriptions.</li><li>Leaves unresolved locations at (0,0). Census coordinates are street-address-range estimates, not verified businesses, rooftops or entrances.</li></ul>
 <h2>Run the import</h2>
 <ol><li>Open your Replit project's <strong>Database → Production → My Data → SQL</strong>. Confirm you selected Production.</li>
 <li>Download the SQL file below, or copy its full contents, and paste into the SQL editor.</li><li>Run the full script together, including BEGIN and COMMIT. Do not run it in separate parts.</li>
@@ -73,8 +101,8 @@ const html = `<!doctype html>
 <pre>SELECT COUNT(*) AS listings,
   COUNT(*) FILTER (WHERE lat &lt;&gt; 0 AND lng &lt;&gt; 0) AS with_coordinates
 FROM public.venues;</pre>
-<p>For an initially empty directory, expect <strong>296 listings</strong> and <strong>248 with coordinates</strong>. If existing records are present, use the import's counts and conflict report rather than assuming these totals.</p>
-<p>Then check <a href="https://spottedeats.com/api/listings">the live listings endpoint</a> and the wheel. Cached listing responses can take up to five minutes to refresh. Nearby spins still require location permission, a selected distance, and a restaurant within that radius; the 48 unresolved locations cannot appear in nearby results.</p>
+<p>For an initially empty directory, expect <strong>${rows.length} listings</strong>, <strong>${updated} with coordinates</strong> and <strong>${rows.length - updated} unresolved locations</strong>. If existing records are present, use the import's counts and conflict report rather than assuming these totals.</p>
+<p>Then check <a href="https://spottedeats.com/api/listings">the live listings endpoint</a> and the wheel. Cached listing responses can take up to five minutes to refresh. Nearby spins still require location permission, a selected distance, and a restaurant within that radius; the ${rows.length - updated} unresolved locations cannot appear in nearby results.</p>
 <script>const sql=${encodedSql};document.getElementById('sql').value=sql;document.getElementById('download').onclick=()=>{const url=URL.createObjectURL(new Blob([sql],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='spotted-eats-production-directory-import.sql';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};document.getElementById('copy').onclick=async()=>{const status=document.getElementById('status');try{await navigator.clipboard.writeText(sql);status.textContent='Full SQL copied.'}catch{document.getElementById('sql').focus();document.getElementById('sql').select();status.textContent='Automatic copy is unavailable. The full SQL is selected; copy it manually.'}};</script></body></html>`;
 writeFileSync("reports/spotted-eats-production-import-guide.html", html);
 console.log(JSON.stringify({ outputPath, listings: rows.length, withCoordinates: updated, unresolved: rows.length - updated, databaseWrites: 0 }, null, 2));

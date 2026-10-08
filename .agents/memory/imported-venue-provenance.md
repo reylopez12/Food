@@ -55,3 +55,26 @@ plausible but wrong pin to an unchanged restaurant record.
 **How to apply:** Keep exact street-and-city matching with standard abbreviation
 normalization only, preserve evidence for review, and invalidate coordinates
 when the underlying supplied address changes.
+
+An independently confirmed business ZIP may narrow an ambiguous geocoder query,
+but it must remain bound to the same listing ID, street address and city. Require
+a single returned exact street/city/ZIP match; never select a convenient candidate
+or weaken direction/street-type checks.
+
+**Why:** Census can return different ZIP-range matches for the same street and
+city. A business's official ZIP can disambiguate them without guessing, while
+provider omissions such as Avenue or West still need to remain rejected.
+
+**How to apply:** Keep the official source and address quotation with the review,
+include the ZIP in the saved query evidence, invalidate incompatible cached
+responses, and revalidate the ZIP before applying bundled coordinates.
+
+Confirmed address corrections must be consumed by offline import handoffs as
+well as runtime seeds, before identity-key calculation and coordinate validation.
+
+**Why:** A stale SQL handoff can otherwise restore the old annotated address and
+lose a newly confirmed pin even though the development directory is correct.
+
+**How to apply:** Regenerate handoff files from the guarded research corrections
+and accepted evidence; test upgrades from the old addresses and unchanged reruns
+in an isolated database, without treating file generation as production approval.

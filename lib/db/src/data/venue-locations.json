@@ -4059,6 +4059,48 @@
     "lng": -122.217861919317
   },
   {
+    "id": "great-china-berkeley",
+    "name": "Great China",
+    "address": "2190 Bancroft Way",
+    "city": "Berkeley, CA",
+    "zip": "94704",
+    "status": "accepted",
+    "reason": "Single exact street and city/state match",
+    "provider": "US Census Geocoder",
+    "precision": "street-address-range",
+    "checkedAt": "2026-10-08T06:43:33.638Z",
+    "benchmark": "Public_AR_Current",
+    "matches": [
+      {
+        "tigerLine": {
+          "side": "R",
+          "tigerLineId": "606159958"
+        },
+        "coordinates": {
+          "x": -122.26613158828,
+          "y": 37.867759148153
+        },
+        "addressComponents": {
+          "zip": "94704",
+          "streetName": "BANCROFT",
+          "preType": "",
+          "city": "BERKELEY",
+          "preDirection": "",
+          "suffixDirection": "",
+          "fromAddress": "2100",
+          "state": "CA",
+          "suffixType": "WAY",
+          "toAddress": "2198",
+          "suffixQualifier": "",
+          "preQualifier": ""
+        },
+        "matchedAddress": "2190 BANCROFT WAY, BERKELEY, CA, 94704"
+      }
+    ],
+    "lat": 37.867759148153,
+    "lng": -122.26613158828
+  },
+  {
     "id": "guadalajara-restaurant-oakland",
     "name": "Guadalajara Restaurant",
     "address": "1001 Fruitvale Ave",
@@ -9756,6 +9798,47 @@
     ],
     "lat": 37.861548241049,
     "lng": -122.29803388302
+  },
+  {
+    "id": "vinyl-wine-bar-shop-alameda",
+    "name": "Vinyl Wine Bar & Shop",
+    "address": "2350 Saratoga St #166",
+    "city": "Alameda, CA",
+    "status": "accepted",
+    "reason": "Single exact street and city/state match",
+    "provider": "US Census Geocoder",
+    "precision": "street-address-range",
+    "checkedAt": "2026-10-08T06:43:33.646Z",
+    "benchmark": "Public_AR_Current",
+    "matches": [
+      {
+        "tigerLine": {
+          "side": "L",
+          "tigerLineId": "636431993"
+        },
+        "coordinates": {
+          "x": -122.302262399456,
+          "y": 37.784196463653
+        },
+        "addressComponents": {
+          "zip": "94501",
+          "streetName": "SARATOGA",
+          "preType": "",
+          "city": "ALAMEDA",
+          "preDirection": "",
+          "suffixDirection": "",
+          "fromAddress": "2398",
+          "state": "CA",
+          "suffixType": "ST",
+          "toAddress": "2300",
+          "suffixQualifier": "",
+          "preQualifier": ""
+        },
+        "matchedAddress": "2350 SARATOGA ST, ALAMEDA, CA, 94501"
+      }
+    ],
+    "lat": 37.784196463653,
+    "lng": -122.302262399456
   },
   {
     "id": "viridian-oakland",

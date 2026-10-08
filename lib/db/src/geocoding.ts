@@ -3,6 +3,7 @@ export interface LocationInput {
   name: string;
   address: string;
   city: string;
+  zip?: string;
 }
 
 export interface CensusMatch {
@@ -63,6 +64,9 @@ export function validateCensusMatches(
     ...result, reason: matches.length ? "Multiple provider matches; needs review" : "No provider match",
   };
   const match = matches[0];
+  if (input.zip && match.matchedAddress?.split(",")[3]?.trim() !== input.zip) {
+    return { ...result, reason: "Provider ZIP differs from officially confirmed ZIP" };
+  }
   const matchedParts = match.matchedAddress?.split(",").map(value => value.trim());
   if (!matchedParts || matchedParts.length < 3
     || normalizeStreet(matchedParts[0]) !== normalizeStreet(parts.street)) {
@@ -90,7 +94,7 @@ export function validateCensusMatches(
 export function locationPatch(input: LocationInput & { lat: number; lng: number }, evidence: LocationEvidence) {
   if (input.id !== evidence.id || input.address !== evidence.address || input.city !== evidence.city
     || input.lat !== 0 || input.lng !== 0 || evidence.status !== "accepted") return null;
-  const validated = validateCensusMatches(input, evidence.matches, evidence.checkedAt, evidence.benchmark);
+  const validated = validateCensusMatches({ ...input, zip: evidence.zip }, evidence.matches, evidence.checkedAt, evidence.benchmark);
   if (validated.status !== "accepted" || validated.lat !== evidence.lat || validated.lng !== evidence.lng) return null;
   return { lat: validated.lat!, lng: validated.lng! };
 }

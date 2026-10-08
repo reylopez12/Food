@@ -67,6 +67,65 @@ Review rows remain at `(0, 0)`, invisible to map pins and nearby spins. Confirm
 missing/ambiguous addresses against a restaurant's official source before
 correcting the address and rerunning; never substitute a convenient nearby pin.
 
+## Official-source address review (2026-10-08)
+
+All 48 originally unresolved IDs were researched individually. The audit is in
+`lib/db/src/data/venue-address-reviews.json`: each row records the primary-source
+URL, a short address quotation when independently retrieved, and the decision.
+Search snippets from social accounts are explicitly **unconfirmed**, not treated
+as direct business confirmation. No businesses were contacted.
+
+- 33 building/street-and-city addresses have independently retrieved official
+  support. Where a site omits a supplied unit, the unit remains unchanged.
+- 15 remain unconfirmed, including conflicting addresses, unavailable official
+  pages, a domain now belonging to another business, and closure notices.
+- Only two supplied addresses were corrected: C'era Una Volta's SoFive/Hub
+  annotation and Vinyl's Alameda Point annotation were removed from the street
+  field. Street numbers, West direction and Vinyl's unit 166 were preserved.
+  Corrections are guarded by the original ID/address/city and applied before
+  seed coordinate validation; uploads themselves were not rewritten.
+- Great China's official site gives **2190 Bancroft Way, Berkeley, CA 94704**.
+  Passing that confirmed ZIP to Census produces one exact match instead of two.
+  The complete returned match and ZIP are stored in the geocoding evidence.
+  Cached responses without the new ZIP must be queried again, and mismatching
+  ZIP responses are rejected.
+- Great China and Vinyl gained validated locations. C'era Una Volta's corrected
+  street address still has no provider match. The other 46 remain unpinned:
+  official-address confirmation alone does not make a disagreeing Census result
+  acceptable.
+
+Do not delete a street suffix or add West/Road to make Census accept a listing.
+In particular, Park Street is confirmed for the Alameda restaurants, and
+Grand Lake Kitchen confirms Grand Avenue, not West Grand Avenue. Lettered and
+fractional numbers remain unresolved when the provider drops the letter/fraction.
+
+Current official pages report Greens & Grains closed and Admiral Maltings offers
+a farewell message; Mistura has a third-party closure report. Los Cocos's social
+search results conflict between Fruitvale Avenue and Trask Street. These are
+status/contact-review findings, **not** permission to delete, relocate, rename,
+or close a directory listing.
+
+The development PostgreSQL database initially had all 296 coordinates missing,
+despite the earlier report recording 248 accepted coordinates. Existing accepted
+evidence was revalidated, not replaced with guessed locations. After this pass,
+250 development listings have validated coordinates and 46 remain unpinned.
+IDs, ratings, review counts, badges and all non-address/location metadata are
+preserved. Production was neither queried nor written and nothing was published.
+
+The production SQL handoff and its HTML guide are also regenerated from the
+original import with the same guarded address corrections and revalidated
+coordinate evidence. They now describe 250 coordinates and 46 unresolved
+locations, including Great China and Vinyl. This is file preparation only,
+**not authorization to execute the import**. The isolated import test exercises
+empty-directory import, upgrading the old annotated records, unchanged reruns,
+metadata preservation and whole-batch conflict blocking.
+
+### Review regression checks
+
+```sh
+artifacts/web/node_modules/.bin/tsx --test lib/db/src/confirmed-addresses.test.ts lib/db/src/geocoding.test.ts lib/db/src/directory-updates.test.ts
+```
+
 ## Radius checks
 
 Both web and mobile full spin screens filter eligible venues by valid

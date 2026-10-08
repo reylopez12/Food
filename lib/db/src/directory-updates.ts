@@ -2,6 +2,7 @@ import path from "node:path";
 import { asVenue, loadDirectoryVenues, readDirectoryCsv, PREVIOUS_DIRECTORY_FILES, UPDATED_DIRECTORY_FILES, type DirectorySource } from "./directory";
 import type { InsertVenue } from "./schema";
 import { withVerifiedLocations } from "./verified-locations";
+import { withConfirmedAddresses } from "./confirmed-addresses";
 
 export interface DirectoryUpdate {
   venue: InsertVenue;
@@ -88,7 +89,7 @@ export function loadSeedDirectoryVenues(assetsDir: string): InsertVenue[] {
   for (const files of [PREVIOUS_DIRECTORY_FILES, UPDATED_DIRECTORY_FILES]) {
     venues = planDirectoryUpdates(venues, loadDirectoryUpdates(assetsDir, files)).venues;
   }
-  return withVerifiedLocations(venues);
+  return withVerifiedLocations(withConfirmedAddresses(venues));
 }
 
 export function normalizeIdentity(value: string): string {
