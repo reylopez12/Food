@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "./Logo";
 import { useTheme } from "../hooks/useTheme";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useNotifications } from "../hooks/useNotifications";
@@ -70,8 +71,8 @@ export function Navbar() {
       location === '/' ? 'bg-[#1E232E] text-[#F7F4F0] border-white/10' : 'bg-background/95 backdrop-blur-lg border-border'
     }`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="font-bold font-serif text-xl sm:text-2xl tracking-tight whitespace-nowrap hover:text-primary transition-colors">
-          Spotted Eats
+        <Link href="/" aria-label="Spotted Eats home" className="transition-opacity hover:opacity-85">
+          <Logo tone={location === '/' ? 'onDark' : 'auto'} />
         </Link>
 
         {/* Desktop Nav */}

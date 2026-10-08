@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { UtensilsCrossed, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { Logo } from "./Logo";
 
 /** Clicks needed on the hidden footer word to open the admin page. */
 const ADMIN_CLICKS = 3;
@@ -74,11 +75,8 @@ export function SiteFooter() {
       <div className="container mx-auto px-4 py-14 md:py-16">
         <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div className="max-w-sm">
-            <Link href="/" className="inline-flex items-center gap-2.5">
-              <span className="bg-secondary p-1.5 rounded-lg text-secondary-foreground">
-                <UtensilsCrossed className="w-5 h-5" />
-              </span>
-              <span className="font-bold font-serif text-xl tracking-tight">Spotted Eats</span>
+            <Link href="/" aria-label="Spotted Eats home" className="inline-flex">
+              <Logo tone="onDark" />
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-[#F7F4F0]/60">
               A directory of independent, locally owned restaurants and food trucks across the Bay Area. No chains, no gatekeeping.
