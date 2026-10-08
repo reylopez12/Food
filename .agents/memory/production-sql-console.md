@@ -20,3 +20,15 @@ run concurrently; retain stronger locked transactions for command-line use.
 Do not confuse the user's writable Edit mode with the agent's production SQL
 callback, which remains read-only. Confirm actual production records separately
 before declaring an import complete.
+
+Distinguish SQL syntax errors from query-transport limits when checking large
+embedded directory payloads.
+
+**Why:** The SQL callback can fail with an OS process-argument limit (`E2BIG`)
+before PostgreSQL receives a large query. That is not a database syntax error.
+
+**How to apply:** Use the app's existing development database client for a
+read-only EXPLAIN check when the callback transport cannot carry the query.
+Never use that alternative to bypass production read-only access. If the
+generated statement parses but the user's console still errors, obtain the
+exact editor contents and error position before producing more variants.
