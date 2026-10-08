@@ -70,8 +70,16 @@ export function Navbar() {
       location === '/' ? 'bg-[#1E232E] text-[#F7F4F0] border-white/10' : 'bg-background/95 backdrop-blur-lg border-border'
     }`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="font-bold font-serif text-xl sm:text-2xl tracking-tight whitespace-nowrap hover:text-primary transition-colors">
-          Spotted Eats
+        <Link href="/" className="inline-flex items-center gap-2 shrink-0 font-bold font-serif text-xl sm:text-2xl tracking-tight whitespace-nowrap hover:text-primary transition-colors">
+          <img
+            src={`${import.meta.env.BASE_URL}icon.svg`}
+            alt=""
+            aria-hidden="true"
+            width={32}
+            height={32}
+            className="h-8 w-8 shrink-0"
+          />
+          <span>Spotted Eats</span>
         </Link>
 
         {/* Desktop Nav */}
