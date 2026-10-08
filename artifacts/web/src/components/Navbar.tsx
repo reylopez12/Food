@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  UtensilsCrossed,
   Search,
   Moon,
   Sun,
@@ -71,11 +70,8 @@ export function Navbar() {
       location === '/' ? 'bg-[#1E232E] text-[#F7F4F0] border-white/10' : 'bg-background/95 backdrop-blur-lg border-border'
     }`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="bg-secondary p-1.5 rounded-lg text-secondary-foreground shadow-sm group-hover:scale-105 transition-transform duration-300">
-            <UtensilsCrossed className="w-5 h-5" />
-          </div>
-          <span className="font-bold font-serif text-xl tracking-tight hidden sm:inline-block">Eat. Local. Food.</span>
+        <Link href="/" className="font-bold font-serif text-xl sm:text-2xl tracking-tight whitespace-nowrap hover:text-primary transition-colors">
+          Spotted Eats
         </Link>
 
         {/* Desktop Nav */}

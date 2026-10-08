@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, venuesTable, partnerInquiriesTable } from "@workspace/db";
+import { db, venuesTable, partnerInquiriesTable, feedbackTable } from "@workspace/db";
 import { desc, eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { getAdminEmails, isAdmin } from "../lib/access";
@@ -268,6 +268,51 @@ router.patch("/partner-inquiries/:id", async (req, res) => {
   } catch (err) {
     console.error("admin update partner inquiry:", err);
     res.status(500).json({ error: "Failed to update inquiry" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/feedback — newest first
+// ---------------------------------------------------------------------------
+router.get("/feedback", async (_req, res) => {
+  try {
+    const rows = await db
+      .select()
+      .from(feedbackTable)
+      .orderBy(desc(feedbackTable.createdAt))
+      .limit(500);
+    res.json(rows);
+  } catch (err) {
+    console.error("admin list feedback:", err);
+    res.status(500).json({ error: "Failed to fetch feedback" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PATCH /admin/feedback/:id — update review status
+// ---------------------------------------------------------------------------
+const FEEDBACK_STATUSES = ["new", "reviewed", "resolved", "dismissed"];
+
+router.patch("/feedback/:id", async (req, res) => {
+  try {
+    const { status } = req.body ?? {};
+    if (!FEEDBACK_STATUSES.includes(status)) {
+      res.status(400).json({ error: `status must be one of ${FEEDBACK_STATUSES.join(" | ")}` });
+      return;
+    }
+    const [updated] = await db
+      .update(feedbackTable)
+      .set({ status })
+      .where(eq(feedbackTable.id, req.params.id))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "Feedback not found" });
+      return;
+    }
+    res.json(updated);
+  } catch (err) {
+    console.error("admin update feedback:", err);
+    res.status(500).json({ error: "Failed to update feedback" });
   }
 });
 

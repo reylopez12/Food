@@ -20,6 +20,7 @@ const Spin = lazy(() => import('@/pages/Spin'));
 const Admin = lazy(() => import('@/pages/Admin'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const Partners = lazy(() => import('@/pages/Partners'));
+const Feedback = lazy(() => import('@/pages/Feedback'));
 
 function PageFallback() {
   return (
@@ -57,6 +58,7 @@ function Router() {
           <Route path="/saved" component={Saved} />
           <Route path="/spin" component={Spin} />
           <Route path="/partners" component={Partners} />
+          <Route path="/feedback" component={Feedback} />
           <Route path="/admin" component={Admin} />
           <Route path="/notifications" component={Notifications} />
           <Route component={NotFound} />

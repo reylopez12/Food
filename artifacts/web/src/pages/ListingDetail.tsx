@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useRoute, Link } from "wouter";
-import { ArrowLeft, Phone, Globe, Navigation, Share2, MapPin, Clock, CheckCircle2, Bookmark, BookmarkCheck, Heart, HeartOff, Megaphone, Send, Copy, Check, Store, ArrowRight } from "lucide-react";
+import { ArrowLeft, Phone, Globe, Navigation, Share2, MapPin, Clock, CheckCircle2, Bookmark, BookmarkCheck, Heart, HeartOff, Megaphone, Send, Copy, Check, Store, ArrowRight, PencilLine } from "lucide-react";
 import { useListing } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { StarRating } from "../components/StarRating";
@@ -78,7 +78,7 @@ export default function ListingDetail() {
     // Native share sheet on phones; clipboard elsewhere.
     if (navigator.share) {
       try {
-        await navigator.share({ title: listing.name, text: `${listing.name} on Eat. Local. Food.`, url });
+        await navigator.share({ title: listing.name, text: `${listing.name} on Spotted Eats`, url });
         return;
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
@@ -495,6 +495,16 @@ export default function ListingDetail() {
                     </div>
                   </div>
                 </div>
+
+                <div className="h-px bg-border" />
+
+                <Link
+                  href={`/feedback?listing=${encodeURIComponent(listing.id)}`}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <PencilLine className="w-4 h-4" />
+                  Something wrong? Suggest an edit
+                </Link>
               </CardContent>
             </Card>
 

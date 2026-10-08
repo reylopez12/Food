@@ -108,3 +108,29 @@ export const partnerInquiriesTable = pgTable("partner_inquiries", {
 });
 
 export type PartnerInquiry = typeof partnerInquiriesTable.$inferSelect;
+
+// Feedback — diners reporting listing corrections or sharing general feedback
+export const feedbackTable = pgTable("feedback", {
+  id: text("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  /** 'listing_edit' | 'general' */
+  category: text("category").notNull().default("general"),
+  /** Set for listing edits — the listing being corrected */
+  venueId: text("venue_id"),
+  /**
+   * listing_edit: 'hours' | 'address' | 'phone' | 'website' | 'details' | 'closed' | 'other'
+   * general: 'idea' | 'problem' | 'praise' | 'other'
+   */
+  topic: text("topic").notNull().default("other"),
+  message: text("message").notNull(),
+  name: text("name").notNull().default(""),
+  email: text("email").notNull().default(""),
+  /** Signed-in submitter, if any */
+  userId: text("user_id"),
+  /** 'new' | 'reviewed' | 'resolved' | 'dismissed' */
+  status: text("status").notNull().default("new"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type Feedback = typeof feedbackTable.$inferSelect;

@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 
-const SITE_NAME = "Eat. Local. Food.";
+const SITE_NAME = "Spotted Eats";
 const DEFAULT_DESCRIPTION =
-  "Eat. Local. Food. helps you discover independent Bay Area restaurants, food trucks, and neighborhood gems.";
+  "Spotted Eats helps you discover independent Bay Area restaurants, food trucks, and neighborhood gems.";
 
 function setMeta(selector: string, attr: "name" | "property", key: string, content: string) {
   let el = document.head.querySelector<HTMLMetaElement>(selector);
