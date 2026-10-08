@@ -42,3 +42,17 @@ mtime_ms = 1791430781970
 storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:e7f9ea3e-943f-4efe-973c-55594090372b/6113ea69-6ae3-4e39-a16e-2c8ff243a56a/6879b721-5936-4021-869b-f067e738d7a9"
 storage_version_token = "1791430874326911"
 content_type = "text/csv"
+
+[[outputs]]
+id = "js3fc9d-HNvzcBYpFfAvp"
+uri = "file://reports/spotted-eats-production-import-guide.html"
+type = "html"
+title = "Spotted Eats — Updated Production Import"
+description = "Import guide with Download SQL and Copy SQL buttons: 296 restaurants, 248 validated Census coordinates, 48 unresolved locations. Tested for safe reruns, protected fields and conflict blocking. Not yet run in production."
+logical_id = "79964bc2-9d2f-4882-a32f-cd56c7bfae9a"
+content_hash = "sha256:60126a33c5b1f6c2d33258ee2d06941a24c2650616ff81447b29bdbcea173785"
+size = 280243
+mtime_ms = 1791441346387
+storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:e7f9ea3e-943f-4efe-973c-55594090372b/79964bc2-9d2f-4882-a32f-cd56c7bfae9a/2aa8bef1-80b3-4890-97c3-cf9f8bc46b49"
+storage_version_token = "1791441421126106"
+content_type = "text/html"

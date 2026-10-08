@@ -33,6 +33,16 @@ listing records were copied.
 after publishing. Treat missing production records as a data-import issue, not a
 reason to invent demo restaurants or disable distance constraints.
 
+Merged geocoding evidence does not prove the target database has those locations.
+
+**Why:** Location work performed in an isolated task environment can merge its
+evidence and code while leaving the main workspace's restaurant coordinates
+unchanged.
+
+**How to apply:** Verify the target database after a merge. Revalidate the saved
+evidence against the exact listing ID, name, address and city when preparing an
+authorized import; never assume the task's reported database updates transferred.
+
 Street-address geocoding is not business verification. Census locations are
 estimated along address ranges, not rooftops or entrances. Treat differing
 street types, directions and cities as unresolved even when the provider says
