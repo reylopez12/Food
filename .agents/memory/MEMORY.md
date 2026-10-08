@@ -7,4 +7,4 @@
 - [Imported venue provenance](imported-venue-provenance.md) — never infer ratings, verification, or pin locations from a restaurant CSV that omits them.
 - [Production SQL Console](production-sql-console.md) — prefer single-statement imports; this console rejected transaction setup even in a batch. Enable Edit mode and avoid concurrent imports.
 - [GitHub access](github-access.md) — native Git authentication can work even when no GitHub integration connection is listed.
-- [Dependency security patches](dependency-security-patches.md) — keep residual version alerts visible; test local fixes and Expo/Metro compatibility through real consumers.
+- [Dependency security patches](dependency-security-patches.md) — keep residual alerts visible; validate patches and fresh codegen against actual consumer versions.

@@ -15,6 +15,16 @@ For directory uploads, the user asked: "Do not make duplicates, flag duplicates 
 
 **How to apply:** Treat future uploads as additive updates, report duplicate or ambiguous matches, and do not infer that restaurants omitted from a file should be deleted.
 
+The protected admin importer must preview additions and updates before saving,
+flag duplicates, preserve existing ratings, verification and paid-placement
+settings, and import restaurant data only—not other tables or database structure.
+
+**Why:** The user explicitly requested these safeguards for live directory imports.
+
+**How to apply:** Keep bulk-import permissions separate from ordinary listing
+editing; importing a CSV is not permission to replace trust, review or payment
+settings, delete omitted businesses, or modify unrelated application data.
+
 Research notes, suggested marketing placeholders, and verification questions are not confirmed restaurant descriptions, addresses, or verification status. Leave unknown details empty and hold listings with unconfirmed street addresses for review.
 
 **Why:** Uploaded directories can mix publishable restaurant information with research tables and suggested placeholder copy. Publishing the latter as facts would mislead customers.

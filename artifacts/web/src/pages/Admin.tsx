@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Pencil, Trash2, Plus, LogIn, Search, ShieldAlert, Megaphone, Mail, Phone, Globe, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import DirectoryImport from "../components/admin/DirectoryImport";
 import { useIsAdmin } from "../hooks/useIsAdmin";
 import { usePageMeta } from "../hooks/usePageMeta";
 
@@ -575,12 +576,13 @@ export default function Admin() {
   usePageMeta("Admin");
   const { isAuthenticated, isLoading: authLoading, login } = useAuth();
   const { isAdmin, loading: adminLoading } = useIsAdmin(isAuthenticated);
-  const { data: rawListings = [], isLoading } = useListings();
+  // An import must refresh actual records, not reuse the public five-minute HTTP cache.
+  const { data: rawListings = [], isLoading } = useListings({ request: { cache: "no-store" } });
   const listings = rawListings as Listing[];
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const [tab, setTab] = useState<"listings" | "inquiries" | "feedback">("listings");
+  const [tab, setTab] = useState<"listings" | "inquiries" | "feedback" | "import">("listings");
   const [query, setQuery] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Listing | null>(null);
@@ -680,11 +682,12 @@ export default function Admin() {
         )}
       </div>
 
-      <div className="mb-6 inline-flex rounded-full bg-muted p-1" role="tablist">
+      <div className="mb-6 flex w-full flex-wrap gap-1 rounded-2xl bg-muted p-1 sm:inline-flex sm:w-auto sm:flex-nowrap sm:rounded-full" role="tablist">
         {([
           { id: "listings", label: "Listings" },
           { id: "inquiries", label: "Partner inquiries" },
           { id: "feedback", label: "Feedback" },
+          { id: "import", label: "Import listings" },
         ] as const).map((t) => (
           <button
             key={t.id}
@@ -700,7 +703,9 @@ export default function Admin() {
         ))}
       </div>
 
-      {tab === "inquiries" ? (
+      {tab === "import" ? (
+        <DirectoryImport />
+      ) : tab === "inquiries" ? (
         <InquiriesPanel listings={listings} />
       ) : tab === "feedback" ? (
         <FeedbackPanel listings={listings} onEditListing={(l) => { setEditTarget(l); setFormOpen(true); }} />

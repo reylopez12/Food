@@ -33,6 +33,8 @@ app.use(
 );
 app.use(cors({ credentials: true, origin: true }));
 app.use(cookieParser());
+// Only the protected CSV-import routes need larger JSON bodies.
+app.use("/api/admin/listings/import", express.json({ limit: "2mb" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(authMiddleware);

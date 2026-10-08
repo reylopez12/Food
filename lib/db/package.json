@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema/index.ts",
-    "./directory": "./src/directory.ts"
+    "./directory": "./src/directory.ts",
+    "./directory-import": "./src/directory-import.ts"
   },
   "scripts": {
     "push": "drizzle-kit push --config ./drizzle.config.ts",

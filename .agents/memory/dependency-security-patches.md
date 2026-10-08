@@ -3,6 +3,17 @@ name: Dependency security patches
 description: Handling unpublished dependency fixes and compatibility bridges without hiding security findings
 ---
 
+Code generation must target the app's runtime Zod version, not the generator's
+transitive dependency version.
+
+**Why:** After the Orval security upgrade, automatic detection emitted Zod 4
+helpers although the application still consumed Zod 3; fresh generation then
+failed type checks even though the previously checked-in client compiled.
+
+**How to apply:** Configure the generator's intended consumer version explicitly
+until an intentional runtime migration. Validate freshly generated output
+against the actual consumer types instead of hand-editing generated files.
+
 When the latest upstream package is still vulnerable, retain honest package
 versions and use committed pnpm patches with exploit regressions. Version-only
 scanners cannot recognize source patches; keep those residual alerts visible

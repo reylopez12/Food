@@ -69,6 +69,10 @@ export function parseCsv(content: string): CsvRow[] {
   }
   const [headers, ...data] = records;
   if (!headers) throw new Error("Empty CSV");
+  const cleanHeaders = headers.map((header) => header.trim().toLowerCase());
+  if (cleanHeaders.some((header) => !header) || new Set(cleanHeaders).size !== cleanHeaders.length) {
+    throw new Error("CSV headers must be nonempty and unique");
+  }
   return data.map((cells, index) => {
     if (cells.length !== headers.length) {
       throw new Error(`CSV row ${index + 2}: expected ${headers.length} columns, got ${cells.length}`);

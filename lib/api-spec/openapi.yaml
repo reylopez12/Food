@@ -17,6 +17,56 @@ tags:
   - name: Follows
     description: Venue follow/unfollow operations.
 paths:
+  /admin/listings/import/preview:
+    post:
+      operationId: previewDirectoryImport
+      tags: [Admin]
+      summary: Preview an admin-only restaurant import without writing data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectoryImportInput'
+      responses:
+        '200':
+          description: Preview with duplicate flags and signed confirmation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectoryImportPreview'
+        '400':
+          description: Invalid input
+        '401':
+          description: Authentication required
+        '403':
+          description: Admin required
+  /admin/listings/import/confirm:
+    post:
+      operationId: confirmDirectoryImport
+      tags: [Admin]
+      summary: Atomically apply an approved, unchanged restaurant import preview
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectoryImportInput'
+      responses:
+        '200':
+          description: Import completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectoryImportResult'
+        '400':
+          description: Invalid confirmation
+        '401':
+          description: Authentication required
+        '403':
+          description: Admin required
+        '409':
+          description: Duplicates, expired preview, or changed directory; preview again
   /healthz:
     get:
       operationId: healthCheck
@@ -322,6 +372,98 @@ components:
           type: number
         lng:
           type: number
+    DirectoryImportFile:
+      type: object
+      required: [name, content]
+      properties:
+        name:
+          type: string
+        content:
+          type: string
+        city:
+          type: string
+          description: Fallback city when not specified in the CSV
+    DirectoryImportInput:
+      type: object
+      required: [source]
+      properties:
+        source:
+          type: string
+          enum: [prepared, csv]
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/DirectoryImportFile'
+        previewToken:
+          type: string
+          description: Required to confirm; bound to admin, source, database and expiry
+    DirectoryImportChange:
+      type: object
+      required: [field, before, after]
+      properties:
+        field:
+          type: string
+        before:
+          type: string
+        after:
+          type: string
+    DirectoryImportRow:
+      type: object
+      required: [source, row, name, action, reason, changes]
+      properties:
+        source:
+          type: string
+        row:
+          type: integer
+        name:
+          type: string
+        action:
+          type: string
+          enum: [add, update, unchanged, blocked]
+        reason:
+          type: string
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DirectoryImportChange'
+    DirectoryImportSummary:
+      type: object
+      required: [added, updated, unchanged, blocked]
+      properties:
+        added:
+          type: integer
+        updated:
+          type: integer
+        unchanged:
+          type: integer
+        blocked:
+          type: integer
+    DirectoryImportPreview:
+      type: object
+      required: [previewToken, expiresAt, target, summary, rows]
+      properties:
+        previewToken:
+          type: string
+        expiresAt:
+          type: string
+        target:
+          type: string
+          enum: [live, development]
+        summary:
+          $ref: '#/components/schemas/DirectoryImportSummary'
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/DirectoryImportRow'
+    DirectoryImportResult:
+      type: object
+      required: [target, summary]
+      properties:
+        target:
+          type: string
+          enum: [live, development]
+        summary:
+          $ref: '#/components/schemas/DirectoryImportSummary'
     HealthStatus:
       type: object
       properties:
