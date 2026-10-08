@@ -229,10 +229,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   bg: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   stripeContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     overflow: 'hidden',
     opacity: 0.12,
   },
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-8deg' }],
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: '#000',
     zIndex: 10,
   },
