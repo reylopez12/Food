@@ -484,6 +484,11 @@ export default function DirectoryImport() {
           )}
 
           <div className="rounded-xl border bg-card p-5">
+            <h3 className="font-semibold">Add all listings</h3>
+            <p className="mt-1 mb-4 text-sm text-muted-foreground" data-testid="text-add-all-scope">
+              Add all {s.added} new listings and apply all {s.updated} updates from this preview, across every file,
+              page and filter. Unchanged listings are skipped.
+            </p>
             <label className="flex items-start gap-3 text-sm">
               <input
                 type="checkbox"
@@ -499,12 +504,12 @@ export default function DirectoryImport() {
               </span>
             </label>
             <Button
-              className="mt-4"
+              className="mt-4 w-full sm:w-auto"
               disabled={!canSave}
               onClick={() => setConfirmOpen(true)}
               data-testid="button-open-confirm"
             >
-              Review and save import
+              {saving ? "Saving..." : `Add all listings (${s.added + s.updated})`}
             </Button>
           </div>
         </section>
@@ -513,10 +518,11 @@ export default function DirectoryImport() {
       <AlertDialog open={confirmOpen} onOpenChange={(o) => !saving && setConfirmOpen(o)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Save this import?</AlertDialogTitle>
+            <AlertDialogTitle>Add all listings from this preview?</AlertDialogTitle>
             <AlertDialogDescription>
               This will add {s?.added ?? 0} and update {s?.updated ?? 0} listings in{" "}
-              {preview?.target === "live" ? "the LIVE directory" : "the development database"}. It is applied together or not at all.
+              {preview?.target === "live" ? "the LIVE directory" : "the development database"}, including every file and page
+              regardless of the current filter. It is applied together or not at all.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
