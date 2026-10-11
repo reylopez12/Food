@@ -28,9 +28,14 @@ test('all three security patches are registered, hash-verified, and used by cons
   const workspace = load(fs.readFileSync(path.join(root, 'pnpm-workspace.yaml'), 'utf8'));
   const lock = load(fs.readFileSync(path.join(root, 'pnpm-lock.yaml'), 'utf8'));
   const certificatesRequire = createRequire(cliRequire.resolve('@expo/code-signing-certificates'));
+  const mockupRequire = createRequire(path.join(root, 'artifacts/mockup-sandbox/package.json'));
+  const globRequire = createRequire(mockupRequire.resolve('fast-glob'));
+  const globMicromatchRequire = createRequire(globRequire.resolve('micromatch'));
+  const transformRequire = createRequire(babelJestRequire.resolve('@jest/transform'));
+  const jestMicromatchRequire = createRequire(transformRequire.resolve('micromatch'));
   for (const [name, version, consumers] of [
     ['node-forge', '1.4.0', [cliRequire, certificatesRequire]],
-    ['braces', '3.0.3', [micromatchRequire]],
+    ['braces', '3.0.3', [micromatchRequire, globMicromatchRequire, jestMicromatchRequire]],
     ['sprintf-js', '1.0.3', [argparseRequire]],
   ]) {
     const key = `${name}@${version}`;
@@ -109,6 +114,34 @@ test('sprintf validates precision before native numeric formatters run', () => {
   }
   for (const format of ['%.0f', '%.0e', '%.1g', '%.100f', '%.100e', '%.100g']) {
     assert.equal(typeof sprintf(format, 1.25), 'string');
+  }
+});
+
+test('malicious sprintf precision never reaches native numeric formatters', () => {
+  for (const [specifier, method] of [
+    ['f', 'toFixed'], ['e', 'toExponential'], ['g', 'toPrecision'],
+  ]) {
+    const original = Number.prototype[method];
+    let calls = 0;
+    Number.prototype[method] = function (...args) {
+      calls++;
+      return original.apply(this, args);
+    };
+    try {
+      for (const precision of ['101', '999999999999999999999999999999999999']) {
+        const format = `%.${precision}${specifier}`;
+        assert.throws(() => sprintf(format, 1.25), { name: 'SyntaxError' });
+        assert.throws(() => vsprintf(format, [1.25]), { name: 'SyntaxError' });
+      }
+      if (specifier === 'g') {
+        assert.throws(() => sprintf('%.0g', 1.25), { name: 'SyntaxError' });
+      }
+      assert.equal(calls, 0, `invalid precision must not invoke ${method}`);
+      assert.equal(typeof sprintf(`%.2${specifier}`, 1.25), 'string');
+      assert.equal(calls, 1, `valid precision must still invoke ${method}`);
+    } finally {
+      Number.prototype[method] = original;
+    }
   }
 });
 
