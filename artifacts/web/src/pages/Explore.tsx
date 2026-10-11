@@ -15,6 +15,7 @@ import { ExploreAllMap } from "../components/ExploreAllMap";
 import { useNearMe, haversineDistanceMi, RADIUS_OPTIONS } from "../hooks/useNearMe";
 import { SearchModeChooser, type SearchMode } from "../components/SearchModeChooser";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { trackEvent } from "@/lib/analytics";
 
 const CATEGORIES = [
   { id: 'restaurants', label: 'Restaurants' },
@@ -91,6 +92,7 @@ export default function Explore() {
   });
 
   const handleViewMode = (mode: 'list' | 'map') => {
+    if (mode !== viewMode) trackEvent("explore_view_changed", { view: mode });
     setViewMode(mode);
     try { localStorage.setItem(VIEW_MODE_KEY, mode); } catch {}
   };
@@ -167,6 +169,23 @@ export default function Explore() {
   }, [allListings, searchMode, searchQuery, selectedCategories, selectedPrices, minRating,
     verifiedOnly, selectedNeighborhood, selectedCity, distanceActive, userLat, userLng, radius]);
 
+  const lastTrackedSearch = useRef<string | null>(null);
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      lastTrackedSearch.current = null;
+      return;
+    }
+    if (listingsLoading) return;
+    // Debounce typing, and retain the query only locally for deduplication.
+    const key = JSON.stringify([searchMode, searchQuery.trim()]);
+    if (lastTrackedSearch.current === key) return;
+    const timer = window.setTimeout(() => {
+      lastTrackedSearch.current = key;
+      trackEvent("directory_search", { search_mode: searchMode, results_count: filteredListings.length });
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery, searchMode, listingsLoading, filteredListings.length]);
+
   const sortedListings = useMemo(() => {
     if (sortBy === "name") return [...filteredListings].sort((a, b) => a.name.localeCompare(b.name));
     if (sortBy === "neighborhood") {
@@ -217,6 +236,7 @@ export default function Explore() {
   };
 
   const handleSearchModeChange = (mode: SearchMode) => {
+    if (mode !== searchMode) trackEvent("explore_search_mode_changed", { search_mode: mode });
     const nextQuery = mode === "near-me" ? "" : searchQuery;
     setSearchMode(mode);
     setSearchQuery(nextQuery);

@@ -8,3 +8,4 @@
 - [Production SQL Console](production-sql-console.md) — prefer single-statement imports; this console rejected transaction setup even in a batch. Enable Edit mode and avoid concurrent imports.
 - [GitHub access](github-access.md) — native Git authentication can work even when no GitHub integration connection is listed.
 - [Dependency security patches](dependency-security-patches.md) — keep residual alerts visible; validate patches and fresh codegen against actual consumer versions.
+- [Analytics privacy](analytics-privacy.md) — track curated actions and aggregate counts, never private search, location, form or import content.

@@ -5,6 +5,7 @@ import { MapPin, Bookmark, BookmarkCheck, CheckCircle2, Play } from "lucide-reac
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSavedListings } from "../hooks/useSavedListings";
+import { trackEvent } from "@/lib/analytics";
 
 interface ListingCardProps {
   listing: Listing;
@@ -19,6 +20,7 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault();
     toggleSaved(listing.id);
+    trackEvent("listing_save_toggled", { listing_id: listing.id, saved: !saved, location: "card" });
   };
 
   const distanceLabel =

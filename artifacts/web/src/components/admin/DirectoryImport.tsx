@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { trackEvent } from "@/lib/analytics";
 
 const MAX_BYTES = 1024 * 1024;
 const MAX_FILES = 6;
@@ -185,6 +186,11 @@ export default function DirectoryImport() {
       {
         onSuccess: (p) => {
           if (seq !== previewSeq.current) return;
+          trackEvent("directory_import_previewed", {
+            source: req.source, target: p.target,
+            added: p.summary.added, updated: p.summary.updated,
+            unchanged: p.summary.unchanged, blocked: p.summary.blocked,
+          });
           setPreview(p);
           setRequestUsed(req);
           setNow(Date.now());
@@ -208,6 +214,11 @@ export default function DirectoryImport() {
       { data: { ...requestUsed, previewToken: token } },
       {
         onSuccess: async (r) => {
+          trackEvent("directory_import_completed", {
+            source: requestUsed.source, target: r.target,
+            added: r.summary.added, updated: r.summary.updated,
+            unchanged: r.summary.unchanged, blocked: r.summary.blocked,
+          });
           setConfirmOpen(false);
           setPreview(null);
           setRequestUsed(null);

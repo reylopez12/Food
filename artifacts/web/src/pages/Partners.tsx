@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 import { Link, useSearch } from "wouter";
 import {
   Search,
@@ -199,6 +200,7 @@ export default function Partners() {
 
   const pickPlan = (interest: Interest) => {
     set("interest", interest);
+    trackEvent("partner_plan_selected", { interest });
     document.getElementById("apply")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -225,6 +227,7 @@ export default function Partners() {
         throw new Error(body.error ?? "Something went wrong. Please try again.");
       }
       setStatus("sent");
+      trackEvent("partner_inquiry_submitted", { interest: form.interest });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setStatus("idle");

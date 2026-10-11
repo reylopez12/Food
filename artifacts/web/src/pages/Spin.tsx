@@ -18,6 +18,8 @@ import { usePageMeta } from "../hooks/usePageMeta";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /** Minimal item the wheel and result card need from either source */
+import { trackEvent } from "@/lib/analytics";
+
 type SpinItem = { id: string; name: string; color: string; distanceMi?: number };
 
 type Mode   = "directory" | "custom";
@@ -336,6 +338,7 @@ export default function Spin() {
 
   const handleSpin = () => {
     if (spinning || spinItems.length === 0) return;
+    trackEvent("wheel_spin_started", { mode, options_count: spinItems.length });
 
     setWinner(null);
     setSpinning(true);
@@ -380,6 +383,11 @@ export default function Spin() {
         setDisplayAngle(totalTarget);
         setSpinning(false);
         setWinner(snapshot[winnerIdx]);
+        trackEvent("wheel_spin_completed", {
+          mode,
+          options_count: snapshot.length,
+          ...(mode === "directory" ? { listing_id: snapshot[winnerIdx].id } : {}),
+        });
       }
     };
 
@@ -904,7 +912,10 @@ export default function Spin() {
                   <Button
                     className="w-full gap-2 rounded-xl"
                     size="lg"
-                    onClick={() => setLocation(`/listing/${winnerListing.id}`)}
+                    onClick={() => {
+                      trackEvent("wheel_result_opened", { listing_id: winnerListing.id });
+                      setLocation(`/listing/${winnerListing.id}`);
+                    }}
                   >
                     <ExternalLink className="w-4 h-4" />
                     View full listing
