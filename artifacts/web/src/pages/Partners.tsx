@@ -154,7 +154,38 @@ interface FormState {
   company_url: string; // honeypot
 }
 
+// Keep the application implementation available, but paused during setup.
+const PARTNER_APPLICATIONS_OPEN = false;
+
 export default function Partners() {
+  return PARTNER_APPLICATIONS_OPEN ? <PartnerApplication /> : <PartnerSetupNotice />;
+}
+
+function PartnerSetupNotice() {
+  usePageMeta("Partnerships coming soon", "We’re setting this part up so we can better connect restaurants to the community.");
+  return (
+    <section id="apply" className="container mx-auto flex min-h-[65vh] items-center justify-center px-4 py-16">
+      <div className="w-full max-w-2xl rounded-3xl border bg-card p-6 text-center shadow-sm sm:p-12" data-testid="partners-setup-notice">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Store className="h-8 w-8" aria-hidden="true" />
+        </div>
+        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Coming soon</span>
+        <h1 className="mt-5 font-serif text-3xl font-bold tracking-tight sm:text-5xl">Partnerships are on the way</h1>
+        <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
+          We’re setting this part up so we can better connect restaurants to the community.
+        </p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Partner applications and listing claims are temporarily unavailable. Please check back soon.
+        </p>
+        <Button asChild className="mt-8">
+          <Link href="/explore">Explore restaurants <ArrowRight className="ml-2 h-4 w-4" /></Link>
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function PartnerApplication() {
   usePageMeta(
     "Partner with us",
     "List your independent Bay Area restaurant or food truck for free, claim your listing, and reach locals with announcements.",

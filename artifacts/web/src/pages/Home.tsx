@@ -224,8 +224,9 @@ export default function Home() {
             <h2 className="text-4xl md:text-5xl font-serif font-bold tracking-tight mb-4 text-foreground">Start exploring</h2>
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed font-medium">
               {stats.places > 0
-                ? `${stats.places} independent spots across ${stats.hoods} neighborhoods. Pick a city and dig in.`
+                ? `${stats.places} independent spots across ${stats.cities} cities and ${stats.hoods} neighborhoods. Pick a city and dig in.`
                 : "Pick a city and dig in."}
+              <span className="mt-2 block text-sm font-semibold text-primary">More coming soon</span>
             </p>
           </div>
           <Button variant="outline" className="hidden md:inline-flex rounded-full px-6 border-border hover:bg-muted hover:text-foreground hover:border-foreground/30 transition-all font-semibold" onClick={() => setLocation('/explore')}>
@@ -242,6 +243,7 @@ export default function Home() {
             >
               <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                 {city.count} {city.count === 1 ? "spot" : "spots"}
+                <span className="mt-1 block text-[10px] font-normal text-primary">More coming soon</span>
               </p>
               <p className="mt-2 font-serif text-3xl md:text-4xl font-bold text-card-foreground transition-colors group-hover:text-primary">
                 {city.name}
@@ -250,12 +252,13 @@ export default function Home() {
               <ArrowRight className="absolute right-6 top-6 h-5 w-5 text-muted-foreground transition-all group-hover:translate-x-1 group-hover:text-primary" />
             </Link>
           ))}
-          {CATEGORIES.filter((cat) => listings.some((l) => l.category === cat.id)).map((cat) => (
+          {CATEGORIES.filter((cat) => cat.id === "food-trucks" || listings.some((l) => l.category === cat.id)).map((cat) => (
             <CategoryCard
               key={cat.id}
               title={cat.label}
               icon={cat.icon}
               category={cat.id}
+              comingSoon={cat.id === "food-trucks"}
             />
           ))}
         </div>

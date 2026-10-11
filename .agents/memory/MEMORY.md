@@ -9,3 +9,4 @@
 - [GitHub access](github-access.md) — native Git authentication can work even when no GitHub integration connection is listed.
 - [Dependency security patches](dependency-security-patches.md) — keep residual alerts visible; validate patches and fresh codegen against actual consumer versions.
 - [Analytics privacy](analytics-privacy.md) — track curated actions and aggregate counts, never private search, location, form or import content.
+- [Launch availability](launch-availability.md) — partner applications paused; restaurant/city growth and food trucks carry coming-soon notices.
