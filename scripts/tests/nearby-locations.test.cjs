@@ -43,6 +43,15 @@ const platforms = [
     spin: "artifacts/mobile/app/(tabs)/spin.tsx", home: "artifacts/mobile/components/HomeSpinWidget.tsx",
   },
 ];
+// Web home wheel also applies the shared exact-tier price helper.
+const spinHelpers = (() => {
+  const js = ts.transpileModule(fs.readFileSync("artifacts/web/src/lib/spinWheel.ts", "utf8"), {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
+  }).outputText;
+  const module = { exports: {} };
+  vm.runInNewContext(js, { module, exports: module.exports });
+  return module.exports;
+})();
 for (const platform of platforms) {
   const haversineDistanceMi = evaluate(`(${functionSource(platform.helpers, "haversineDistanceMi")})`);
   const hasValidCoordinates = evaluate(`(${functionSource(platform.helpers, "hasValidCoordinates")})`);
@@ -59,7 +68,8 @@ for (const platform of platforms) {
       ];
       const context = { allListings, userLat, userLng, radius, preferredRadius: radius,
         locationReady: true, hasValidCoordinates, haversineDistanceMi,
-        shuffled: values => values, MAX_SLOTS: 10, MAX_HOME_SPOTS: 10, MAX_DIR_SLOTS: 10 };
+        shuffled: values => values, MAX_SLOTS: 10, MAX_HOME_SPOTS: 10, MAX_DIR_SLOTS: 10,
+        priceFilter: "any", matchesPriceTier: spinHelpers.matchesPriceTier };
       const full = evaluate(`(${memoSource(platform.spin, "nearbyListings")})()`, context);
       const home = evaluate(`(${memoSource(platform.home, "spinItems")})()`, context);
       assert.deepEqual(Array.from(full, item => item.listing.id), ["inside"]);
@@ -75,3 +85,13 @@ for (const platform of platforms) {
     assert.equal(evaluate(`(${memoSource(platform.spin, "nearbyListings")})()`, context).length, 0);
   });
 }
+
+test("web: home spin with an explicit radius never falls back to all listings without location", () => {
+  const allListings = [{ id: "a", lat: 37.78, lng: -122.26, priceRange: "$" }, { id: "b", lat: 0, lng: 0, priceRange: "" }];
+  const base = { allListings, userLat: null, userLng: null, priceFilter: "any", matchesPriceTier: spinHelpers.matchesPriceTier,
+    hasValidCoordinates: () => true, haversineDistanceMi: () => 0, shuffled: v => v, MAX_SLOTS: 10 };
+  const home = ctx => evaluate(`(${memoSource("artifacts/web/src/components/HomeSpin.tsx", "spinItems")})()`, ctx);
+  assert.equal(home({ ...base, radius: 5, locationReady: false }).length, 0);
+  assert.deepEqual(Array.from(home({ ...base, radius: null, locationReady: false }), i => i.id), ["a", "b"]);
+  assert.deepEqual(Array.from(home({ ...base, radius: null, locationReady: false, priceFilter: "$" }), i => i.id), ["a"]);
+});

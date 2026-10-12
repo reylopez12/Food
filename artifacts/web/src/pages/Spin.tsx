@@ -24,7 +24,7 @@ type SpinItem = { id: string; name: string; color: string; distanceMi?: number }
 
 type Mode   = "directory" | "custom";
 type Filter = "all" | "restaurants" | "food-trucks";
-type Price  = "all" | "budget" | "mid" | "upscale";
+type Price  = "all" | "budget" | "mid" | "upscale" | "luxe";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -38,6 +38,7 @@ const PRICE_MAP: Record<Price, string | null> = {
   budget:  "$",
   mid:     "$$",
   upscale: "$$$",
+  luxe:    "$$$$",
 };
 
 const FILTER_OPTIONS: { id: Filter; label: string }[] = [
@@ -51,6 +52,7 @@ const PRICE_OPTIONS: { id: Price; label: string }[] = [
   { id: "budget",  label: "$" },
   { id: "mid",     label: "$$" },
   { id: "upscale", label: "$$$" },
+  { id: "luxe",    label: "$$$$" },
 ];
 
 const SPIN_ROTATIONS  = 8;
@@ -661,32 +663,35 @@ export default function Spin() {
                 })}
               </div>
 
-              <div className="flex items-center gap-2 p-1 bg-muted rounded-full max-w-full overflow-x-auto">
-                {PRICE_OPTIONS.map((opt) => {
-                  const count = nearbyListings.filter(
-                    ({ listing }) =>
-                      (filter === "all" || listing.category === filter) &&
-                      (PRICE_MAP[opt.id] === null || listing.priceRange === PRICE_MAP[opt.id])
-                  ).length;
-                  return (
-                    <button
-                      key={opt.id}
-                      onClick={() => handlePriceChange(opt.id)}
-                      disabled={spinning}
-                      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
-                        price === opt.id
-                          ? "bg-background shadow text-foreground"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {opt.label}
-                      <span className="ml-1.5 text-xs opacity-60">({count})</span>
-                    </button>
-                  );
-                })}
-              </div>
             </>
           )}
+
+          {/* Price stays editable before location is ready; distance remains required to spin. */}
+            <div className="flex items-center gap-2 p-1 bg-muted rounded-full max-w-full overflow-x-auto">
+              {PRICE_OPTIONS.map((opt) => {
+                const count = nearbyListings.filter(
+                  ({ listing }) =>
+                    (filter === "all" || listing.category === filter) &&
+                    (PRICE_MAP[opt.id] === null || listing.priceRange === PRICE_MAP[opt.id])
+                ).length;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => handlePriceChange(opt.id)}
+                    disabled={spinning}
+                    data-testid={`spin-price-${opt.id}`}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
+                      price === opt.id
+                        ? "bg-background shadow text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {opt.label}
+                    {locationReady && <span className="ml-1.5 text-xs opacity-60">({count})</span>}
+                  </button>
+                );
+              })}
+            </div>
         </div>
       )}
 

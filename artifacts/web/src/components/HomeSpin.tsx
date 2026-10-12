@@ -1,19 +1,27 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "wouter";
-import { Shuffle, RotateCcw, RefreshCw, ExternalLink, Star, MapPin, Navigation, Loader2 } from "lucide-react";
+import { ExternalLink, Star, MapPin, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useListings } from "@workspace/api-client-react";
 import type { Venue as Listing } from "@workspace/api-client-react";
 import {
-  RADIUS_OPTIONS,
   hasValidCoordinates,
   haversineDistanceMi,
   useNearMe,
   type RadiusMiles,
 } from "../hooks/useNearMe";
-
+import {
+  customSpinItems,
+  emptyCustomEntries,
+  matchesPriceTier,
+  shuffled,
+  updateCustomEntry,
+  type PriceFilter,
+} from "@/lib/spinWheel";
+import { HomeSpinControls, type WheelEditor } from "./spin/HomeSpinControls";
+import { CustomChoicesPanel } from "./spin/CustomChoicesPanel";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SpinItem = { id: string; name: string; color: string; distanceMi?: number };
@@ -42,15 +50,6 @@ function resolveCssVar(property: string, fallback: string): string {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function shuffled<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
 
 function easeOut(t: number) {
   return 1 - Math.pow(1 - t, 3);
@@ -174,25 +173,27 @@ export function HomeSpin() {
     userLng,
     radius,
     requestLocation,
-    clearLocation,
     setRadius,
   } = useNearMe();
 
+  const [editor,        setEditor]        = useState<WheelEditor>("distance");
+  const [priceFilter,   setPriceFilter]   = useState<PriceFilter>("any");
+  const [customEntries, setCustomEntries] = useState<string[]>(emptyCustomEntries);
   const [seed,     setSeed]     = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [winner,   setWinner]   = useState<SpinItem | null>(null);
 
   const currentAngleRef = useRef(0);
+  const spinningRef     = useRef(false);
   const [displayAngle,  setDisplayAngle]  = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef    = useRef<number | null>(null);
 
-  // Resolve canvas colors from theme; re-resolve on dark/light toggle.
   const [primaryColor, setPrimaryColor] = useState(
     () => resolveCssVar("--primary", "#DE6B48")
   );
   const [accentColor, setAccentColor] = useState(
-    () => resolveCssVar("--secondary", "#F4B952") // secondary is yellow now
+    () => resolveCssVar("--secondary", "#F4B952")
   );
   useEffect(() => {
     const update = () => {
@@ -210,80 +211,95 @@ export function HomeSpin() {
     userLng !== null &&
     radius !== null;
 
-  // Show random directory picks by default; opt-in location and radius narrow them to nearby spots.
+  const isCustom = editor === "custom";
+
+  // No radius: random directory picks (price still applies; "any" includes unspecified tiers).
+  // Explicit radius: only known-coordinate venues inside it, never an all-directory fallback.
   const spinItems = useMemo<SpinItem[]>(() => {
-    if (!locationReady) {
+    if (radius === null) {
       return shuffled(
-        allListings.map((listing) => ({
-          id: listing.id,
-          name: listing.name,
-          color: listing.color,
-        }))
+        allListings
+          .filter((listing) => matchesPriceTier(listing.priceRange, priceFilter))
+          .map((listing) => ({ id: listing.id, name: listing.name, color: listing.color }))
       ).slice(0, MAX_SLOTS);
     }
+    if (!locationReady) return [];
     return shuffled(
       allListings.flatMap((listing) => {
+        if (!matchesPriceTier(listing.priceRange, priceFilter)) return [];
         if (!hasValidCoordinates(listing.lat, listing.lng)) return [];
-        const distanceMi = haversineDistanceMi(
-          userLat,
-          userLng,
-          listing.lat,
-          listing.lng,
-        );
+        const distanceMi = haversineDistanceMi(userLat, userLng, listing.lat, listing.lng);
         if (distanceMi > radius) return [];
-        return [{
-          id: listing.id,
-          name: listing.name,
-          color: listing.color,
-          distanceMi,
-        }];
+        return [{ id: listing.id, name: listing.name, color: listing.color, distanceMi }];
       })
     ).slice(0, MAX_SLOTS);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allListings, locationReady, radius, seed, userLat, userLng]);
+  }, [allListings, locationReady, radius, priceFilter, seed, userLat, userLng]);
+
+  const customItems = useMemo<SpinItem[]>(() => customSpinItems(customEntries), [customEntries]);
+  const wheelItems = isCustom ? customItems : spinItems;
+
+  const mappedCount = useMemo(
+    () => allListings.filter((l) => hasValidCoordinates(l.lat, l.lng)).length,
+    [allListings],
+  );
 
   // ── Draw ────────────────────────────────────────────────────────────────────
 
   const redraw = useCallback(
-    (angle: number, override?: SpinItem[]) => {
+    (angle: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      drawWheel(canvas, override ?? spinItems, angle, primaryColor);
+      drawWheel(canvas, wheelItems, angle, primaryColor);
       drawPointer(canvas, accentColor);
     },
-    [spinItems, primaryColor, accentColor]
+    [wheelItems, primaryColor, accentColor]
   );
+  const redrawRef = useRef(redraw);
+  redrawRef.current = redraw;
 
+  // Resize on window and container changes (custom panel opening narrows the column).
+  // While spinning, the animation loop owns painting from its snapshot.
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    // Back the canvas with device pixels so the wheel stays crisp on phones.
+    const parent = canvas?.parentElement;
+    if (!canvas || !parent) return;
     const fit = () => {
-      const size = Math.min(canvas.parentElement!.clientWidth, 440);
+      const size = Math.max(1, Math.min(parent.clientWidth, 440));
       const dpr = Math.min(window.devicePixelRatio || 1, 3);
-      canvas.width  = Math.round(size * dpr);
-      canvas.height = Math.round(size * dpr);
+      const w = Math.round(size * dpr);
+      if (canvas.width === w && canvas.dataset.dpr === String(dpr)) return;
+      canvas.width  = w;
+      canvas.height = w;
       canvas.dataset.dpr = String(dpr);
-      redraw(currentAngleRef.current);
+      if (!spinningRef.current) redrawRef.current(currentAngleRef.current);
     };
     fit();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(fit) : null;
+    ro?.observe(parent);
     window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
-  }, [spinItems, redraw]);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", fit);
+    };
+  }, []);
 
-  useEffect(() => { redraw(displayAngle); }, [displayAngle, redraw]);
+  useEffect(() => {
+    if (!spinningRef.current) redraw(displayAngle);
+  }, [displayAngle, redraw]);
 
   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
 
   // ── Spin ────────────────────────────────────────────────────────────────────
 
   const handleSpin = () => {
-    if (spinning || spinItems.length === 0) return;
+    if (spinningRef.current || wheelItems.length === 0) return;
+    spinningRef.current = true;
     setWinner(null);
     setSpinning(true);
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
-    const n         = spinItems.length;
+    const n         = wheelItems.length;
     const slice     = TWO_PI / n;
     const winnerIdx = Math.floor(Math.random() * n);
 
@@ -295,14 +311,13 @@ export function HomeSpin() {
     const totalTarget = currentAngleRef.current + delta + (SPIN_ROTATIONS - 1) * TWO_PI;
     const startAngle  = currentAngleRef.current;
     const startTime   = { v: -1 };
-    const snapshot    = spinItems.slice();
+    const snapshot    = wheelItems.slice();
     const snapPrimary = primaryColor;
     const snapAccent  = accentColor;
 
     const animate = (ts: number) => {
       if (startTime.v < 0) startTime.v = ts;
-      const elapsed = ts - startTime.v;
-      const t       = Math.min(elapsed / SPIN_DURATION, 1);
+      const t       = Math.min((ts - startTime.v) / SPIN_DURATION, 1);
       const current = startAngle + (totalTarget - startAngle) * easeOut(t);
 
       const canvas = canvasRef.current;
@@ -314,6 +329,7 @@ export function HomeSpin() {
       if (t < 1) {
         rafRef.current = requestAnimationFrame(animate);
       } else {
+        spinningRef.current = false;
         currentAngleRef.current = totalTarget;
         setDisplayAngle(totalTarget);
         setSpinning(false);
@@ -324,53 +340,81 @@ export function HomeSpin() {
   };
 
   const handleReset = () => {
+    if (spinningRef.current) return;
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     currentAngleRef.current = 0;
     setDisplayAngle(0);
     setWinner(null);
   };
 
-  const handleReshuffle = () => {
-    if (spinning) return;
+  /** Run a wheel-changing action only when idle, clearing any obsolete winner/angle. */
+  const guarded = (action: () => void) => {
+    if (spinningRef.current) return;
     handleReset();
-    setSeed(s => s + 1);
+    action();
   };
 
-  const handleLocationRequest = () => {
-    if (spinning) return;
-    handleReset();
-    requestLocation();
+  const handleEditorChange = (next: WheelEditor) => {
+    if (spinningRef.current || next === editor) return;
+    // Switching between directory editors keeps the same wheel; entering/leaving custom changes source.
+    if ((next === "custom") !== isCustom) handleReset();
+    setEditor(next);
   };
 
-  const handleLocationClear = () => {
-    if (spinning) return;
-    handleReset();
-    clearLocation();
-  };
+  const handleRadiusChange = (next: RadiusMiles) => guarded(() => setRadius(next));
+  const handleClearRadius  = () => guarded(() => setRadius(null));
+  const handlePriceChange  = (next: PriceFilter) => guarded(() => setPriceFilter(next));
+  const handleReshuffle    = () => guarded(() => setSeed((s) => s + 1));
+  const handleLocationRequest = () => guarded(requestLocation);
+  const handleEntryChange  = (i: number, value: string) =>
+    guarded(() => setCustomEntries((prev) => updateCustomEntry(prev, i, value)));
+  const handleEntriesReset = () => guarded(() => setCustomEntries(emptyCustomEntries()));
 
-  const handleRadiusChange = (nextRadius: RadiusMiles) => {
-    if (spinning) return;
-    handleReset();
-    setRadius(nextRadius);
-  };
+  const winnerListing: Listing | undefined =
+    winner && !isCustom
+      ? allListings.find(l => l.id === winner.id)
+      : undefined;
 
-  const winnerListing: Listing | undefined = winner
-    ? allListings.find(l => l.id === winner.id)
-    : undefined;
+  // ── Empty state copy ────────────────────────────────────────────────────────
+
+  const priceLabel = priceFilter === "any" ? "" : ` at ${priceFilter}`;
+  let emptyMessage = "";
+  if (wheelItems.length === 0) {
+    if (isCustom) emptyMessage = "Type at least one choice beside the wheel to spin.";
+    else if (isPending) emptyMessage = "Loading restaurant choices…";
+    else if (isError) emptyMessage = "Restaurant choices couldn't load. Please try again.";
+    else if (allListings.length === 0) emptyMessage = "No restaurant listings are available yet. You can still spin your own choices.";
+    else if (radius !== null && locationStatus === "requesting") emptyMessage = `Finding your location to keep picks within ${radius} mi…`;
+    else if (radius !== null && locationStatus === "denied") emptyMessage = `Location is blocked, so nothing can be checked against ${radius} mi. Allow it in your browser, or clear the distance.`;
+    else if (radius !== null && locationStatus === "unavailable") emptyMessage = `This browser can't share location, so the ${radius} mi distance can't be applied. Clear the distance to spin the directory.`;
+    else if (radius !== null && !locationReady) emptyMessage = `Turn on location to spin spots within ${radius} mi.`;
+    else if (radius !== null && mappedCount === 0) emptyMessage = "No restaurants have mapped locations yet, so none can match a distance. Clear the distance to spin the whole directory.";
+    else if (radius !== null) emptyMessage = `No mapped restaurants within ${radius} mi${priceLabel}. Try a wider distance or another price.`;
+    else emptyMessage = `No restaurants are listed${priceLabel}. Try another price.`;
+  }
+
+  const wheelCaption = isCustom
+    ? `${customItems.length} custom ${customItems.length === 1 ? "choice" : "choices"}`
+    : radius !== null
+      ? locationReady
+        ? `${spinItems.length} nearby ${spinItems.length === 1 ? "spot" : "spots"} within ${radius} mi${priceLabel}`
+        : locationStatus === "requesting"
+          ? "Getting your location…"
+          : `Waiting on location for ${radius} mi`
+      : `${spinItems.length} random directory ${spinItems.length === 1 ? "pick" : "picks"}${priceLabel}`;
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <section className="relative bg-primary overflow-hidden border-t border-primary/20">
-      {/* subtle dot-grid background */}
       <div className="absolute inset-0 bg-primary" />
       <div className="absolute inset-0 opacity-10 mix-blend-overlay bg-noise pointer-events-none" />
 
       <div className="container mx-auto px-4 py-20 md:py-32 relative z-10">
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24">
+        <div className={`flex flex-col lg:flex-row items-center lg:items-start justify-center gap-12 ${isCustom ? "lg:gap-12" : "lg:gap-24"}`}>
 
-          {/* ── Left: copy ── */}
-          <div className="flex-1 text-center lg:text-left max-w-lg">
+          {/* ── Left: copy + controls ── */}
+          <div className="flex-1 min-w-0 text-center lg:text-left max-w-lg">
             <p className="text-xs font-mono font-bold tracking-widest uppercase text-primary-foreground/60 mb-4">
               Not sure what you're craving?
             </p>
@@ -387,69 +431,52 @@ export function HomeSpin() {
               <Button
                 size="lg"
                 onClick={handleSpin}
-                disabled={spinning || spinItems.length === 0}
+                disabled={spinning || wheelItems.length === 0}
                 className="rounded-full px-10 text-base font-bold gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 min-w-36 h-14"
+                data-testid="button-home-spin"
               >
                 {spinning ? (
                   <>
                     <span className="w-4 h-4 border-2 border-secondary-foreground/40 border-t-secondary-foreground rounded-full animate-spin" />
                     Spinning…
                   </>
-                ) : (
-                  "Spin for a spot"
-                )}
+                ) : isCustom ? "Spin my choices" : "Spin for a spot"}
               </Button>
             </div>
-            {spinItems.length === 0 && (
-              <div role="status" className="mb-6 max-w-sm mx-auto lg:mx-0 text-primary-foreground">
-                <p className="text-sm mb-3">
-                  {isPending
-                    ? "Loading restaurant choices…"
-                    : isError
-                      ? "Restaurant choices couldn't load. Please try again."
-                      : allListings.length === 0
-                        ? "No restaurant listings are available yet. You can still spin with your own choices."
-                        : "No restaurants with verified locations match this distance. Try a wider radius or use all directory listings."}
-                </p>
+
+            {wheelItems.length === 0 && !isCustom && (
+              <div role="status" className="mb-6 max-w-sm mx-auto lg:mx-0 text-primary-foreground" data-testid="status-home-spin-empty">
+                <p className="text-sm mb-3">{emptyMessage}</p>
                 {!isPending && (
                   <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                     {isError && <Button variant="secondary" onClick={() => void refetch()}>Retry loading</Button>}
-                    {locationReady && allListings.length > 0 && (
-                      <Button variant="secondary" onClick={handleLocationClear}>Use all directory listings</Button>
+                    {radius !== null && (locationStatus === "idle" || locationStatus === "denied") && (
+                      <Button variant="secondary" onClick={handleLocationRequest}>Enable location</Button>
                     )}
-                    <Button variant="secondary" onClick={() => setLocation("/spin?mode=custom")}>Use my own choices</Button>
+                    {radius !== null && allListings.length > 0 && (
+                      <Button variant="secondary" onClick={handleClearRadius}>Clear distance</Button>
+                    )}
+                    {priceFilter !== "any" && (
+                      <Button variant="secondary" onClick={() => handlePriceChange("any")}>Any price</Button>
+                    )}
+                    <Button variant="secondary" onClick={() => handleEditorChange("custom")}>Use my own choices</Button>
                   </div>
                 )}
               </div>
             )}
 
-            <div className="max-w-sm mx-auto lg:mx-0 p-4 border border-white/20 rounded-2xl bg-white/5">
-              <div className="flex items-center justify-between gap-4 mb-3">
-                <span className="text-xs font-bold text-white/80 uppercase tracking-widest">Radius</span>
-                {locationStatus !== "granted" && (
-                  <button onClick={handleLocationRequest} className="text-xs font-bold text-white underline hover:text-secondary transition-colors">
-                    {locationStatus === "requesting" ? "Locating..." : "Enable Location"}
-                  </button>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {RADIUS_OPTIONS.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => handleRadiusChange(option)}
-                    disabled={spinning}
-                    className={`flex-1 py-1.5 rounded-full border text-xs font-bold transition-all disabled:opacity-40 ${
-                      radius === option
-                        ? "bg-white text-primary border-white"
-                        : "border-white/20 text-white hover:border-white/40 hover:bg-white/10"
-                    }`}
-                  >
-                    {option} mi
-                  </button>
-                ))}
-              </div>
-            </div>
+            <HomeSpinControls
+              editor={editor}
+              disabled={spinning}
+              radius={radius}
+              priceFilter={priceFilter}
+              locationStatus={locationStatus}
+              onEditorChange={handleEditorChange}
+              onRadiusChange={handleRadiusChange}
+              onClearRadius={handleClearRadius}
+              onPriceChange={handlePriceChange}
+              onRequestLocation={handleLocationRequest}
+            />
 
             {/* Result card */}
             <AnimatePresence>
@@ -462,7 +489,7 @@ export function HomeSpin() {
                   transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                   className="mt-8 text-left"
                 >
-                  <div className="rounded-2xl overflow-hidden shadow-2xl bg-background max-w-sm mx-auto lg:mx-0">
+                  <div className="rounded-2xl overflow-hidden shadow-2xl bg-background max-w-sm mx-auto lg:mx-0" data-testid="card-home-spin-winner">
                     <div className="h-1.5" style={{ backgroundColor: winnerListing?.color ?? winner.color }} />
                     <div className="p-5">
                       {winnerListing ? (
@@ -486,7 +513,9 @@ export function HomeSpin() {
                             <Badge variant="outline" className="capitalize text-xs font-semibold px-2">
                               {winnerListing.category.replace("-", " ")}
                             </Badge>
-                            <Badge variant="secondary" className="text-xs font-bold px-2">{winnerListing.priceRange}</Badge>
+                            {winnerListing.priceRange && (
+                              <Badge variant="secondary" className="text-xs font-bold px-2">{winnerListing.priceRange}</Badge>
+                            )}
                             {winner.distanceMi !== undefined && (
                               <Badge className="text-xs gap-1 bg-emerald-500/10 text-emerald-700 border-emerald-500/20 hover:bg-emerald-500/10">
                                 <Navigation className="w-3 h-3" />
@@ -518,7 +547,7 @@ export function HomeSpin() {
                             {winner.name.slice(0, 2).toUpperCase()}
                           </div>
                           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">The wheel chose</p>
-                          <h3 className="text-3xl font-serif font-bold">{winner.name}</h3>
+                          <h3 className="text-3xl font-serif font-bold text-center break-words">{winner.name}</h3>
                         </div>
                       )}
                     </div>
@@ -528,48 +557,69 @@ export function HomeSpin() {
             </AnimatePresence>
           </div>
 
-          {/* ── Right: wheel ── */}
-          <div className="shrink-0 w-full max-w-[340px] lg:max-w-[400px]">
-            <div className="relative w-full">
-              <canvas
-                ref={canvasRef}
-                className="w-full h-auto rounded-full"
-                style={{
-                  filter: spinning
-                    ? `drop-shadow(0 0 28px color-mix(in srgb, ${accentColor} 55%, transparent))`
-                    : "drop-shadow(0 8px 24px rgba(0,0,0,0.3))",
-                  transition: "filter 0.3s",
-                }}
-              />
-              {spinItems.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center px-12 text-center text-white">
-                  <span className="font-semibold text-lg">{isPending ? "Loading choices…" : "No restaurant choices available"}</span>
-                </div>
-              )}
+          {/* ── Right: wheel (+ custom panel beside it) ── */}
+          <div className={`w-full flex flex-col items-center gap-8 ${isCustom ? "md:flex-row md:items-start md:justify-center lg:w-auto" : "lg:w-auto"}`}>
+            <div className={`shrink-0 w-full max-w-[340px] ${isCustom ? "md:max-w-[300px] xl:max-w-[360px]" : "lg:max-w-[400px] lg:w-[400px]"}`}>
+              <div className="relative w-full">
+                <canvas
+                  ref={canvasRef}
+                  className="w-full h-auto rounded-full"
+                  style={{
+                    filter: spinning
+                      ? `drop-shadow(0 0 28px color-mix(in srgb, ${accentColor} 55%, transparent))`
+                      : "drop-shadow(0 8px 24px rgba(0,0,0,0.3))",
+                    transition: "filter 0.3s",
+                  }}
+                />
+                {wheelItems.length === 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center px-12 text-center text-white">
+                    <span className="font-semibold text-base">
+                      {isCustom ? "Add a choice to fill the wheel" : isPending ? "Loading choices…" : "Nothing on the wheel yet"}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <p className="text-center text-white/60 text-xs mt-3" data-testid="text-wheel-caption">
+                {wheelCaption}
+                {!isCustom && spinItems.length > 0 && (
+                  <>
+                    {" · "}
+                    <button onClick={handleReshuffle} disabled={spinning} className="underline hover:text-white/80 transition-colors disabled:opacity-40">
+                      Reshuffle
+                    </button>
+                  </>
+                )}
+                {winner && !spinning && (
+                  <>
+                    {" · "}
+                    <button onClick={handleReset} className="underline hover:text-white/80 transition-colors">
+                      Reset
+                    </button>
+                  </>
+                )}
+              </p>
             </div>
-            <p className="text-center text-white/50 text-xs mt-3">
-              {locationReady
-                ? `${spinItems.length} nearby ${spinItems.length === 1 ? "spot" : "spots"} within ${radius} mi`
-                : locationStatus === "requesting"
-                  ? "Getting your location…"
-                  : `${spinItems.length} random directory ${spinItems.length === 1 ? "pick" : "picks"} · enable location to focus nearby`}
-              {spinItems.length > 0 && (
-                <>
-                  {" · "}
-                  <button onClick={handleReshuffle} disabled={spinning} className="underline hover:text-white/80 transition-colors disabled:opacity-40">
-                    Reshuffle
-                  </button>
-                </>
+
+            <AnimatePresence initial={false}>
+              {isCustom && (
+                <motion.div
+                  key="custom-panel"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 16 }}
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  className="w-full max-w-[340px] md:w-auto"
+                >
+                  <CustomChoicesPanel
+                    entries={customEntries}
+                    filledCount={customItems.length}
+                    disabled={spinning}
+                    onChange={handleEntryChange}
+                    onReset={handleEntriesReset}
+                  />
+                </motion.div>
               )}
-              {winner && !spinning && (
-                <>
-                  {" · "}
-                  <button onClick={handleReset} className="underline hover:text-white/80 transition-colors">
-                    Reset
-                  </button>
-                </>
-              )}
-            </p>
+            </AnimatePresence>
           </div>
 
         </div>
