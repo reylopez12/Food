@@ -10,3 +10,4 @@
 - [Dependency security patches](dependency-security-patches.md) — keep residual alerts visible; validate patches and fresh codegen against actual consumer versions.
 - [Analytics privacy](analytics-privacy.md) — track curated actions and aggregate counts, never private search, location, form or import content.
 - [Launch availability](launch-availability.md) — partner applications paused; restaurant/city growth and food trucks carry coming-soon notices.
+- [Wheel sound policy](wheel-sound-policy.md) — wheel sounds default on, with a user-controlled mute preference.

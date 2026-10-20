@@ -83,6 +83,13 @@ function homeHarness(listings) {
     "@/lib/spinWheel": h,
     "./spin/HomeSpinControls": { HomeSpinControls: "HomeSpinControls" },
     "./spin/CustomChoicesPanel": { CustomChoicesPanel: "CustomChoicesPanel" },
+    "./spin/WheelSoundToggle": { WheelSoundToggle: "WheelSoundToggle" },
+    "@/hooks/useWheelSound": {
+      useWheelSound: () => ({
+        enabled: true, unavailable: false,
+        toggle() {}, start() {}, tick() {}, finish() {},
+      }),
+    },
   };
   vm.runInNewContext(compiled, {
     module, exports: module.exports,

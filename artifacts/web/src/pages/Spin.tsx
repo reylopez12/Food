@@ -14,6 +14,8 @@ import {
   type RadiusMiles,
 } from "../hooks/useNearMe";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { useWheelSound } from "@/hooks/useWheelSound";
+import { WheelSoundToggle } from "@/components/spin/WheelSoundToggle";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -212,6 +214,7 @@ function easeOut(t: number) {
 // ─── Page component ───────────────────────────────────────────────────────────
 
 export default function Spin() {
+  const sound = useWheelSound();
   usePageMeta("Indecisive Spin", "Can't decide where to eat? Spin the wheel and let it pick a local Bay Area spot.");
   const [, setLocation] = useLocation();
 
@@ -340,6 +343,7 @@ export default function Spin() {
 
   const handleSpin = () => {
     if (spinning || spinItems.length === 0) return;
+    sound.start(currentAngleRef.current, spinItems.length);
     trackEvent("wheel_spin_started", { mode, options_count: spinItems.length });
 
     setWinner(null);
@@ -371,6 +375,7 @@ export default function Spin() {
       const elapsed = ts - startTime.v;
       const t       = Math.min(elapsed / SPIN_DURATION, 1);
       const current = startAngle + (totalTarget - startAngle) * easeOut(t);
+      sound.tick(current);
 
       const canvas = canvasRef.current;
       if (canvas) {
@@ -385,6 +390,7 @@ export default function Spin() {
         setDisplayAngle(totalTarget);
         setSpinning(false);
         setWinner(snapshot[winnerIdx]);
+        sound.finish();
         trackEvent("wheel_spin_completed", {
           mode,
           options_count: snapshot.length,
@@ -761,6 +767,8 @@ export default function Spin() {
             </div>
           )}
         </div>
+
+        <WheelSoundToggle {...sound} />
 
         <div className="flex items-center gap-3">
           <Button

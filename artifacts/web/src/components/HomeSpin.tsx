@@ -22,6 +22,8 @@ import {
 } from "@/lib/spinWheel";
 import { HomeSpinControls, type WheelEditor } from "./spin/HomeSpinControls";
 import { CustomChoicesPanel } from "./spin/CustomChoicesPanel";
+import { useWheelSound } from "@/hooks/useWheelSound";
+import { WheelSoundToggle } from "./spin/WheelSoundToggle";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SpinItem = { id: string; name: string; color: string; distanceMi?: number };
@@ -165,6 +167,7 @@ function drawPointer(canvas: HTMLCanvasElement, accentColor: string) {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function HomeSpin() {
+  const sound = useWheelSound();
   const [, setLocation] = useLocation();
   const { data: allListings = [], isPending, isError, refetch } = useListings();
   const {
@@ -294,6 +297,7 @@ export function HomeSpin() {
 
   const handleSpin = () => {
     if (spinningRef.current || wheelItems.length === 0) return;
+    sound.start(currentAngleRef.current, wheelItems.length);
     spinningRef.current = true;
     setWinner(null);
     setSpinning(true);
@@ -319,6 +323,7 @@ export function HomeSpin() {
       if (startTime.v < 0) startTime.v = ts;
       const t       = Math.min((ts - startTime.v) / SPIN_DURATION, 1);
       const current = startAngle + (totalTarget - startAngle) * easeOut(t);
+      sound.tick(current);
 
       const canvas = canvasRef.current;
       if (canvas) {
@@ -334,6 +339,7 @@ export function HomeSpin() {
         setDisplayAngle(totalTarget);
         setSpinning(false);
         setWinner(snapshot[winnerIdx]);
+        sound.finish();
       }
     };
     rafRef.current = requestAnimationFrame(animate);
@@ -464,6 +470,10 @@ export function HomeSpin() {
                 )}
               </div>
             )}
+
+            <div className="mb-4 flex justify-center lg:justify-start">
+              <WheelSoundToggle {...sound} />
+            </div>
 
             <HomeSpinControls
               editor={editor}
