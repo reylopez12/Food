@@ -16,6 +16,22 @@ renamed, and audit findings are **not** hidden:
 | GHSA-vfj7-8cjw-p6xm | braces 3.0.3 | The parser bounds nesting; all recursive AST walkers first check depth and cycles iteratively, including caller-created ASTs. Inputs beyond 100 levels throw SyntaxError. |
 | GHSA-hp3w-g68c-fv3c | sprintf-js 1.0.3 | Floating-point precision is checked against ECMAScript's limits before native formatting; invalid precision throws SyntaxError instead of a native RangeError. |
 
+### Upstream status checked October 20, 2026
+
+The npm registry and GitHub advisories still offer no fixed release for these
+findings:
+
+- [node-forge advisory](https://github.com/advisories/GHSA-86w9-cpqp-85rv):
+  latest release 1.4.0; affected versions `<=1.4.0`.
+- [braces advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm):
+  latest release 3.0.3; affected versions `<=3.0.3`.
+- [sprintf-js advisory](https://github.com/advisories/GHSA-hp3w-g68c-fv3c):
+  latest release 1.1.3; affected versions `<=1.1.3`. Updating the installed
+  1.0.3 to 1.1.3 alone does **not** fix the precision vulnerability.
+
+Retain the existing patches rather than performing an ineffective version
+upgrade. Recheck each advisory's fixed-version field before replacing a patch.
+
 Invalid patterns and format strings must still be treated as errors by callers.
 These fixes do not make arbitrary user-supplied patterns or formats safe in all
 contexts, nor do they provide general CPU/memory limits.
