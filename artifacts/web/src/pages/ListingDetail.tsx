@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRoute, Link } from "wouter";
 import { ArrowLeft, Phone, Globe, Navigation, Share2, MapPin, Clock, CheckCircle2, Bookmark, BookmarkCheck, Heart, HeartOff, Megaphone, Send, Copy, Check, Store, ArrowRight, PencilLine } from "lucide-react";
 import { useListing } from "@workspace/api-client-react";
@@ -19,6 +19,7 @@ import { usePageMeta } from "../hooks/usePageMeta";
 import { hasValidCoordinates } from "../hooks/useNearMe";
 import { directionsUrl, formatHours, mapsUrl } from "../lib/venue";
 import "leaflet/dist/leaflet.css";
+import { trackEvent } from "@/lib/analytics";
 
 export default function ListingDetail() {
   const [match, params] = useRoute("/listing/:id");
@@ -45,6 +46,12 @@ export default function ListingDetail() {
   // useListing already sets enabled: id !== null && id !== undefined internally
   const { data: listing, isLoading, isError } = useListing(id);
   usePageMeta(listing?.name, listing?.description);
+  const trackedListing = useRef<string | null>(null);
+  useEffect(() => {
+    if (!match || isError || !listing || trackedListing.current === listing.id) return;
+    trackedListing.current = listing.id;
+    trackEvent("listing_viewed", { listing_id: listing.id, category: listing.category });
+  }, [match, isError, listing]);
 
   if (!match) return null;
 
@@ -133,7 +140,10 @@ export default function ListingDetail() {
             <Button variant="secondary" size="icon" onClick={handleFollow} className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm" aria-label={followed ? "Unfollow" : "Follow"}>
               {followed ? <HeartOff className="w-5 h-5" /> : <Heart className="w-5 h-5" />}
             </Button>
-            <Button variant="secondary" size="icon" onClick={() => toggleSaved(listing.id)} aria-label={saved ? "Remove from saved" : "Save"} className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm">
+            <Button variant="secondary" size="icon" onClick={() => {
+              toggleSaved(listing.id);
+              trackEvent("listing_save_toggled", { listing_id: listing.id, saved: !saved, location: "listing" });
+            }} aria-label={saved ? "Remove from saved" : "Save"} className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm">
               {saved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
             </Button>
           </div>
@@ -168,11 +178,11 @@ export default function ListingDetail() {
 
                 <div className="flex flex-wrap items-center gap-4 text-sm mb-6">
                   <div className="flex items-center gap-2 bg-accent/10 px-3 py-1.5 rounded-full">
-                    {listing.reviewCount > 0 ? (
+                    {listing.rating > 0 ? (
                       <>
                         <span className="font-bold text-base text-accent-foreground">{listing.rating}</span>
                         <StarRating rating={listing.rating} />
-                        <span className="text-muted-foreground font-medium">({listing.reviewCount} reviews)</span>
+                        <span className="text-muted-foreground font-medium">{listing.reviewCount > 0 ? `(${listing.reviewCount} reviews)` : "Source rating"}</span>
                       </>
                     ) : <span className="text-muted-foreground font-medium">No ratings yet</span>}
                   </div>
@@ -204,14 +214,14 @@ export default function ListingDetail() {
               <div className="grid grid-cols-3 md:flex md:flex-col gap-2 sm:gap-3 w-full md:w-48 shrink-0 [&>a]:px-2 sm:[&>a]:px-8 [&>a]:text-xs sm:[&>a]:text-sm">
                 {listing.phone ? (
                   <Button size="lg" className="flex-1 md:w-full gap-2" asChild>
-                    <a href={`tel:${listing.phone.replace(/[^0-9]/g, '')}`}>
+                    <a href={`tel:${listing.phone.replace(/[^0-9]/g, '')}`} onClick={() => trackEvent("listing_contact_clicked", { listing_id: listing.id, action: "call" })}>
                       <Phone className="w-4 h-4" />
                       <span>Call Now</span>
                     </a>
                   </Button>
                 ) : (
                   <Button size="lg" className="flex-1 md:w-full gap-2" variant="outline" asChild>
-                    <a href={`https://www.google.com/search?q=${encodeURIComponent(listing.name + ' ' + listing.city + ' phone number')}`} target="_blank" rel="noreferrer">
+                    <a href={`https://www.google.com/search?q=${encodeURIComponent(listing.name + ' ' + listing.city + ' phone number')}`} target="_blank" rel="noreferrer" onClick={() => trackEvent("listing_contact_clicked", { listing_id: listing.id, action: "find_phone" })}>
                       <Phone className="w-4 h-4" />
                       <span>Find Phone</span>
                     </a>
@@ -219,21 +229,21 @@ export default function ListingDetail() {
                 )}
                 {listing.website ? (
                   <Button size="lg" variant="outline" className="flex-1 md:w-full gap-2" asChild>
-                    <a href={listing.website} target="_blank" rel="noreferrer">
+                    <a href={listing.website} target="_blank" rel="noreferrer" onClick={() => trackEvent("listing_contact_clicked", { listing_id: listing.id, action: "website" })}>
                       <Globe className="w-4 h-4" />
                       <span>Website</span>
                     </a>
                   </Button>
                 ) : (
                   <Button size="lg" variant="outline" className="flex-1 md:w-full gap-2" asChild>
-                    <a href={`https://www.google.com/search?q=${encodeURIComponent(listing.name + ' ' + listing.city)}`} target="_blank" rel="noreferrer">
+                    <a href={`https://www.google.com/search?q=${encodeURIComponent(listing.name + ' ' + listing.city)}`} target="_blank" rel="noreferrer" onClick={() => trackEvent("listing_contact_clicked", { listing_id: listing.id, action: "search_online" })}>
                       <Globe className="w-4 h-4" />
                       <span>Search Online</span>
                     </a>
                   </Button>
                 )}
                 <Button size="lg" variant="secondary" className="flex-1 md:w-full gap-2" asChild>
-                  <a href={directionsUrl(listing)} target="_blank" rel="noreferrer">
+                  <a href={directionsUrl(listing)} target="_blank" rel="noreferrer" onClick={() => trackEvent("listing_contact_clicked", { listing_id: listing.id, action: "directions" })}>
                     <Navigation className="w-4 h-4" />
                     <span>Directions</span>
                   </a>
@@ -425,6 +435,7 @@ export default function ListingDetail() {
                   )}
                   <a
                     href={mapsUrl(listing)}
+                    onClick={() => trackEvent("listing_contact_clicked", { listing_id: listing.id, action: "map" })}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors mt-3"
@@ -462,12 +473,13 @@ export default function ListingDetail() {
                     <div className="flex items-center gap-3">
                       <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
                       {listing.phone ? (
-                        <a href={`tel:${listing.phone.replace(/[^0-9]/g, '')}`} className="font-medium hover:text-primary transition-colors">
+                        <a href={`tel:${listing.phone.replace(/[^0-9]/g, '')}`} className="font-medium hover:text-primary transition-colors" onClick={() => trackEvent("listing_contact_clicked", { listing_id: listing.id, action: "call" })}>
                           {listing.phone}
                         </a>
                       ) : (
                         <a
                           href={`https://www.google.com/search?q=${encodeURIComponent(listing.name + ' ' + listing.city + ' phone number')}`}
+                          onClick={() => trackEvent("listing_contact_clicked", { listing_id: listing.id, action: "find_phone" })}
                           target="_blank"
                           rel="noreferrer"
                           className="text-muted-foreground hover:text-primary transition-colors italic"
@@ -479,12 +491,13 @@ export default function ListingDetail() {
                     <div className="flex items-center gap-3">
                       <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
                       {listing.website ? (
-                        <a href={listing.website} target="_blank" rel="noreferrer" className="font-medium hover:text-primary transition-colors text-primary overflow-hidden text-ellipsis whitespace-nowrap">
+                        <a href={listing.website} target="_blank" rel="noreferrer" className="font-medium hover:text-primary transition-colors text-primary overflow-hidden text-ellipsis whitespace-nowrap" onClick={() => trackEvent("listing_contact_clicked", { listing_id: listing.id, action: "website" })}>
                           {listing.website.replace(/^https?:\/\//, '')}
                         </a>
                       ) : (
                         <a
                           href={`https://www.google.com/search?q=${encodeURIComponent(listing.name + ' ' + listing.city)}`}
+                          onClick={() => trackEvent("listing_contact_clicked", { listing_id: listing.id, action: "search_online" })}
                           target="_blank"
                           rel="noreferrer"
                           className="text-muted-foreground hover:text-primary transition-colors italic"

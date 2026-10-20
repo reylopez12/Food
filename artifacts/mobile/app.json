@@ -1,16 +1,19 @@
 {
   "expo": {
-    "name": "Eat. Local. Food.",
-    "slug": "mobile",
+    "name": "Spotted Eats",
+    "slug": "spottedeats",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "spottedeats",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.spottedeats.app"
     },
-    "android": {},
+    "android": {
+      "package": "com.spottedeats.app"
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },

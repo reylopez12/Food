@@ -6,9 +6,10 @@ interface CategoryCardProps {
   title: string;
   icon: ReactNode;
   category: string;
+  comingSoon?: boolean;
 }
 
-export function CategoryCard({ title, icon, category }: CategoryCardProps) {
+export function CategoryCard({ title, icon, category, comingSoon = false }: CategoryCardProps) {
   return (
     <Link href={`/explore?category=${category}`} className="block group outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl">
       <Card className="h-full border-border/60 hover:border-primary/40 transition-all duration-300 bg-card hover:bg-muted/30 hover:shadow-lg hover:-translate-y-1 overflow-hidden">
@@ -20,6 +21,11 @@ export function CategoryCard({ title, icon, category }: CategoryCardProps) {
           <span className="font-serif font-bold text-xl group-hover:text-primary transition-colors duration-300 relative z-10 text-card-foreground">
             {title}
           </span>
+          {comingSoon && (
+            <span className="relative z-10 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              Coming soon
+            </span>
+          )}
         </CardContent>
       </Card>
     </Link>

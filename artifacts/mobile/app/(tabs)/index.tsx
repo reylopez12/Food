@@ -22,6 +22,7 @@ import { VideoShowcase } from '@/components/VideoShowcase';
 import { HomeSpinWidget } from '@/components/HomeSpinWidget';
 
 const LOCATION = 'San Francisco Bay Area';
+const SERVICE_CITIES = ['Oakland', 'Berkeley', 'Albany', 'Alameda'];
 
 export default function HomeScreen() {
   const colors = useColors();
@@ -159,6 +160,30 @@ export default function HomeScreen() {
         <View style={styles.videoSection}>
           <VideoShowcase />
         </View>
+
+        <View style={[styles.sectionHeader, { paddingHorizontal: horizontalPadding }]}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Browse by City</Text>
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: horizontalPadding, gap: 10, paddingBottom: 24 }}
+        >
+          {SERVICE_CITIES.map((city) => (
+            <TouchableOpacity
+              key={city}
+              accessibilityRole="button"
+              accessibilityLabel={`Explore restaurants in ${city}`}
+              onPress={() => router.push({ pathname: '/(tabs)/explore', params: { mode: 'city', city } })}
+              style={{
+                borderRadius: 24, borderWidth: 1, borderColor: colors.border,
+                backgroundColor: colors.card, paddingHorizontal: 18, paddingVertical: 12,
+              }}
+            >
+              <Text style={{ color: colors.foreground, fontWeight: '600' }}>{city}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
         {/* Categories */}
         <View style={[styles.sectionHeader, { paddingHorizontal: horizontalPadding }]}>

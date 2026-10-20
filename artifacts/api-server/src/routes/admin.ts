@@ -3,6 +3,7 @@ import { db, venuesTable, partnerInquiriesTable, feedbackTable } from "@workspac
 import { desc, eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { getAdminEmails, isAdmin } from "../lib/access";
+import directoryImportRouter from "./directory-import";
 
 const router: IRouter = Router();
 
@@ -32,6 +33,8 @@ router.use((req, res, next) => {
 });
 
 // GET /admin/me — lets the UI confirm admin access before rendering tools
+router.use("/listings/import", directoryImportRouter);
+
 router.get("/me", (_req, res) => {
   res.json({ admin: true });
 });

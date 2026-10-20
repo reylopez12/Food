@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { EMAIL_RE, createRateLimiter, text } from "../lib/publicForm";
 
 const router: IRouter = Router();
+const PARTNER_APPLICATIONS_OPEN = false;
 
 const INTERESTS = ["listing", "claim", "broadcaster", "featured", "other"];
 
@@ -15,6 +16,10 @@ const rateLimited = createRateLimiter(5, 60 * 60 * 1000);
 // A business asks to be listed, claim a listing, or upgrade to a paid plan.
 // ---------------------------------------------------------------------------
 router.post("/partner-inquiries", async (req, res) => {
+  if (!PARTNER_APPLICATIONS_OPEN) {
+    res.status(503).json({ error: "Partner applications are coming soon. We’re setting this part up so we can better connect restaurants to the community." });
+    return;
+  }
   const body = req.body ?? {};
 
   // Honeypot: real users never see or fill this field.

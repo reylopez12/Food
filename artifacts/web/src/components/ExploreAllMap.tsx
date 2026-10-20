@@ -177,11 +177,11 @@ export function ExploreAllMap({
                   {listing.neighborhood} · {listing.priceRange}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 10 }}>
-                  {listing.reviewCount > 0 ? (
+                  {listing.rating > 0 ? (
                     <>
                       <span style={{ color: accentColor, fontSize: 13 }}>★</span>
                       <span style={{ fontWeight: 600, fontSize: 13, color: '#111' }}>{listing.rating}</span>
-                      <span style={{ color: '#9ca3af', fontSize: 12 }}>({listing.reviewCount.toLocaleString()})</span>
+                      <span style={{ color: '#9ca3af', fontSize: 12 }}>{listing.reviewCount > 0 ? `(${listing.reviewCount.toLocaleString()})` : "Source rating"}</span>
                     </>
                   ) : <span style={{ color: '#6b7280', fontSize: 12 }}>No ratings yet</span>}
                 </div>

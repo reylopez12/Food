@@ -15,6 +15,7 @@ import { ExploreAllMap } from "../components/ExploreAllMap";
 import { useNearMe, haversineDistanceMi, RADIUS_OPTIONS } from "../hooks/useNearMe";
 import { SearchModeChooser, type SearchMode } from "../components/SearchModeChooser";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { trackEvent } from "@/lib/analytics";
 
 const CATEGORIES = [
   { id: 'restaurants', label: 'Restaurants' },
@@ -73,6 +74,8 @@ export default function Explore() {
     searchParams.get("category") ? [searchParams.get("category")!] : []
   );
   const [selectedPrices, setSelectedPrices] = useState<string[]>([]);
+  const foodTrucksSelected = selectedCategories.includes("food-trucks");
+  const foodTrucksOnly = foodTrucksSelected && selectedCategories.length === 1;
   const [minRating, setMinRating] = useState<number[]>([0]);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<string | null>(
@@ -91,6 +94,7 @@ export default function Explore() {
   });
 
   const handleViewMode = (mode: 'list' | 'map') => {
+    if (mode !== viewMode) trackEvent("explore_view_changed", { view: mode });
     setViewMode(mode);
     try { localStorage.setItem(VIEW_MODE_KEY, mode); } catch {}
   };
@@ -114,8 +118,8 @@ export default function Explore() {
     setSelectedCity(mode === "city" ? city || "" : "");
   }, [locationStr, searchStr]);
 
-  // Ratings only matter once venues actually have reviews.
-  const hasRatings = allListings.some((l) => l.reviewCount > 0);
+  // Uploaded source scores can exist without a supplied review count.
+  const hasRatings = allListings.some((l) => l.rating > 0);
 
   const distanceActive = status === 'granted' && userLat !== null && userLng !== null && radius !== null;
 
@@ -167,6 +171,23 @@ export default function Explore() {
   }, [allListings, searchMode, searchQuery, selectedCategories, selectedPrices, minRating,
     verifiedOnly, selectedNeighborhood, selectedCity, distanceActive, userLat, userLng, radius]);
 
+  const lastTrackedSearch = useRef<string | null>(null);
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      lastTrackedSearch.current = null;
+      return;
+    }
+    if (listingsLoading) return;
+    // Debounce typing, and retain the query only locally for deduplication.
+    const key = JSON.stringify([searchMode, searchQuery.trim()]);
+    if (lastTrackedSearch.current === key) return;
+    const timer = window.setTimeout(() => {
+      lastTrackedSearch.current = key;
+      trackEvent("directory_search", { search_mode: searchMode, results_count: filteredListings.length });
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery, searchMode, listingsLoading, filteredListings.length]);
+
   const sortedListings = useMemo(() => {
     if (sortBy === "name") return [...filteredListings].sort((a, b) => a.name.localeCompare(b.name));
     if (sortBy === "neighborhood") {
@@ -217,6 +238,7 @@ export default function Explore() {
   };
 
   const handleSearchModeChange = (mode: SearchMode) => {
+    if (mode !== searchMode) trackEvent("explore_search_mode_changed", { search_mode: mode });
     const nextQuery = mode === "near-me" ? "" : searchQuery;
     setSearchMode(mode);
     setSearchQuery(nextQuery);
@@ -353,6 +375,11 @@ export default function Explore() {
               />
               <Label htmlFor={`cat-${category.id}`} className="font-normal cursor-pointer">
                 {category.label}
+                {category.id === "food-trucks" && (
+                  <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                    Coming soon
+                  </span>
+                )}
               </Label>
             </div>
           ))}
@@ -560,6 +587,15 @@ export default function Explore() {
         </div>
       </div>
 
+      {foodTrucksSelected && (
+        <section className="mb-6 rounded-2xl border border-primary/30 bg-primary/5 p-5 sm:p-6" role="status" data-testid="food-trucks-coming-soon">
+          <h2 className="font-serif text-xl font-bold">Food trucks: coming soon</h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+            You’ll soon never have to question where your favorite trucks are—find them all in one place.
+          </p>
+        </section>
+      )}
+
       {viewMode === 'map' ? (
         <ExploreAllMap
           listings={filteredListings}
@@ -583,6 +619,7 @@ export default function Explore() {
                 Showing{' '}
                 <span className="font-medium text-foreground">{filteredListings.length}</span>{' '}
                 {filteredListings.length === 1 ? 'place' : 'places'}
+                <span className="ml-2 text-xs text-primary">More coming soon</span>
                 {distanceActive && (
                   <> within <span className="font-medium text-foreground">{radius} mi</span></>
                 )}
@@ -629,9 +666,13 @@ export default function Explore() {
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
                   <Search className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No places found</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  {foodTrucksOnly ? "Food truck listings are coming soon" : "No places found"}
+                </h3>
                 <p className="text-muted-foreground max-w-md mb-6">
-                  {distanceActive
+                  {foodTrucksOnly
+                    ? "Explore our restaurants while we get everything ready."
+                    : distanceActive
                     ? `No listings with location data found within ${radius} miles. Try a larger radius or clear the distance filter.`
                     : "We couldn't find anything matching your filters. Try adjusting your search or clearing the filters."}
                 </p>

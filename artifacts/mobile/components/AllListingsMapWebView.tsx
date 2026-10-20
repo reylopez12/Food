@@ -74,7 +74,7 @@ function buildAllListingsHtml(listings: Listing[], c: MapColors): string {
         '<div class="popup-card">' +
           '<div class="popup-name">' + escapeHtml(info.name) + '</div>' +
           '<div class="popup-meta">' + escapeHtml(info.city) + '</div>' +
-          (info.reviewCount > 0 ? '<div class="popup-rating"><span class="popup-star">&#9733;</span><span class="popup-score">' + info.rating + '</span></div>' : '') +
+          (info.rating > 0 ? '<div class="popup-rating"><span class="popup-star">&#9733;</span><span class="popup-score">' + info.rating + '</span></div>' : '') +
           '<button class="popup-btn" onclick="openListing(' + JSON.stringify(info.id) + ')">View details &rarr;</button>' +
         '</div>';
       L.marker([lat, lng], { icon: markerIcon })

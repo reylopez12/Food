@@ -12,7 +12,7 @@ interface RatingStarsProps {
 
 export function RatingStars({ rating, reviewCount, size = 14, showCount = true }: RatingStarsProps) {
   const colors = useColors();
-  if (rating <= 0 || reviewCount === 0) {
+  if (rating <= 0) {
     return <Text style={[styles.count, { color: colors.mutedForeground, fontSize: size }]}>No ratings yet</Text>;
   }
   const fullStars = Math.floor(rating);
@@ -31,7 +31,7 @@ export function RatingStars({ rating, reviewCount, size = 14, showCount = true }
       {showCount && reviewCount !== undefined && (
         <Text style={[styles.count, { color: colors.mutedForeground, fontSize: size }]}>
           {' '}
-          {rating.toFixed(1)} ({reviewCount.toLocaleString()})
+          {rating.toFixed(1)} {reviewCount > 0 ? `(${reviewCount.toLocaleString()})` : "· Source rating"}
         </Text>
       )}
     </View>

@@ -14,15 +14,19 @@ import {
   type RadiusMiles,
 } from "../hooks/useNearMe";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { useWheelSound } from "@/hooks/useWheelSound";
+import { WheelSoundToggle } from "@/components/spin/WheelSoundToggle";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /** Minimal item the wheel and result card need from either source */
+import { trackEvent } from "@/lib/analytics";
+
 type SpinItem = { id: string; name: string; color: string; distanceMi?: number };
 
 type Mode   = "directory" | "custom";
 type Filter = "all" | "restaurants" | "food-trucks";
-type Price  = "all" | "budget" | "mid" | "upscale";
+type Price  = "all" | "budget" | "mid" | "upscale" | "luxe";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -36,6 +40,7 @@ const PRICE_MAP: Record<Price, string | null> = {
   budget:  "$",
   mid:     "$$",
   upscale: "$$$",
+  luxe:    "$$$$",
 };
 
 const FILTER_OPTIONS: { id: Filter; label: string }[] = [
@@ -49,6 +54,7 @@ const PRICE_OPTIONS: { id: Price; label: string }[] = [
   { id: "budget",  label: "$" },
   { id: "mid",     label: "$$" },
   { id: "upscale", label: "$$$" },
+  { id: "luxe",    label: "$$$$" },
 ];
 
 const SPIN_ROTATIONS  = 8;
@@ -208,10 +214,13 @@ function easeOut(t: number) {
 // ─── Page component ───────────────────────────────────────────────────────────
 
 export default function Spin() {
+  const sound = useWheelSound();
   usePageMeta("Indecisive Spin", "Can't decide where to eat? Spin the wheel and let it pick a local Bay Area spot.");
   const [, setLocation] = useLocation();
 
-  const [mode,    setMode]    = useState<Mode>("directory");
+  const [mode,    setMode]    = useState<Mode>(() =>
+    new URLSearchParams(window.location.search).get("mode") === "custom" ? "custom" : "directory"
+  );
   const [filter,  setFilter]  = useState<Filter>("all");
   const [price,   setPrice]   = useState<Price>("all");
   const [spinning, setSpinning] = useState(false);
@@ -245,7 +254,7 @@ export default function Spin() {
     return () => observer.disconnect();
   }, []);
 
-  const { data: allListings = [] } = useListings();
+  const { data: allListings = [], isPending, isError, refetch } = useListings();
   const {
     status: locationStatus,
     userLat,
@@ -334,6 +343,8 @@ export default function Spin() {
 
   const handleSpin = () => {
     if (spinning || spinItems.length === 0) return;
+    sound.start(currentAngleRef.current, spinItems.length);
+    trackEvent("wheel_spin_started", { mode, options_count: spinItems.length });
 
     setWinner(null);
     setSpinning(true);
@@ -364,6 +375,7 @@ export default function Spin() {
       const elapsed = ts - startTime.v;
       const t       = Math.min(elapsed / SPIN_DURATION, 1);
       const current = startAngle + (totalTarget - startAngle) * easeOut(t);
+      sound.tick(current);
 
       const canvas = canvasRef.current;
       if (canvas) {
@@ -378,6 +390,12 @@ export default function Spin() {
         setDisplayAngle(totalTarget);
         setSpinning(false);
         setWinner(snapshot[winnerIdx]);
+        sound.finish();
+        trackEvent("wheel_spin_completed", {
+          mode,
+          options_count: snapshot.length,
+          ...(mode === "directory" ? { listing_id: snapshot[winnerIdx].id } : {}),
+        });
       }
     };
 
@@ -651,32 +669,35 @@ export default function Spin() {
                 })}
               </div>
 
-              <div className="flex items-center gap-2 p-1 bg-muted rounded-full max-w-full overflow-x-auto">
-                {PRICE_OPTIONS.map((opt) => {
-                  const count = nearbyListings.filter(
-                    ({ listing }) =>
-                      (filter === "all" || listing.category === filter) &&
-                      (PRICE_MAP[opt.id] === null || listing.priceRange === PRICE_MAP[opt.id])
-                  ).length;
-                  return (
-                    <button
-                      key={opt.id}
-                      onClick={() => handlePriceChange(opt.id)}
-                      disabled={spinning}
-                      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
-                        price === opt.id
-                          ? "bg-background shadow text-foreground"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {opt.label}
-                      <span className="ml-1.5 text-xs opacity-60">({count})</span>
-                    </button>
-                  );
-                })}
-              </div>
             </>
           )}
+
+          {/* Price stays editable before location is ready; distance remains required to spin. */}
+            <div className="flex items-center gap-2 p-1 bg-muted rounded-full max-w-full overflow-x-auto">
+              {PRICE_OPTIONS.map((opt) => {
+                const count = nearbyListings.filter(
+                  ({ listing }) =>
+                    (filter === "all" || listing.category === filter) &&
+                    (PRICE_MAP[opt.id] === null || listing.priceRange === PRICE_MAP[opt.id])
+                ).length;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => handlePriceChange(opt.id)}
+                    disabled={spinning}
+                    data-testid={`spin-price-${opt.id}`}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
+                      price === opt.id
+                        ? "bg-background shadow text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {opt.label}
+                    {locationReady && <span className="ml-1.5 text-xs opacity-60">({count})</span>}
+                  </button>
+                );
+              })}
+            </div>
         </div>
       )}
 
@@ -722,7 +743,32 @@ export default function Spin() {
               transition: "filter 0.3s",
             }}
           />
+          {spinItems.length === 0 && (
+            <div role="status" className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-12 text-center">
+              <p className="font-semibold">
+                {mode === "custom"
+                  ? "Add your choices above"
+                  : isPending
+                    ? "Loading restaurant choices…"
+                    : isError
+                      ? "Restaurant choices couldn't load"
+                      : allListings.length === 0
+                        ? "No restaurant listings available"
+                        : !locationReady
+                          ? "Enable location and choose a distance"
+                          : "No nearby restaurants with verified locations"}
+              </p>
+              {mode === "directory" && !isPending && (
+                <>
+                  {isError && <Button variant="outline" size="sm" onClick={() => void refetch()}>Retry loading</Button>}
+                  <Button variant="outline" size="sm" onClick={() => switchMode("custom")}>Use my own choices</Button>
+                </>
+              )}
+            </div>
+          )}
         </div>
+
+        <WheelSoundToggle {...sound} />
 
         <div className="flex items-center gap-3">
           <Button
@@ -763,7 +809,13 @@ export default function Spin() {
         <p className="mt-8 text-muted-foreground text-sm text-center max-w-md">
           {mode === "custom"
             ? "Add at least one entry above to spin."
-            : locationStatus === "requesting"
+            : isPending
+              ? "Loading restaurant choices…"
+              : isError
+                ? "Could not load restaurant listings. Retry loading or use Custom choices."
+                : allListings.length === 0
+                  ? "No restaurant listings are available on this site yet. Switch to Custom to spin with your own choices."
+                  : locationStatus === "requesting"
               ? "Getting your location…"
               : locationStatus !== "granted"
                 ? "Enable location to build a wheel of nearby recommendations."
@@ -855,12 +907,12 @@ export default function Spin() {
                   </div>
 
                   <div className="flex items-center gap-2 mb-4">
-                    {winnerListing.reviewCount > 0 ? (
+                    {winnerListing.rating > 0 ? (
                       <>
                         <Star className="w-4 h-4 fill-secondary text-secondary" />
                         <span className="font-bold">{winnerListing.rating}</span>
                         <span className="text-muted-foreground text-sm">
-                          ({winnerListing.reviewCount.toLocaleString()} reviews)
+                          {winnerListing.reviewCount > 0 ? `(${winnerListing.reviewCount.toLocaleString()} reviews)` : "Source rating"}
                         </span>
                       </>
                     ) : <span className="text-muted-foreground text-sm">No ratings yet</span>}
@@ -873,7 +925,10 @@ export default function Spin() {
                   <Button
                     className="w-full gap-2 rounded-xl"
                     size="lg"
-                    onClick={() => setLocation(`/listing/${winnerListing.id}`)}
+                    onClick={() => {
+                      trackEvent("wheel_result_opened", { listing_id: winnerListing.id });
+                      setLocation(`/listing/${winnerListing.id}`);
+                    }}
                   >
                     <ExternalLink className="w-4 h-4" />
                     View full listing

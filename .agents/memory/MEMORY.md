@@ -5,3 +5,9 @@
 - [Expo SDK dependency updates](expo-sdk-updates.md) — update the mobile importer as a pair, validate with Expo’s compatibility check, and review workspace metadata changes.
 - [Hidden native tabs](hidden-native-tabs.md) — hidden NativeTabs routes cannot serve as secondary screens in this Expo Router version; use routable classic tabs or a separate stack.
 - [Imported venue provenance](imported-venue-provenance.md) — never infer ratings, verification, or pin locations from a restaurant CSV that omits them.
+- [Production SQL Console](production-sql-console.md) — prefer single-statement imports; this console rejected transaction setup even in a batch. Enable Edit mode and avoid concurrent imports.
+- [GitHub access](github-access.md) — native Git authentication can work even when no GitHub integration connection is listed.
+- [Dependency security patches](dependency-security-patches.md) — keep residual alerts visible; validate patches and fresh codegen against actual consumer versions.
+- [Analytics privacy](analytics-privacy.md) — track curated actions and aggregate counts, never private search, location, form or import content.
+- [Launch availability](launch-availability.md) — partner applications paused; restaurant/city growth and food trucks carry coming-soon notices.
+- [Wheel sound policy](wheel-sound-policy.md) — wheel sounds default on, with a user-controlled mute preference.

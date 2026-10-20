@@ -795,7 +795,7 @@ export default function SpinScreen() {
                         </Text>
                       </View>
                     )}
-                    {winnerListing.reviewCount > 0 && (
+                    {winnerListing.rating > 0 && (
                       <View style={styles.ratingChip}>
                         <Feather name="star" size={11} color={colors.accent} />
                         <Text style={[styles.chipText, { color: colors.foreground, marginLeft: 3 }]}>

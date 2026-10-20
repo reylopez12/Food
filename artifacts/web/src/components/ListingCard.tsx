@@ -5,6 +5,7 @@ import { MapPin, Bookmark, BookmarkCheck, CheckCircle2, Play } from "lucide-reac
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSavedListings } from "../hooks/useSavedListings";
+import { trackEvent } from "@/lib/analytics";
 
 interface ListingCardProps {
   listing: Listing;
@@ -19,6 +20,7 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault();
     toggleSaved(listing.id);
+    trackEvent("listing_save_toggled", { listing_id: listing.id, saved: !saved, location: "card" });
   };
 
   const distanceLabel =
@@ -62,7 +64,7 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
           </button>
         </div>
 
-        <CardContent className="p-6 flex-1 flex flex-col bg-card relative z-20">
+        <CardContent className="p-6 flex-1 flex flex-col bg-card relative">
           <div className="flex justify-between items-start mb-3">
             <div className="w-full">
               <h3 className="font-serif font-bold text-2xl leading-tight group-hover:text-primary transition-colors flex items-center gap-2 text-card-foreground">
@@ -78,11 +80,11 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
           </div>
 
           <div className="flex items-center gap-2 mb-4">
-            {listing.reviewCount > 0 ? (
+            {listing.rating > 0 ? (
               <>
                 <StarRating rating={listing.rating} className="scale-90 origin-left" />
                 <span className="text-sm font-bold text-card-foreground">{listing.rating}</span>
-                <span className="text-sm text-muted-foreground font-medium">({listing.reviewCount})</span>
+                <span className="text-sm text-muted-foreground font-medium">{listing.reviewCount > 0 ? `(${listing.reviewCount})` : "Source rating"}</span>
               </>
             ) : <span className="text-sm text-muted-foreground">No ratings yet</span>}
             {listing.priceRange && <>

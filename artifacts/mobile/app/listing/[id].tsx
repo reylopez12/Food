@@ -342,12 +342,12 @@ export default function ListingDetailScreen() {
           ]}
         >
           <View style={styles.ratingLeft}>
-            {listing.reviewCount > 0 ? (
+            {listing.rating > 0 ? (
               <>
                 <Text style={[styles.ratingNum, { color: colors.foreground }]}>{listing.rating.toFixed(1)}</Text>
                 <RatingStars rating={listing.rating} size={16} showCount={false} />
                 <Text style={[styles.ratingCount, { color: colors.mutedForeground }]}>
-                  {listing.reviewCount.toLocaleString()} reviews
+                  {listing.reviewCount > 0 ? `${listing.reviewCount.toLocaleString()} reviews` : "Source rating"}
                 </Text>
               </>
             ) : (

@@ -56,6 +56,7 @@ const LINK_GROUPS = [
     links: [
       { href: "/explore?mode=city&city=Oakland", label: "Oakland" },
       { href: "/explore?mode=city&city=Berkeley", label: "Berkeley" },
+      { href: "/explore?mode=city&city=Albany", label: "Albany" },
       { href: "/explore?mode=city&city=Alameda", label: "Alameda" },
     ],
   },
@@ -63,8 +64,7 @@ const LINK_GROUPS = [
     title: "For business",
     links: [
       { href: "/partners", label: "Partner with us" },
-      { href: "/partners#plans", label: "Plans & pricing" },
-      { href: "/partners#apply", label: "Get listed or claim a listing" },
+      { href: "/partners#apply", label: "Listing tools (coming soon)" },
     ],
   },
 ];
@@ -85,8 +85,8 @@ export function SiteFooter() {
               href="/partners"
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Own a local spot? Get listed
-              <ArrowRight className="w-4 h-4" />
+              Own a local spot? See what’s coming
+              <ArrowRight className="w-4 h-4 shrink-0" />
             </Link>
           </div>
 

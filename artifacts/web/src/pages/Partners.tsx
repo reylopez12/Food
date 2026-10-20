@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 import { Link, useSearch } from "wouter";
 import {
   Search,
@@ -153,7 +154,42 @@ interface FormState {
   company_url: string; // honeypot
 }
 
+// Applications stay paused during setup. The archived application below has
+// obsolete paid plans: replace those with free tools before reopening it.
+const PARTNER_APPLICATIONS_OPEN = false;
+
 export default function Partners() {
+  return PARTNER_APPLICATIONS_OPEN ? <PartnerApplication /> : <PartnerSetupNotice />;
+}
+
+function PartnerSetupNotice() {
+  usePageMeta("Free tools for local restaurants", "When ready, all previously planned paid features will be available for free to all local restaurants.");
+  return (
+    <section id="apply" className="container mx-auto flex min-h-[65vh] items-center justify-center px-4 py-16">
+      <div className="w-full max-w-2xl rounded-3xl border bg-card p-6 text-center shadow-sm sm:p-12" data-testid="partners-setup-notice">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Store className="h-8 w-8" aria-hidden="true" />
+        </div>
+        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Coming soon</span>
+        <h1 className="mt-5 font-serif text-3xl font-bold tracking-tight sm:text-5xl">Free tools for local restaurants</h1>
+        <p className="mt-5 text-lg leading-relaxed text-foreground" data-testid="free-business-features-notice">
+          We’ve decided to remove paid plans. When we’re ready, all previously planned paid features will be available for free to all local restaurants.
+        </p>
+        <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+          We’re setting this part up so we can better connect restaurants to the community.
+        </p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Partner applications and listing claims are temporarily unavailable. Please check back soon.
+        </p>
+        <Button asChild className="mt-8">
+          <Link href="/explore">Explore restaurants <ArrowRight className="ml-2 h-4 w-4" /></Link>
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function PartnerApplication() {
   usePageMeta(
     "Partner with us",
     "List your independent Bay Area restaurant or food truck for free, claim your listing, and reach locals with announcements.",
@@ -199,6 +235,7 @@ export default function Partners() {
 
   const pickPlan = (interest: Interest) => {
     set("interest", interest);
+    trackEvent("partner_plan_selected", { interest });
     document.getElementById("apply")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -225,6 +262,7 @@ export default function Partners() {
         throw new Error(body.error ?? "Something went wrong. Please try again.");
       }
       setStatus("sent");
+      trackEvent("partner_inquiry_submitted", { interest: form.interest });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setStatus("idle");
