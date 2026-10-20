@@ -6,7 +6,6 @@ import {
   Sun,
   Menu,
   Shuffle,
-  LogIn,
   LogOut,
   Bell,
   Bookmark,
@@ -48,7 +47,7 @@ interface NavLink {
 export function Navbar() {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { user, isLoading, isAuthenticated, login, logout } = useAuth();
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
   const { unreadCount } = useNotifications(isAuthenticated);
   const { isAdmin } = useIsAdmin(isAuthenticated);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -206,11 +205,6 @@ export function Navbar() {
                       <span className="font-medium">Saved</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={login} className="gap-2.5 cursor-pointer py-2 focus:bg-primary focus:text-primary-foreground font-medium">
-                    <LogIn className="w-4 h-4" />
-                    Log in
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )
@@ -284,9 +278,8 @@ export function Navbar() {
                   </Link>
                 )}
 
-                <div className="pt-6 border-t mt-auto">
-                  {!isLoading && (
-                    isAuthenticated ? (
+                {!isLoading && isAuthenticated && (
+                  <div className="pt-6 border-t mt-auto">
                       <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-3">
                           <Avatar className="w-10 h-10">
@@ -305,14 +298,8 @@ export function Navbar() {
                           Log out
                         </Button>
                       </div>
-                    ) : (
-                      <Button variant="default" onClick={() => { setMobileMenuOpen(false); login(); }} className="gap-2 w-full rounded-xl font-bold shadow-md">
-                        <LogIn className="w-4 h-4" />
-                        Log in
-                      </Button>
-                    )
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </SheetContent>
           </Sheet>

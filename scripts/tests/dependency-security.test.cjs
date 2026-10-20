@@ -90,6 +90,19 @@ test('brace patterns keep ordinary compilation and expansion', () => {
   assert.equal(braces.stringify(braces.parse('x/{a,b}')), 'x/{a,b}');
 });
 
+test('brace depth guard preserves supported nesting and noncyclic shared AST nodes', () => {
+  // The parser stack includes the root, leaving room for 99 nested braces.
+  const supported = '{'.repeat(99) + 'a,b' + '}'.repeat(99);
+  assert.equal(typeof braces.compile(supported), 'string');
+  assert.equal(braces.stringify(braces.parse(supported)), supported);
+  assert.throws(() => braces.parse(`{${supported}}`), { name: 'SyntaxError' });
+
+  const shared = { type: 'text', value: 'a' };
+  const ast = { type: 'root', nodes: [shared, shared] };
+  assert.equal(braces.compile(ast), 'aa');
+  assert.equal(braces.stringify(ast), 'aa');
+});
+
 test('all brace walkers reject deeply nested input and cyclic caller-built ASTs', () => {
   const pattern = '{'.repeat(5000) + 'a,b' + '}'.repeat(5000);
   let ast = { type: 'text', value: 'a' };
@@ -115,6 +128,22 @@ test('sprintf validates precision before native numeric formatters run', () => {
   for (const format of ['%.0f', '%.0e', '%.1g', '%.100f', '%.100e', '%.100g']) {
     assert.equal(typeof sprintf(format, 1.25), 'string');
   }
+});
+
+test('sprintf precision guard preserves every supported native precision', () => {
+  for (const [specifier, method, minimum] of [
+    ['f', 'toFixed', 0], ['e', 'toExponential', 0], ['g', 'toPrecision', 1],
+  ]) {
+    for (let precision = minimum; precision <= 100; precision++) {
+      const format = `%.${precision}${specifier}`;
+      const expected = (1.25)[method](precision);
+      assert.equal(sprintf(format, 1.25), expected);
+      assert.equal(vsprintf(format, [1.25]), expected);
+    }
+  }
+  assert.equal(sprintf('%f', 1.25), '1.25');
+  assert.equal(sprintf('%e', 1.25), '1.25e+0');
+  assert.equal(sprintf('%g', 1.25), '1.25');
 });
 
 test('malicious sprintf precision never reaches native numeric formatters', () => {
