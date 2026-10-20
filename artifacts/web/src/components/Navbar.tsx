@@ -24,6 +24,8 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -113,7 +115,7 @@ export function Navbar() {
             </Link>
           </Button>
 
-          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle dark mode" className={`rounded-full transition-colors ${location === '/' ? 'text-white hover:bg-white/10' : 'hover:bg-muted/50'}`}>
+          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle dark mode" className={`h-11 w-11 rounded-full transition-colors ${location === '/' ? 'text-white hover:bg-white/10' : 'hover:bg-muted/50'}`}>
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
 
@@ -217,19 +219,21 @@ export function Navbar() {
           {/* Mobile hamburger sheet */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden rounded-full hover:bg-muted/50 transition-colors">
+              <Button variant="ghost" size="icon" className="h-11 w-11 md:hidden rounded-full hover:bg-muted/50 transition-colors">
                 <Menu className="w-5 h-5" />
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="border-l-border/60">
+            <SheetContent side="right" className="h-dvh overflow-y-auto overscroll-contain border-l-border/60 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+              <SheetDescription className="sr-only">Browse Spotted Eats and manage your account.</SheetDescription>
               <div className="flex flex-col gap-6 mt-8">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 text-lg font-semibold transition-colors py-1 ${
+                    className={`flex min-h-11 items-center gap-3 text-lg font-semibold transition-colors py-2 ${
                       location === link.href ? "text-primary" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -241,7 +245,7 @@ export function Navbar() {
                 <Link
                   href="/saved"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 text-lg font-semibold transition-colors py-1 ${
+                  className={`flex min-h-11 items-center gap-3 text-lg font-semibold transition-colors py-2 ${
                     location === "/saved" ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -253,7 +257,7 @@ export function Navbar() {
                   <Link
                     href="/notifications"
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 text-lg font-semibold transition-colors py-1 ${
+                    className={`flex min-h-11 items-center gap-3 text-lg font-semibold transition-colors py-2 ${
                       location === "/notifications" ? "text-primary" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -271,7 +275,7 @@ export function Navbar() {
                   <Link
                     href="/admin"
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 text-lg font-semibold transition-colors py-1 ${
+                    className={`flex min-h-11 items-center gap-3 text-lg font-semibold transition-colors py-2 ${
                       location === "/admin" ? "text-primary" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >

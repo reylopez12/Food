@@ -64,7 +64,7 @@ export function ListingCard({ listing, distanceMi }: ListingCardProps) {
           </button>
         </div>
 
-        <CardContent className="p-6 flex-1 flex flex-col bg-card relative z-20">
+        <CardContent className="p-6 flex-1 flex flex-col bg-card relative">
           <div className="flex justify-between items-start mb-3">
             <div className="w-full">
               <h3 className="font-serif font-bold text-2xl leading-tight group-hover:text-primary transition-colors flex items-center gap-2 text-card-foreground">

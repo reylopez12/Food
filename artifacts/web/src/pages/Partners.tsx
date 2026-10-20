@@ -154,7 +154,8 @@ interface FormState {
   company_url: string; // honeypot
 }
 
-// Keep the application implementation available, but paused during setup.
+// Applications stay paused during setup. The archived application below has
+// obsolete paid plans: replace those with free tools before reopening it.
 const PARTNER_APPLICATIONS_OPEN = false;
 
 export default function Partners() {
@@ -162,7 +163,7 @@ export default function Partners() {
 }
 
 function PartnerSetupNotice() {
-  usePageMeta("Partnerships coming soon", "We’re setting this part up so we can better connect restaurants to the community.");
+  usePageMeta("Free tools for local restaurants", "When ready, all previously planned paid features will be available for free to all local restaurants.");
   return (
     <section id="apply" className="container mx-auto flex min-h-[65vh] items-center justify-center px-4 py-16">
       <div className="w-full max-w-2xl rounded-3xl border bg-card p-6 text-center shadow-sm sm:p-12" data-testid="partners-setup-notice">
@@ -170,8 +171,11 @@ function PartnerSetupNotice() {
           <Store className="h-8 w-8" aria-hidden="true" />
         </div>
         <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Coming soon</span>
-        <h1 className="mt-5 font-serif text-3xl font-bold tracking-tight sm:text-5xl">Partnerships are on the way</h1>
-        <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
+        <h1 className="mt-5 font-serif text-3xl font-bold tracking-tight sm:text-5xl">Free tools for local restaurants</h1>
+        <p className="mt-5 text-lg leading-relaxed text-foreground" data-testid="free-business-features-notice">
+          We’ve decided to remove paid plans. When we’re ready, all previously planned paid features will be available for free to all local restaurants.
+        </p>
+        <p className="mt-4 text-base leading-relaxed text-muted-foreground">
           We’re setting this part up so we can better connect restaurants to the community.
         </p>
         <p className="mt-3 text-sm text-muted-foreground">
