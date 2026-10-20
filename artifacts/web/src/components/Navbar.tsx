@@ -1,15 +1,12 @@
-import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   Search,
   Moon,
   Sun,
-  Menu,
   Shuffle,
   LogOut,
   Bell,
   Bookmark,
-  User,
   Store,
   ShieldCheck,
 } from "lucide-react";
@@ -19,13 +16,6 @@ import { useTheme } from "../hooks/useTheme";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useNotifications } from "../hooks/useNotifications";
 import { useIsAdmin } from "../hooks/useIsAdmin";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,7 +40,6 @@ export function Navbar() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const { unreadCount } = useNotifications(isAuthenticated);
   const { isAdmin } = useIsAdmin(isAuthenticated);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks: NavLink[] = [
     { href: "/", label: "Home", desktopClass: "hidden lg:inline" },
@@ -132,12 +121,11 @@ export function Navbar() {
             </Button>
           )}
 
-          {/* Desktop account menu */}
-          {!isLoading && (
-            isAuthenticated ? (
+          {/* Keep signed-in account actions accessible on every screen size. */}
+          {!isLoading && isAuthenticated && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className={`hidden md:flex rounded-full transition-colors ${location === '/' ? 'hover:bg-white/10' : 'hover:bg-muted/50'}`}>
+                  <Button variant="ghost" size="icon" aria-label="Account" className={`h-11 w-11 rounded-full transition-colors ${location === '/' ? 'hover:bg-white/10' : 'hover:bg-muted/50'}`}>
                     <Avatar className="w-8 h-8 ring-2 ring-transparent hover:ring-primary/20 transition-all">
                       <AvatarImage src={user?.profileImageUrl ?? undefined} alt={displayName} />
                       <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bold">
@@ -190,119 +178,18 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className={`hidden md:flex gap-2 rounded-full font-semibold px-4 transition-colors ${location === '/' ? 'border-white/20 text-white hover:bg-white/10' : 'border-border hover:bg-muted/50'}`}>
-                    <User className="w-4 h-4" />
-                    Menu
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-lg border-border/60">
-                  <DropdownMenuItem asChild className="gap-2.5 cursor-pointer py-2 focus:bg-muted">
-                    <Link href="/saved">
-                      <Bookmark className="w-4 h-4" />
-                      <span className="font-medium">Saved</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )
           )}
 
-          {/* Mobile hamburger sheet */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-11 w-11 md:hidden rounded-full hover:bg-muted/50 transition-colors">
-                <Menu className="w-5 h-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="h-dvh overflow-y-auto overscroll-contain border-l-border/60 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-              <SheetTitle className="sr-only">Navigation menu</SheetTitle>
-              <SheetDescription className="sr-only">Browse Spotted Eats and manage your account.</SheetDescription>
-              <div className="flex flex-col gap-6 mt-8">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex min-h-11 items-center gap-3 text-lg font-semibold transition-colors py-2 ${
-                      location === link.href ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {link.icon}
-                    {link.label}
-                  </Link>
-                ))}
-
-                <Link
-                  href="/saved"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex min-h-11 items-center gap-3 text-lg font-semibold transition-colors py-2 ${
-                    location === "/saved" ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Bookmark className="w-5 h-5" />
-                  Saved
-                </Link>
-
-                {isAuthenticated && (
-                  <Link
-                    href="/notifications"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex min-h-11 items-center gap-3 text-lg font-semibold transition-colors py-2 ${
-                      location === "/notifications" ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Bell className="w-5 h-5" />
-                    Notifications
-                    {unreadCount > 0 && (
-                      <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full ml-auto">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </Link>
-                )}
-
-                {isAdmin && (
-                  <Link
-                    href="/admin"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex min-h-11 items-center gap-3 text-lg font-semibold transition-colors py-2 ${
-                      location === "/admin" ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <ShieldCheck className="w-5 h-5" />
-                    Admin
-                  </Link>
-                )}
-
-                {!isLoading && isAuthenticated && (
-                  <div className="pt-6 border-t mt-auto">
-                      <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="w-10 h-10">
-                            <AvatarImage src={user?.profileImageUrl ?? undefined} alt={displayName} />
-                            <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bold">
-                              {initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-sm font-bold">{displayName}</p>
-                            {user?.email && <p className="text-xs text-muted-foreground font-medium">{user.email}</p>}
-                          </div>
-                        </div>
-                        <Button variant="outline" onClick={() => { setMobileMenuOpen(false); logout(); }} className="gap-2 w-full rounded-xl font-semibold border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all">
-                          <LogOut className="w-4 h-4" />
-                          Log out
-                        </Button>
-                      </div>
-                  </div>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
+          <Button
+            variant="ghost"
+            size="icon"
+            asChild
+            className={`h-11 w-11 shrink-0 rounded-full transition-colors ${location === '/' ? 'text-white hover:bg-white/10' : 'hover:bg-muted/50'}`}
+          >
+            <Link href="/saved" aria-label="Saved places" aria-current={location === "/saved" ? "page" : undefined} data-testid="navbar-saved">
+              <Bookmark className="w-5 h-5" fill={location === "/saved" ? "currentColor" : "none"} aria-hidden="true" />
+            </Link>
+          </Button>
         </div>
       </div>
     </header>
