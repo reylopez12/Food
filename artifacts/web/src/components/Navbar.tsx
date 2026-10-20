@@ -9,6 +9,7 @@ import {
   Bookmark,
   Store,
   ShieldCheck,
+  CircleUserRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "./Logo";
@@ -23,7 +24,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface NavLink {
   href: string;
@@ -37,7 +37,7 @@ interface NavLink {
 export function Navbar() {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { user, isLoading, isAuthenticated, logout } = useAuth();
+  const { user, isLoading, isAuthenticated, login, logout } = useAuth();
   const { unreadCount } = useNotifications(isAuthenticated);
   const { isAdmin } = useIsAdmin(isAuthenticated);
 
@@ -51,10 +51,6 @@ export function Navbar() {
   const displayName = user?.firstName
     ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ""}`
     : user?.email ?? "Account";
-
-  const initials = user?.firstName
-    ? `${user.firstName[0]}${user.lastName ? user.lastName[0] : ""}`.toUpperCase()
-    : "?";
 
   return (
     <header className={`sticky top-0 z-50 w-full border-b transition-colors duration-300 ${
@@ -121,17 +117,23 @@ export function Navbar() {
             </Button>
           )}
 
-          {/* Keep signed-in account actions accessible on every screen size. */}
+          <Button
+            variant="ghost"
+            size="icon"
+            asChild
+            className={`h-11 w-11 shrink-0 rounded-full transition-colors ${location === '/' ? 'text-white hover:bg-white/10' : 'hover:bg-muted/50'}`}
+          >
+            <Link href="/saved" aria-label="Saved places" aria-current={location === "/saved" ? "page" : undefined} data-testid="navbar-saved">
+              <Bookmark className="w-5 h-5" fill={location === "/saved" ? "currentColor" : "none"} aria-hidden="true" />
+            </Link>
+          </Button>
+
+          {/* Account is always the rightmost action, beside Saved. */}
           {!isLoading && isAuthenticated && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="Account" className={`h-11 w-11 rounded-full transition-colors ${location === '/' ? 'hover:bg-white/10' : 'hover:bg-muted/50'}`}>
-                    <Avatar className="w-8 h-8 ring-2 ring-transparent hover:ring-primary/20 transition-all">
-                      <AvatarImage src={user?.profileImageUrl ?? undefined} alt={displayName} />
-                      <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bold">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
+                  <Button variant="ghost" size="icon" aria-label="Account" data-testid="navbar-account" className={`h-11 w-11 shrink-0 rounded-full transition-colors ${location === '/' ? 'text-white hover:bg-white/10' : 'hover:bg-muted/50'}`}>
+                    <CircleUserRound className="w-5 h-5" aria-hidden="true" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-lg border-border/60">
@@ -180,16 +182,19 @@ export function Navbar() {
               </DropdownMenu>
           )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            asChild
-            className={`h-11 w-11 shrink-0 rounded-full transition-colors ${location === '/' ? 'text-white hover:bg-white/10' : 'hover:bg-muted/50'}`}
-          >
-            <Link href="/saved" aria-label="Saved places" aria-current={location === "/saved" ? "page" : undefined} data-testid="navbar-saved">
-              <Bookmark className="w-5 h-5" fill={location === "/saved" ? "currentColor" : "none"} aria-hidden="true" />
-            </Link>
-          </Button>
+          {(isLoading || !isAuthenticated) && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={login}
+              disabled={isLoading}
+              aria-label={isLoading ? "Account loading" : "Sign in to your account"}
+              data-testid="navbar-account"
+              className={`h-11 w-11 shrink-0 rounded-full transition-colors ${location === '/' ? 'text-white hover:bg-white/10' : 'hover:bg-muted/50'}`}
+            >
+              <CircleUserRound className="w-5 h-5" aria-hidden="true" />
+            </Button>
+          )}
         </div>
       </div>
     </header>
