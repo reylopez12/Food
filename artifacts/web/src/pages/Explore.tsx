@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { useListings } from "@workspace/api-client-react";
+import { useListings, createListingSearch } from "@workspace/api-client-react";
 import { ListingCard } from "../components/ListingCard";
 import { ExploreAllMap } from "../components/ExploreAllMap";
 import { useNearMe, haversineDistanceMi, RADIUS_OPTIONS } from "../hooks/useNearMe";
@@ -124,15 +124,11 @@ export default function Explore() {
   const distanceActive = status === 'granted' && userLat !== null && userLng !== null && radius !== null;
 
   const filteredListings = useMemo(() => {
+    const matchesQuery = createListingSearch(allListings, searchQuery);
     return allListings.filter(listing => {
-      const q = searchQuery.toLowerCase();
       const matchesSearch =
         searchMode !== "food" ||
-        searchQuery === "" ||
-        listing.name.toLowerCase().includes(q) ||
-        listing.description.toLowerCase().includes(q) ||
-        listing.tags.some(t => t.toLowerCase().includes(q)) ||
-        listing.category.toLowerCase().includes(q);
+        matchesQuery(listing);
 
       const matchesCategory =
         selectedCategories.length === 0 ||
