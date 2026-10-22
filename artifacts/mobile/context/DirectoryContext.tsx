@@ -9,7 +9,7 @@ import React, {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { listings } from '@workspace/api-client-react';
+import { listings, createListingSearch } from '@workspace/api-client-react';
 import type { Venue } from '@workspace/api-client-react';
 import * as Location from 'expo-location';
 
@@ -198,14 +198,7 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (searchMode === 'food' && searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (l) =>
-          l.name.toLowerCase().includes(q) ||
-          l.description.toLowerCase().includes(q) ||
-          l.tags.some((t) => t.toLowerCase().includes(q)) ||
-          l.category.toLowerCase().includes(q),
-      );
+      result = result.filter(createListingSearch(allListings, searchQuery));
     }
 
     if (searchMode === 'city' && cityQuery.trim()) {
