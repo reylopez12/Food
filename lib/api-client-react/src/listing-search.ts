@@ -1,4 +1,5 @@
 import type { Venue } from "./generated/api.schemas";
+import { KNOWN_PHRASES, knownSingleWordTerms, relatedTerms } from "./search-terms";
 
 type SearchableListing = Pick<Venue, "name" | "description" | "tags" | "category"> & {
   neighborhood?: string | null;
@@ -69,11 +70,51 @@ function isTypoOf(queryWord: string, words: string[]): boolean {
   });
 }
 
+/** "tacos" → "taco", "pastries" → "pastry"; unchanged for short or non-plural words. */
+function singular(word: string): string {
+  if (word.length <= 3 || word.endsWith("ss")) return word;
+  if (word.endsWith("ies")) return `${word.slice(0, -3)}y`;
+  if (/(ch|sh|x|ss)es$/.test(word)) return word.slice(0, -2);
+  if (word.endsWith("s")) return word.slice(0, -1);
+  return word;
+}
+
+/** Whole-word (or whole-phrase) match, allowing a plural "s"/"es" ending. */
+function hasWord(paddedText: string, phrase: string): boolean {
+  return [" ", "s ", "es "].some((end) => paddedText.includes(` ${phrase}${end}`));
+}
+
+/** Splits a query into terms, keeping known phrases like "dim sum" together. */
+function queryTerms(normalizedQuery: string): string[] {
+  const words = normalizedQuery.split(" ");
+  const terms: string[] = [];
+  for (let i = 0; i < words.length; i++) {
+    const rest = words.slice(i).join(" ");
+    const phrase = KNOWN_PHRASES.find((p) => rest === p || rest.startsWith(`${p} `));
+    if (phrase) {
+      terms.push(phrase);
+      i += phrase.split(" ").length - 1;
+    } else {
+      terms.push(words[i]);
+    }
+  }
+  return terms;
+}
+
+/** Other words that also satisfy `term`: its singular form and related terms. */
+function alternativesFor(term: string): string[] {
+  const base = singular(term);
+  return [...new Set([base, ...relatedTerms(term), ...relatedTerms(base)])]
+    .map(normalize)
+    .filter((alt) => alt && alt !== term);
+}
+
 /**
  * Builds a predicate for listings matching `query` in their name, description,
- * tags, category or neighborhood. Every meaningful query word must match.
- * A word is matched loosely (small typos allowed) only when it appears nowhere
- * in `listings`, so real words like "thai" never pick up "that" or "chai".
+ * tags, category or neighborhood. Every meaningful query term must match,
+ * either as typed, as a related term ("noodles" also finds ramen and pho), or,
+ * when it appears nowhere in `listings`, with small typos. Real words like
+ * "thai" are never typo-matched, so they don't pick up "that" or "chai".
  */
 export function createListingSearch<T extends SearchableListing>(
   listings: readonly T[],
@@ -98,20 +139,41 @@ export function createListingSearch<T extends SearchableListing>(
     return text;
   };
 
-  const allWords = normalizedQuery.split(" ");
-  const meaningful = allWords.filter((w) => !FILLER_WORDS.has(w));
+  const allTerms = queryTerms(normalizedQuery);
+  const meaningful = allTerms.filter((t) => !FILLER_WORDS.has(t));
   // A query made only of filler words ("food") is searched as typed.
-  const required = meaningful.length > 0 ? meaningful : allWords;
-  const typoWords = new Set(
-    required.filter((w) => !listings.some((listing) => textOf(listing).includes(w))),
-  );
+  const required = meaningful.length > 0 ? meaningful : allTerms;
+
+  // The typed term matches anywhere (so "lump" finds "lumpia" while typing);
+  // its alternatives must match whole words, so "masa" doesn't find "masala".
+  const termMatches = (term: string, alternatives: string[], listing: T) => {
+    const text = textOf(listing);
+    if (text.includes(term)) return true;
+    const padded = ` ${text} `;
+    return alternatives.some((alt) => hasWord(padded, alt));
+  };
+  const anyListingMatches = (term: string, alternatives: string[]) =>
+    listings.some((listing) => termMatches(term, alternatives, listing));
+
+  const matchers = required.map((term): ((listing: T) => boolean) => {
+    const alternatives = alternativesFor(term);
+    if (anyListingMatches(term, alternatives)) {
+      return (listing) => termMatches(term, alternatives, listing);
+    }
+    // Not in the directory as typed: maybe a misspelled known term ("noodels").
+    const known = knownSingleWordTerms().find((k) => isTypoOf(term, [k]));
+    if (known) {
+      const knownAlternatives = alternativesFor(known);
+      if (anyListingMatches(known, knownAlternatives)) {
+        return (listing) => termMatches(known, knownAlternatives, listing);
+      }
+    }
+    return (listing) => isTypoOf(term, textOf(listing).split(" "));
+  });
 
   return (listing) => {
-    const text = textOf(listing);
     // Whole-phrase matches keep exact searches like "lucky three" working as before.
-    if (text.includes(normalizedQuery)) return true;
-    const words = text.split(" ");
-    return required.every((w) =>
-      typoWords.has(w) ? isTypoOf(w, words) : text.includes(w));
+    if (textOf(listing).includes(normalizedQuery)) return true;
+    return matchers.every((matches) => matches(listing));
   };
 }
